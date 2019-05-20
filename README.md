@@ -7,6 +7,8 @@ Author: Tomasz Siwek (tsiwek@g.pl)
 
 Supervisor: dr inż. (Ph. D.) Jerzy Karczewski
 
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+
 # Installation
 1. Make sure to have Python 3 (ver >= 3.6) and Anaconda installed. If you do not wish to use separate environment, make sure to install with `pip` all dependencies listed in `conda_env.yml`.
 2. Clone repository to the directory of your choosing.
