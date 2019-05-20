@@ -7,6 +7,9 @@ Author: Tomasz Siwek (tsiwek@g.pl)
 
 Supervisor: dr inż. (Ph. D.) Jerzy Karczewski, Department of Geophysics
 
+# 996 ICU
+If you liked my project, give those guys a star and spread awareness: https://github.com/996icu/996.ICU.
+
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 
 # Installation
