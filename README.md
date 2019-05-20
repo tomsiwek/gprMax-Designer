@@ -30,4 +30,4 @@ If you liked my project, give those guys a star and spread awareness: https://gi
 10. To parse created model, save result file and run gprMax simulation either click `Parse to gprMax` button in the toolbar or use `File\Parse to gprMax` item from the main menu.
 11. After work is finished the conda environment may be deactivated with `conda deactivate`.
 
-__Warning !__ Currently program does not support invoking gprMax for computations in \*nix systems.
+__Warning!__ Currently program does not support invoking gprMax for computations in \*nix systems.
