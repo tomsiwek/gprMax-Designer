@@ -10,7 +10,7 @@ Supervisor: dr inż. (Ph. D.) Jerzy Karczewski
 # Installation
 1. Make sure to have Python 3 (ver >= 3.6) and Anaconda installed. If you do not wish to use separate environment, make sure to install with `pip` all dependencies listed in `conda_env.yml`.
 2. Clone repository to the directory of your choosing.
-3. Create Anaconda environment using `.yml` file that is shipped with the program: `conda env create -f conda_env.yml`
+3. Create Anaconda environment using `.yml` file that is shipped with the program: `conda env create -f conda_env.yml`.
 
 # Usage
 1. Activate conda environment with: `conda activate gprMaxDesigner` in main project directory.
