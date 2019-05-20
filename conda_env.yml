@@ -1,0 +1,8 @@
+# This file may be used to create a conda environment using:
+# $ conda create --name gprMaxDesigner --file <this file>
+
+name: gprMaxDesigner
+dependencies:
+- python>=3.6
+- h5py
+- sortedcontainers
