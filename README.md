@@ -1,5 +1,5 @@
 # gprMax-Designer
-A GUI front-end for gprMax 3 -- simulation program used in GPR method created by Giannopoulos and Warren (https://github.com/gprMax/gprMax). 
+A GUI front-end for gprMax 3 - simulation program used in GPR method created by Giannopoulos and Warren (https://github.com/gprMax/gprMax). 
 
 This program is being developed as a master thesis on AGH University of Science and Technology in Kraków, Faculty of Geology, Geophysics and Environmental Protection.
 
