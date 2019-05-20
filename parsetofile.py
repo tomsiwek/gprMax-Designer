@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from tkinter import messagebox
 
 from settings import TModel_Size, TSurveySettings
