@@ -6,7 +6,7 @@ from point import TPoint
 
 class TPolygonWindow(simpledialog.Dialog):
     """
-    Class represents polygon vertices edit window.
+    Class represents polygon vertices edit window
     """
 
     def __init__(self, master, app, polygon):

@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 import cProfile
 #from itertools import islice
 from math import asin, atan2, pi
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from sortedcontainers import SortedDict
 import sys
 

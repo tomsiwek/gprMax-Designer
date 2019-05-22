@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 from decimal import Decimal
+import h5py
 from math import asin, acos, atan, degrees, sin, cos, radians, log10
 import os
 from random import randrange
@@ -13,6 +14,7 @@ from tkinter import LEFT, TOP, X, Y, FLAT, RAISED, SUNKEN, ARC, PIESLICE, INSERT
                     ACTIVE, HORIZONTAL, VERTICAL
 
 from displaysettingswindow import TDisplaySettingsWindow
+from echogramwindow import TEchogramWindow
 from geometry import TGeometry as TG
 from materials import TMaterial
 from materialswindow import TMaterialsWindow
@@ -26,6 +28,7 @@ from settings import TWindow_Size, TModel_Size, TTicksSettings, TSurveySettings
 from shapes import TRect, TCylin, TCylinSector, TPolygon, TCoordSys
 from shapeswindow import TShapesWindow
 from surveysettingswindow import TSurveySettingsWindow
+from tracewindow import TTraceWindow
 
 
 class TApp(object):
@@ -178,6 +181,11 @@ class TApp(object):
         self.file_menu.add_command(label = "Open materials")
         self.file_menu.add_command(label = "Save materials")
         self.file_menu.add_command(label = "Parse to gprMax", command = self.parse_to_gprmax)
+        self.file_menu.add_command(label = "Run gprMax in terminal", command = self.run_gprmax_terminal)
+        self.file_menu.add_command(label = "Export hdf5 to ascii", command = self.export_hdf5_to_ascii)
+        self.file_menu.add_command(label = "Merge traces", command = self.merge_traces)
+        self.file_menu.add_command(label = "Plot trace", command = self.display_trace)
+        self.file_menu.add_command(label = "Plot echogram", command = self.display_echogram)
         self.file_menu.add_command(label = "Quit!", command = self.master.destroy)
         self.edit_menu.add_command(label = "Undo", command = self.undo_operation)
         self.edit_menu.add_command(label = "Create rectangle", command = self.create_rectangle)
@@ -186,15 +194,14 @@ class TApp(object):
         self.edit_menu.add_command(label = "Create polygon", command = self.create_polygon)
         self.edit_menu.add_command(label = "Recolour randomly", command = self.recolour_randomly)
         self.edit_menu.add_command(label = "Delete all", command = self.remove_all_shapes)
-        self.edit_menu.add_command(label = "Run gprMax in terminal", command = self.run_gprmax_terminal)
         # self.edit_menu.add_command(label = "Refresh_canvas", command = self.canvas_refresh)
+        self.view_menu.add_command(label = "Display", command = self.display_settings)
+        self.view_menu.add_command(label = "Toogle grid", command = self.toogle_grid)
         self.view_menu.add_command(label = "Zoom in", command = self.view_zoom_in)
         self.view_menu.add_command(label = "Zoom out", command = self.view_zoom_out)
         self.view_menu.add_command(label = "Reset zoom", command = self.view_zoom_reset)
         self.settings_menu.add_command(label = "Edit title", command = self.edit_title)
-        self.settings_menu.add_command(label = "Toogle grid", command = self.toogle_grid)
         self.settings_menu.add_command(label = "Model", command = self.change_model_size)
-        self.settings_menu.add_command(label = "Display", command = self.display_settings)
         self.settings_menu.add_command(label = "Survey", command = self.survey_settings)
         self.main_menubar.add_cascade(label = "File", menu = self.file_menu)
         self.main_menubar.add_cascade(label = "Edit", menu = self.edit_menu)
@@ -213,7 +220,7 @@ class TApp(object):
         self.mode_polygon.set(False)
 
         self.right_button_popup = Menu(self.master, tearoff = 0)
-
+        
         self.right_button_popup.add_command(label = "Select shape")
         self.right_button_popup.add_command(label = "Edit shape")
         self.right_button_popup.add_command(label = "Change shape colour")
@@ -222,6 +229,9 @@ class TApp(object):
         self.right_button_popup.add_command(label = "Add vertex to polygon")
         self.right_button_popup.add_command(label = "Edit polygon vertex")
         self.right_button_popup.add_command(label = "Remove polygon vertex")
+        self.right_button_popup.add_separator()
+        self.right_button_popup.add_command(label = "Copy shape")
+        self.right_button_popup.add_command(label = "Paste shape")
         self.right_button_popup.add_separator()
         
         self.right_button_popup.add_checkbutton(label = "Rectangle", \
@@ -287,6 +297,8 @@ class TApp(object):
         self.master.bind("<Left>", self.move_cursor_left)
         self.master.bind("<Right>", self.move_cursor_right)
         self.master.bind("<Control-Key-z>", self.undo_operation)
+        self.master.bind("<Control-Key-c>", self.copy_ctrl_c)
+        self.master.bind("<Control-Key-v>", self.paste_ctrl_v)
 
     def load_toolbar_icons(self):
         try:
@@ -316,6 +328,7 @@ class TApp(object):
                          
     def canvas_click(self, event):
         "Left mouse click event "
+        self.main_canvas.focus_force()
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
         max_window = TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y)
         in_model = TG.position_in_boundries(TPoint(event.x, event.y), \
@@ -510,15 +523,26 @@ class TApp(object):
 
     # Displays right mouse button popup (context) menu
     def display_right_button_popup(self, event):
-        self.canvas_interupt()
+        self.canvas_interrupt()
         try:
-            self.right_button_popup.entryconfig("Select shape", command = lambda: self.select_shape(event))
-            self.right_button_popup.entryconfig("Edit shape", command = lambda: self.edit_shape(event))
-            self.right_button_popup.entryconfig("Change shape colour", command = lambda: self.change_shape_colour(event))
-            self.right_button_popup.entryconfig("Remove shape", command = lambda: self.remove_shape(event))
-            self.right_button_popup.entryconfig("Add vertex to polygon", command = lambda: self.add_vertex_to_polygon(event))
-            self.right_button_popup.entryconfig("Edit polygon vertex", command = lambda: self.edit_polygon_vertex(event))
-            self.right_button_popup.entryconfig("Remove polygon vertex", command = lambda: self.remove_polygon_vertex(event))
+            self.right_button_popup.entryconfig("Select shape", command = lambda: \
+                                                self.select_shape(event))
+            self.right_button_popup.entryconfig("Edit shape", command = lambda: \
+                                                self.edit_shape(event))
+            self.right_button_popup.entryconfig("Change shape colour", command = \
+                                                lambda: self.change_shape_colour(event))
+            self.right_button_popup.entryconfig("Remove shape", command = lambda: \
+                                                self.remove_shape(event))
+            self.right_button_popup.entryconfig("Add vertex to polygon", command = \
+                                                lambda: self.add_vertex_to_polygon(event))
+            self.right_button_popup.entryconfig("Edit polygon vertex", command = \
+                                                lambda: self.edit_polygon_vertex(event))
+            self.right_button_popup.entryconfig("Remove polygon vertex", command = \
+                                                lambda: self.remove_polygon_vertex(event))
+            self.right_button_popup.entryconfig("Copy shape", command = lambda: \
+                                                self.copy_shape(event))
+            self.right_button_popup.entryconfig("Paste shape", command = lambda: \
+                                                self.paste_shape(event))
             self.right_button_popup.post(event.x_root, event.y_root)
         finally:
             self.right_button_popup.grab_release()
@@ -696,7 +720,7 @@ class TApp(object):
                 self.main_canvas.delete ("all")
                 self.canvas_refresh ()
 
-    def canvas_interupt(self):
+    def canvas_interrupt(self):
         self.first_click = False
         self.second_click = False
         self.resize = False
@@ -710,6 +734,7 @@ class TApp(object):
         self.resize_moving_point = -1
         self.main_canvas.config(cursor = "arrow")
         self.main_canvas.delete("all")
+        self.copy_pos = None
         # self.canvas_refresh()
         if(self.mouse_mode == "move" or self.mouse_mode == "resize"):
             if(self.shape_buffer is not None):
@@ -1938,9 +1963,9 @@ class TApp(object):
         n_iter = simpledialog.askinteger("Give number of iterations", "n: ", \
                                          initialvalue = init_iter)
         if(n_iter is not None):
-            command = "start cmd /K run_gprmax.bat " + "\"" + filename + "\"" + \
+            command = "start cmd /K run_gprmax.bat compute " + "\"" + filename + "\"" + \
                       " -n " + str(n_iter) + " --geometry-fixed"
-            sts = subprocess.call(command, shell=True)
+            sts = subprocess.call(command, shell = True)
     
     def view_zoom_in(self):
         self.scale *= 2
@@ -1968,7 +1993,7 @@ class TApp(object):
 
     def view_zoom_out(self):
         self.scale /= 2
-        if(self.scale != 100.0):
+        if(self.scale > 100.0):
             x_lenght = TModel_Size.MAX_X - TModel_Size.MIN_X
             y_lenght = TModel_Size.MAX_Y - TModel_Size.MIN_Y
             x_min_new = TModel_Size.MIN_X - x_lenght/2
@@ -1979,6 +2004,10 @@ class TApp(object):
             TModel_Size.MAX_X = x_max_new
             TModel_Size.MIN_Y = y_min_new
             TModel_Size.MAX_Y = y_max_new
+        elif(self.scale < 100.0):
+            self.scale = 100.0
+            self.view_zoom_reset()
+            return
         else:
             TModel_Size.MIN_X = 0.0
             TModel_Size.MAX_X = self.len_tot_x
@@ -2126,7 +2155,7 @@ class TApp(object):
     def read_model_file(self):
         "Reads and loads a GprMax compliant input file"
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
-                    filetypes = [("All files", "*.*")])
+                    filetypes = [("gprMax input files", "*.in"), ("All files", "*.*")])
         
         with open(filename) as infile:
             self.remove_all_shapes()
@@ -2231,6 +2260,133 @@ class TApp(object):
         else:
             messagebox.showwarning("Input error", \
                                    "Invalid input {} in line {}.".format(line, line_num))
+
+    def export_hdf5_to_ascii(self):
+        "Export a gprMax output file in HDF5 format to ASCII"
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                    filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
+        h5file = h5py.File(filename)
+        iterations = h5file.attrs["Iterations"]
+        title = h5file.attrs["Title"]
+        dt = h5file.attrs["dt"]
+        ver = h5file.attrs["gprMax"]
+        nrx = h5file.attrs["nrx"]
+        traces = h5file["rxs"]["rx1"]["Ez"].shape[1]
+        metafilename = (filename.split("."))[0] + "_meta.txt"
+        with open(metafilename, "w") as metafile:
+            metafile.write("title: {}\n".format(title))
+            metafile.write("gprMax version: {}\n".format(ver))
+            metafile.write("no of iterations: {}\n".format(iterations))
+            metafile.write("time increment: {}\n".format(dt))
+            metafile.write("total time: {}\n".format(dt*iterations))
+            metafile.write("no of traces: {}\n".format(traces))
+            metafile.write("no of rxs per src: {}\n".format(nrx))
+        ezfilename = (filename.split("."))[0] + "_ez.txt"
+        ezdata = h5file["rxs"]["rx1"]["Ez"]
+        ezdata = ezdata[()].transpose()
+        with open(ezfilename, "w") as ezfile:
+            self.write_array_to_file(ezfile, ezdata)
+        hxfilename = (filename.split("."))[0] + "_hx.txt"
+        hxdata = h5file["rxs"]["rx1"]["Hx"]
+        hxdata = hxdata[()].transpose()
+        with open(hxfilename, "w") as hxfile:
+            self.write_array_to_file(hxfile, hxdata)
+        hyfilename = (filename.split("."))[0] + "_hy.txt"
+        hydata = h5file["rxs"]["rx1"]["Hy"]
+        hydata = hydata[()].transpose()
+        with open(hyfilename, "w") as hyfile:
+            self.write_array_to_file(hyfile, hydata)
+        
+    def write_array_to_file(self, fileh, array):
+        length = len(array)
+        for i, row in enumerate(array):
+            for elem in row[:-1]:
+                fileh.write(str(elem) + ", ")
+            fileh.write(str(row[-1]))
+            if(i != (length - 1)):
+                fileh.write("\n")
+    
+    def merge_traces(self):
+        "Invoke gprMax tools to merge output files containing traces"
+        remove_files = messagebox.askyesno("Merge files", "Do you wish to remove merged files?")
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                    filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
+        basename = (filename.split("."))[0]
+        if(basename != ""):
+            command = "start cmd /K run_gprmax.bat merge " + "\"" + basename[:-1] + "\""
+            if(remove_files == True):
+                command += " --remove-files"
+            sts = subprocess.call(command, shell = True)
+    
+    def display_trace(self):
+        components_dialog = TTraceWindow(self.master)
+        components = components_dialog.result
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                    filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
+        if(filename != ""):
+            command = "start cmd /K run_gprmax.bat ascan " + "\"" + filename + "\"" + \
+                      " " + components
+            sts = subprocess.call(command, shell = True)
+    
+    def display_echogram(self):
+        component_dialog = TEchogramWindow(self.master)
+        component = component_dialog.result
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                    filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
+        if(filename != ""):
+            command = "start cmd /K run_gprmax.bat bscan " + "\"" + filename + "\"" + \
+                      " " + component
+            sts = subprocess.call(command, shell = True)
+    
+    def copy_shape(self, event = None, *, shape_num = -1):
+        "Copies shape overlaped by mouse pointer to buffer or specified by given number"
+        self.canvas_interrupt()
+        if(shape_num == -1 and event is not None):
+            shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
+        if(shape_num > -1):
+            if(event is not None):
+                self.move_const_point = TPoint(event.x, event.y)
+            else:
+                if(self.shapes[shape_num].type == "Rectangle"):
+                    self.move_const_point = self.shapes[shape_num].point1
+                elif(self.shapes[shape_num].type == "Cylinder" or \
+                     self.shapes[shape_num].type == "CylinSector"):
+                    self.move_const_point = self.shapes[shape_num].centre
+                elif(self.shapes[shape_num].type == "Polygon"):
+                    self.move_const_point = self.shapes[shape_num].points[0]
+                else:
+                    raise NotImplementedError("Invalid shape type")
+            self.manipulated_shape_num = len(self.shapes)
+            self.shape_buffer = deepcopy(self.shapes[shape_num])
+    
+    def paste_shape(self, event = None, *, deltax = 15, deltay = 15):
+        "Paste shape into model"
+        if(event is not None):
+            shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
+        if(self.shape_buffer is not None and event is not None):
+            if(self.shape_buffer.type == "Rectangle"):
+                self.rectangle_click_move_insert(event, shape_num)
+            elif(self.shape_buffer.type == "Cylinder"):
+                self.cylinder_click_move_insert(event, shape_num)
+            elif(self.shape_buffer.type == "CylinSector"):
+                self.cylin_sector_click_move_insert(event, shape_num)
+            elif(self.shape_buffer.type == "Polygon"):
+                self.polygon_click_move_insert(event, shape_num)
+            else:
+                raise NotImplementedError("Invalid shape type")
+    
+    def copy_ctrl_c(self, event):
+        "ctrl+z keystroke event"
+        try:
+            shape_num = (self.shapes_frame.shapes_list.curselection())[0]
+        except IndexError:
+            return
+        self.copy_shape(shape_num = shape_num)
+
+    def paste_ctrl_v(self, event):
+        "ctrl+v keystroke event"
+        pass
+
 
 def centre_window(window):
     # Gets the requested values of the height and widht.

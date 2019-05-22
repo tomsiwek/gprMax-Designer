@@ -8,7 +8,7 @@ from settings import TTicksSettings
 
 class TShapesWindow(Frame):
     """
-    Class representing auxiliary window containg shapes' information.
+    Class representing auxiliary window containg shapes information.
     """
     def __init__(self, master, TApp):
         super().__init__()
@@ -19,7 +19,7 @@ class TShapesWindow(Frame):
     def init_widgets(self):
         # Listbox
         self.shapes_list = Listbox(self, exportselection = False)
-        self.shapes_list.config(exportselection=0)
+        # self.shapes_list.config(exportselection = 0)
         self.grid_columnconfigure(0, weight = 1, minsize = 300)
         self.grid_rowconfigure(0, weight = 1)
         self.shapes_list.grid(row = 0, column = 0, sticky = NSEW, padx = (5, 25), pady = 5)
@@ -30,6 +30,8 @@ class TShapesWindow(Frame):
                                                command = self.shapes_list.yview)
         self.shapes_list_scrollbar.grid(row = 0, column = 0, sticky = NS + E, padx = (0, 5), pady = 5)
         self.shapes_list.config(yscrollcommand = self.shapes_list_scrollbar.set)
+        # self.shapes_list.bind("<Up>", lambda x: "break")
+        # self.shapes_list.bind("<Down>", lambda x: "break")
 
         # Drop down menu with materials
         self.material_box = Combobox(self, values = ["pec", "free_space"] )
@@ -95,16 +97,16 @@ class TShapesWindow(Frame):
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
-            return None
+            return
         except Exception as message:
             messagebox.showerror("Error while picking shape!", message)
         if (shape_num < 0):
-            return None
+            return
         else:
             try:
                 shape = self.TApp.shapes[shape_num]
             except Exception as message:
-                messagebox.showerror ("Materials list error", message)
+                messagebox.showerror("Materials list error", message)
                 return
         
         self.material_box.set(str(shape.material))
@@ -121,13 +123,16 @@ class TShapesWindow(Frame):
         self.shapes_list.focus_set()
 
     def init_popup_menu (self):
-        "Inits shapes' pane pup-up menu"
+        "Inits shapes pane pup-up menu"
         self.popup_menu = Menu (self, tearoff = 0)
         self.popup_menu.add_command(label = "Edit shape", command = self.edit_shape)
         self.popup_menu.add_command(label = "Change shape colour", command = self.change_shape_colour)
         self.popup_menu.add_command(label = "Remove shape", command = self.remove_shape)
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Add vertex to polygon", command = self.add_vertex_to_polygon)
+        self.popup_menu.add_separator()
+        self.popup_menu.add_command(label = "Copy shape", command = self.copy_shape)
+        self.popup_menu.add_command(label = "Paste shape", command = self.paste_shape)
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Move up", command = self.move_shape_up)
         self.popup_menu.add_command(label = "Move down", command = self.move_shape_down)
@@ -156,7 +161,7 @@ class TShapesWindow(Frame):
                 self.shapes_list.selection_set(shape_num - 1)
                 self.shapes_list.activate(shape_num - 1)
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes' list!", message)
+                messagebox.showerror ("Error while manipulating shapes list!", message)
                 return
     
     def move_shape_down (self):
@@ -176,7 +181,7 @@ class TShapesWindow(Frame):
                 self.shapes_list.activate (shape_num + 1)
                 # self.shapes_list.focus_set ()
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes' list!", message)
+                messagebox.showerror ("Error while manipulating shapes list!", message)
                 return
     
     def move_shape_top (self):
@@ -196,7 +201,7 @@ class TShapesWindow(Frame):
                 self.shapes_list.activate (0)
                 # self.shapes_list.focus_set ()
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes' list!", message)
+                messagebox.showerror ("Error while manipulating shapes list!", message)
                 return
 
     def move_shape_bottom(self):
@@ -215,7 +220,7 @@ class TShapesWindow(Frame):
                 self.shapes_list.selection_set(END)
                 self.shapes_list.activate(END)
             except Exception as message:
-                messagebox.showerror("Error while manipulating shapes' list!", message)
+                messagebox.showerror("Error while manipulating shapes list!", message)
                 return
 
     def edit_shape(self):
@@ -252,9 +257,9 @@ class TShapesWindow(Frame):
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
-            return None
+            return
         if (shape_num < 0):
-            return None
+            return
         else:
             try:
                 del self.TApp.shapes[shape_num]
@@ -268,7 +273,7 @@ class TShapesWindow(Frame):
                 self.TApp.main_canvas.delete ("all")
                 self.TApp.canvas_refresh ()
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes' list!", message)
+                messagebox.showerror ("Error while manipulating shapes list!", message)
                 return
 
     def add_vertex_to_polygon(self):
@@ -282,3 +287,22 @@ class TShapesWindow(Frame):
             self.TApp.shapes[shape_num].add_vertex(x_mod = point_mod_x, y_mod = point_mod_y)
         self.TApp.main_canvas.delete("all")
         self.TApp.canvas_refresh()
+
+    def copy_shape(self):
+        "Copy selected shape to buffer"
+        try:
+            shape_num = (self.shapes_list.curselection())[0]
+        except IndexError:
+            return
+        if (shape_num < 0):
+            return
+        else:
+            try:
+                self.TApp.copy_shape(shape_num = shape_num)
+            except Exception as message:
+                messagebox.showerror ("Error while manipulating shapes list!", message)
+                return
+    
+    def paste_shape(self):
+        "Paste selected shape from buffer"
+        pass

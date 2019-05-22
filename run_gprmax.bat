@@ -1,6 +1,10 @@
+:: @chcp 852>NUL
 @echo off
-set conda_dir="C:\path_to_conda"
-set gprmax_dir="C:\path_to_gprmax"
+set conda_dir=PATH_TO_CONDA
+set gprmax_dir=PATH_TO_GPRMAX
 call %conda_dir%\Scripts\activate.bat %conda_dir%
 cd %gprmax_dir%
-activate gprMax & python -m gprMax %1 %2 %3 %4 & conda deactivate & pause & exit
+if "%1"=="compute" (activate gprMax & python -m gprMax %2 %3 %4 %5 & conda deactivate & pause & exit)
+if "%1"=="merge" (activate gprMax & python -m tools.outputfiles_merge %2 %3 & conda deactivate & echo "Merge complete" & pause & exit)
+if "%1"=="ascan" (activate gprMax & python -m tools.plot_Ascan %2 --outputs %3 %4 %5 %6 %7 %8 %9 & conda deactivate & exit)
+if "%1"=="bscan" (activate gprMax & python -m tools.plot_Bscan %2 %3 & conda deactivate & exit)

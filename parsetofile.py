@@ -121,13 +121,18 @@ class TParser (object):
         if(debug):
             from timeit import default_timer as timer
             start = timer()
-        polygon_obj = Polygon(polygon.points_mod)
-        edges = make_monotone(polygon_obj)
-        monotone_polygons = split_polygons(polygon_obj, edges)
-        edges2 = []
-        for poly in monotone_polygons:
-            edges2 += triangulate_monotone_polygon(poly)
-        triangles = split_polygons(polygon_obj, edges + edges2)
+        try:
+            polygon_obj = Polygon(polygon.points_mod)
+            edges_monotone = make_monotone(polygon_obj)
+            monotone_polygons = split_polygons(polygon_obj, edges_monotone)
+            edges_triangles = []
+            triangles = []
+            for poly in monotone_polygons:
+                edges_triangles = triangulate_monotone_polygon(poly)
+                triangles += split_polygons(poly, edges_triangles)
+        # triangles = split_polygons(polygon_obj, edges_monotone + edges_triangles)
+        except Exception as message:
+            messagebox.showerror("Error while triangulating polygon!", message)
         if(debug):
             end = timer()
             print("n vertices:", len(polygon.points_mod))
