@@ -5,6 +5,10 @@ class TTraceWindow(simpledialog.Dialog):
     Class represents popup used to choose trace components and FFT
     """
 
+    def __init__(self, master, *, show_fft = True):
+        self.show_fft = show_fft
+        super().__init__(master)
+
     def body(self, master):
         Label(self, text = "Choose component(s) to plot:").pack()
         bwidth = 3
@@ -42,8 +46,9 @@ class TTraceWindow(simpledialog.Dialog):
         self.hz.grid(row = 1, column = 2)
         self.button_frame.pack()
         self.fft_en = IntVar()
-        self.fft_button = Checkbutton(self, text = "Show FFT", variable = self.fft_en)
-        self.fft_button.pack()
+        if(self.show_fft):
+            self.fft_button = Checkbutton(self, text = "Show FFT", variable = self.fft_en)
+            self.fft_button.pack()
         # self.mag_frame.pack()
 
     def apply(self):

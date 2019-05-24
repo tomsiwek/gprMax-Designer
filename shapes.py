@@ -1,5 +1,6 @@
 from copy import copy, deepcopy
 from math import asin, acos, atan, degrees, sin, cos, radians, ceil, floor, pi
+from PIL import Image, ImageDraw
 from random import randrange
 from tkinter import Tk, Canvas, Menu, messagebox, BooleanVar, Frame, Button
 from tkinter import LEFT, TOP, X, FLAT, RAISED, SUNKEN, ARC, PIESLICE, CHORD
@@ -41,6 +42,10 @@ class TShape(ABC):
     @abstractmethod
     def area(self):
         pass
+    
+    @abstractmethod
+    def draw_to_image(self, image, colour):
+        pass
 
 class TRect(TShape):
     """
@@ -56,6 +61,8 @@ class TRect(TShape):
         if(point1_mod and point2_mod):
             self.point1_mod = TPoint(min(point1_mod.x, point2_mod.x), min(point1_mod.y, point2_mod.y))
             self.point2_mod = TPoint(max(point1_mod.x, point2_mod.x), max(point1_mod.y, point2_mod.y))
+            self.point3_mod = TPoint(self.point1_mod.x, self.point2_mod.y)
+            self.point4_mod = TPoint(self.point2_mod.x, self.point1_mod.y)
         else:
             if(point1 and point2):
                 self.point1 = TPoint(min(point1.x, point2.x), max(point1.y, point2.y))
@@ -67,6 +74,8 @@ class TRect(TShape):
                 self.point1.y = max(point1_y, point2_y)
                 self.point2.x = max(point1_x, point2_x)
                 self.point2.y = min(point1_y, point2_y)
+            self.point3 = TPoint(self.point1.x, self.point2.y)
+            self.point4 = TPoint(self.point2.x, self.point1.y)
             # Coordinates in model's system
             self.update_model_positions()
         # Material
@@ -104,6 +113,14 @@ class TRect(TShape):
             canvas.create_oval(self.point2.x-3, self.point2.y-3, self.point2.x+3, \
                                self.point2.y+3, outline = self.colour, \
                                fill = self.colour, width = 1)
+        if(TG.point_visible(self.point3_mod, min_model, max_model)):
+            canvas.create_oval(self.point3.x-3, self.point3.y-3, self.point3.x+3, \
+                               self.point3.y+3, outline = self.colour, \
+                               fill = self.colour, width = 1)
+        if(TG.point_visible(self.point4_mod, min_model, max_model)):
+            canvas.create_oval(self.point4.x-3, self.point4.y-3, self.point4.x+3, \
+                               self.point4.y+3, outline = self.colour, \
+                               fill = self.colour, width = 1)
 
     def update_window_positions(self):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
@@ -113,6 +130,10 @@ class TRect(TShape):
         self.point1 = TG.model_to_window(self.point1_mod, min_model, max_model, \
                                          min_window, max_window)
         self.point2 = TG.model_to_window(self.point2_mod, min_model, max_model, \
+                                         min_window, max_window)
+        self.point3 = TG.model_to_window(self.point3_mod, min_model, max_model, \
+                                         min_window, max_window)
+        self.point4 = TG.model_to_window(self.point4_mod, min_model, max_model, \
                                          min_window, max_window)
 
     def update_model_positions(self):
@@ -125,6 +146,10 @@ class TRect(TShape):
         self.point1_mod = TG.window_to_model(self.point1, min_model, max_model, \
                                              min_window, max_window, dx, dy)
         self.point2_mod = TG.window_to_model(self.point2, min_model, max_model, \
+                                             min_window, max_window, dx, dy)
+        self.point3_mod = TG.window_to_model(self.point3, min_model, max_model, \
+                                             min_window, max_window, dx, dy)
+        self.point4_mod = TG.window_to_model(self.point4, min_model, max_model, \
                                              min_window, max_window, dx, dy)
     
     def visible(self, min_model, max_model):
@@ -148,6 +173,15 @@ class TRect(TShape):
         len_x = abs(self.point2_mod.x - self.point1_mod.x)
         len_y = abs(self.point2_mod.y - self.point1_mod.y)
         return len_x*len_y
+
+    def draw_to_image(self, image, colour):
+        draw = ImageDraw.Draw(image)
+        point1_im_x = (self.point1_mod.x/TModel_Size.DOM_X)*image.width
+        point1_im_y = (1-(self.point1_mod.y/TModel_Size.DOM_Y))*image.height
+        point2_im_x = (self.point2_mod.x/TModel_Size.DOM_X)*image.width
+        point2_im_y = (1-(self.point2_mod.y/TModel_Size.DOM_Y))*image.height
+        draw.rectangle([point1_im_x, point1_im_y, point2_im_x, point2_im_y], \
+                      fill = colour, outline = None)
 
 
 class TCylin(TShape):
@@ -297,6 +331,15 @@ class TCylin(TShape):
             return True
         else:
             return False
+    
+    def draw_to_image(self, image, colour):
+        draw = ImageDraw.Draw(image)
+        centre_im_x = (self.centre_mod.x/TModel_Size.DOM_X)*image.width
+        centre_im_y = (1-(self.centre_mod.y/TModel_Size.DOM_Y))*image.height
+        radius_im = (1/TModel_Size.DX)*self.radius_mod
+        draw.ellipse([centre_im_x - radius_im, centre_im_y - radius_im, \
+                      centre_im_x + radius_im, centre_im_y + radius_im], \
+                     fill = colour, outline = None)
 
 
 class TCylinSector(TCylin):
@@ -443,6 +486,17 @@ class TCylinSector(TCylin):
     def area(self):
         "Calculate cylindrical sector area"
         return (self.extent/360.0)*self.radius_mod**2*pi
+    
+    def draw_to_image(self, image, colour):
+        draw = ImageDraw.Draw(image)
+        centre_im_x = (self.centre_mod.x/TModel_Size.DOM_X)*image.width
+        centre_im_y = (1-(self.centre_mod.y/TModel_Size.DOM_Y))*image.height
+        radius_im = (1/TModel_Size.DX)*self.radius_mod
+        start_im = -(self.start + self.extent)
+        end_im = 0 - (self.start)
+        draw.pieslice([centre_im_x - radius_im, centre_im_y - radius_im, \
+                       centre_im_x + radius_im, centre_im_y + radius_im], \
+                      start = start_im, end = end_im, fill = colour, outline = None)
 
 
 # class TTriangle (TShape):
@@ -647,6 +701,14 @@ class TPolygon(TShape):
                           self.points_mod[:1]):
                 darea += (v2.x - v1.x)*(v2.y + v1.y)
         return darea/2.0
+    
+    def draw_to_image(self, image, colour):
+        draw = ImageDraw.Draw(image)
+        coords = []
+        for pt_mod in self.points_mod:
+            coords.append((pt_mod.x/TModel_Size.DOM_X)*image.width)
+            coords.append((1-(pt_mod.y/TModel_Size.DOM_Y))*image.height)
+        draw.polygon(coords, fill = colour, outline = None)
 
 
 class TCoordSys(TRect):
@@ -835,6 +897,7 @@ class TCoordSys(TRect):
         self.round_digits = TTicksSettings.ROUND_DIGITS
         self.ticintx = (abs(TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X)*self.ticintmetx)/(self.model_max_x - self.model_min_x)
         self.ticinty = (abs(TWindow_Size.BOX_MAX_Y - TWindow_Size.BOX_MIN_Y)*self.ticintmety)/(self.model_max_y - self.model_min_y)
+
 
 if __name__ == "__main__":
     assert TG.intersect(TPoint(1,1), TPoint(5,5), TPoint(1,5), TPoint(5,1)) == True

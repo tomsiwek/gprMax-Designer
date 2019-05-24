@@ -1,8 +1,9 @@
 from copy import copy, deepcopy
 from decimal import Decimal
 import h5py
-from math import asin, acos, atan, degrees, sin, cos, radians, log10
+from math import asin, acos, atan, degrees, sin, cos, radians, log10, log2, ceil
 import os
+from PIL import Image, ImageDraw
 from random import randrange
 import subprocess
 import sys
@@ -169,6 +170,7 @@ class TApp(object):
         self.main_vertical_scrollbar.grid(row = 1, column = 0, sticky = NS)
         self.main_canvas.grid(row = 1, column = 1, sticky = NSEW)
         self.canvas_frame.grid(row = 1, column = 0, rowspan = 2, sticky = NSEW)
+        self.main_canvas.config(cursor = "pencil")
 
     def init_main_menu(self):
         self.main_menubar = Menu(self.master)
@@ -180,17 +182,28 @@ class TApp(object):
                                    command = self.read_model_file)
         self.file_menu.add_command(label = "Open materials")
         self.file_menu.add_command(label = "Save materials")
-        self.file_menu.add_command(label = "Parse to gprMax", command = self.parse_to_gprmax)
-        self.file_menu.add_command(label = "Run gprMax in terminal", command = self.run_gprmax_terminal)
-        self.file_menu.add_command(label = "Export hdf5 to ascii", command = self.export_hdf5_to_ascii)
-        self.file_menu.add_command(label = "Merge traces", command = self.merge_traces)
-        self.file_menu.add_command(label = "Plot trace", command = self.display_trace)
-        self.file_menu.add_command(label = "Plot echogram", command = self.display_echogram)
+        self.file_menu.add_command(label = "Parse to gprMax", \
+                                   command = self.parse_to_gprmax)
+        self.file_menu.add_command(label = "Run gprMax in terminal", \
+                                   command = self.run_gprmax_terminal)
+        self.file_menu.add_command(label = "Export hdf5 to ascii", \
+                                   command = self.export_hdf5_to_ascii)
+        self.file_menu.add_command(label = "Merge traces", \
+                                   command = self.merge_traces)
+        self.file_menu.add_command(label = "Plot trace", \
+                                   command = self.display_trace)
+        self.file_menu.add_command(label = "Plot echogram", \
+                                   command = self.display_echogram)
+        self.file_menu.add_command(label = "Convert model to an image", \
+                                   command = self.export_canvas_to_image)
         self.file_menu.add_command(label = "Quit!", command = self.master.destroy)
         self.edit_menu.add_command(label = "Undo", command = self.undo_operation)
-        self.edit_menu.add_command(label = "Create rectangle", command = self.create_rectangle)
-        self.edit_menu.add_command(label = "Create cylinder", command = self.create_cylin)
-        self.edit_menu.add_command(label = "Create cylindrical sector", command = self.create_cylin_sector)
+        self.edit_menu.add_command(label = "Create rectangle", \
+                                   command = self.create_rectangle)
+        self.edit_menu.add_command(label = "Create cylinder", \
+                                   command = self.create_cylin)
+        self.edit_menu.add_command(label = "Create cylindrical sector", \
+                                   command = self.create_cylin_sector)
         self.edit_menu.add_command(label = "Create polygon", command = self.create_polygon)
         self.edit_menu.add_command(label = "Recolour randomly", command = self.recolour_randomly)
         self.edit_menu.add_command(label = "Delete all", command = self.remove_all_shapes)
@@ -247,31 +260,42 @@ class TApp(object):
     
     def init_main_toolbar(self):
         self.main_toolbar = Frame(self.master, bd = 1, relief = RAISED)
-        self.rectangleButton = Button(self.main_toolbar, text = "R", relief=SUNKEN, command = self.set_mode_rectangle)
+        self.rectangleButton = Button(self.main_toolbar, text = "R", relief=SUNKEN, \
+                                      command = self.set_mode_rectangle)
         self.rectangleButton.grid(row = 0, column = 0, padx=2, pady=2)
-        self.cylinderButton = Button(self.main_toolbar, text = "C", relief=FLAT, command = self.set_mode_cylinder)
+        self.cylinderButton = Button(self.main_toolbar, text = "C", relief=FLAT, \
+                                     command = self.set_mode_cylinder)
         self.cylinderButton.grid(row = 0, column = 1, padx=2, pady=2)
-        self.cylinSectorButton = Button(self.main_toolbar, text = "S", relief=FLAT, command = self.set_mode_cylin_sector)
+        self.cylinSectorButton = Button(self.main_toolbar, text = "S", relief=FLAT, \
+                                        command = self.set_mode_cylin_sector)
         self.cylinSectorButton.grid(row = 0, column = 2, padx=2, pady=2)
-        self.polygonButton = Button(self.main_toolbar, text = "P", relief = FLAT, command = self.set_mode_polygon)
+        self.polygonButton = Button(self.main_toolbar, text = "P", relief = FLAT, \
+                                    command = self.set_mode_polygon)
         self.polygonButton.grid(row = 0, column = 4, padx=2, pady=2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 5, padx=2, pady=2)
-        self.draw_button = Button(self.main_toolbar, text = "D", relief = SUNKEN, command = self.set_mouse_mode_draw)
+        self.draw_button = Button(self.main_toolbar, text = "D", relief = SUNKEN, \
+                                  command = self.set_mouse_mode_draw)
         self.draw_button.grid(row = 0, column = 6, padx = 2, pady = 2)
-        self.move_button = Button(self.main_toolbar, text = "M", relief = FLAT, command = self.set_mouse_mode_move)
+        self.move_button = Button(self.main_toolbar, text = "M", relief = FLAT, \
+                                  command = self.set_mouse_mode_move)
         self.move_button.grid(row = 0, column = 7, padx = 2, pady = 2)
-        self.resize_button = Button(self.main_toolbar, text = "R", relief = FLAT, command = self.set_mouse_mode_resize)
+        self.resize_button = Button(self.main_toolbar, text = "R", relief = FLAT, \
+                                    command = self.set_mouse_mode_resize)
         self.resize_button.grid(row = 0, column = 8, padx = 2, pady = 2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 9, padx=2, pady=2)
-        self.parseToGprMaxButton = Button(self.main_toolbar, text = "Parse to gprMax", relief = FLAT, command = self.parse_to_gprmax)
+        self.parseToGprMaxButton = Button(self.main_toolbar, text = "Parse to gprMax", \
+                                          relief = FLAT, command = self.parse_to_gprmax)
         self.parseToGprMaxButton.grid(row = 0, column = 10, padx = 2, pady = 2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 11, padx = 2, pady = 2)
-        self.zoom_in_button = Button(self.main_toolbar, text = "+", relief = FLAT, command = self.view_zoom_in)
+        self.zoom_in_button = Button(self.main_toolbar, text = "+", relief = FLAT, \
+                                     command = self.view_zoom_in)
         self.zoom_in_button.grid(row = 0, column = 12, padx = 2, pady = 2)
-        self.zoom_out_button = Button(self.main_toolbar, text = "-", relief = FLAT, command = self.view_zoom_out)
+        self.zoom_out_button = Button(self.main_toolbar, text = "-", relief = FLAT, \
+                                      command = self.view_zoom_out)
         self.zoom_out_button.grid(row = 0, column = 13, padx = 2, pady = 2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 14, padx=2, pady=2)
-        self.exitButton = Button(self.main_toolbar, text = "Q", relief=FLAT, command = self.master.destroy)
+        self.exitButton = Button(self.main_toolbar, text = "Q", relief=FLAT, \
+                                 command = self.master.destroy)
         self.exitButton.grid(row = 0, column = 15, padx=2, pady=2)
         self.main_toolbar.grid(row = 0, column = 0, sticky = EW)
 
@@ -290,6 +314,9 @@ class TApp(object):
         self.main_canvas.bind("<Motion>", self.canvas_mouse_move)
         self.main_canvas.bind("<Double-Button-1>", self.canvas_double_click)
         self.main_canvas.bind("<Configure>", self.canvas_resize)
+        self.main_canvas.bind("<MouseWheel>", self.mouse_wheel)
+        self.main_canvas.bind("<Button-4>", self.mouse_wheel)
+        self.main_canvas.bind("<Button-5>", self.mouse_wheel)
     
     def bind_application_events(self):
         self.master.bind("<Up>", self.move_cursor_up)
@@ -299,6 +326,13 @@ class TApp(object):
         self.master.bind("<Control-Key-z>", self.undo_operation)
         self.master.bind("<Control-Key-c>", self.copy_ctrl_c)
         self.master.bind("<Control-Key-v>", self.paste_ctrl_v)
+        self.master.bind("<Key-d>", self.set_mouse_mode_draw)
+        self.master.bind("<Key-m>", self.set_mouse_mode_move)
+        self.master.bind("<Key-r>", self.set_mouse_mode_resize)
+        self.master.bind("<Key-b>", self.set_mode_rectangle)
+        self.master.bind("<Key-c>", self.set_mode_cylinder)
+        self.master.bind("<Key-s>", self.set_mode_cylin_sector)
+        self.master.bind("<Key-p>", self.set_mode_polygon)
 
     def load_toolbar_icons(self):
         try:
@@ -477,8 +511,13 @@ class TApp(object):
     def mouse_overlaps_rectangle(self, shape, x, y, radius):
         if((x >= shape.point1.x - radius and x <= shape.point1.x + radius \
             and y >= shape.point1.y - radius and y <= shape.point1.y + radius) or \
-            (x >= shape.point2.x - radius and x <= shape.point2.x + radius \
+           (x >= shape.point2.x - radius and x <= shape.point2.x + radius \
             and y >= shape.point2.y - radius and y <= shape.point2.y + radius)):
+            return True
+        elif((x >= shape.point3.x - radius and x <= shape.point3.x + radius \
+              and y >= shape.point3.y - radius and y <= shape.point3.y + radius) or \
+             (x >= shape.point4.x - radius and x <= shape.point4.x + radius \
+              and y >= shape.point4.y - radius and y <= shape.point4.y + radius)):
             return True
         return False
     
@@ -547,7 +586,8 @@ class TApp(object):
         finally:
             self.right_button_popup.grab_release()
     
-    def set_mode_rectangle(self):
+    def set_mode_rectangle(self, event = None):
+        "Set drawn shape to rectangle"
         self.mode = "Rectangle"
         self.mode_rectangle.set(True)
         self.mode_cylinder.set(False)
@@ -560,46 +600,49 @@ class TApp(object):
         # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config(relief = FLAT)
     
-    def set_mode_cylinder (self):
+    def set_mode_cylinder(self, event = None):
+        "Set drawn shape to cylinder"
         self.mode = "Cylinder"
-        self.mode_rectangle.set (False)
-        self.mode_cylinder.set (True)
-        self.mode_cylin_sector.set (False)
+        self.mode_rectangle.set(False)
+        self.mode_cylinder.set(True)
+        self.mode_cylin_sector.set(False)
         # self.mode_triangle.set (False)
-        self.mode_polygon.set (False)
-        self.rectangleButton.config (relief = FLAT)
-        self.cylinderButton.config (relief = SUNKEN)
-        self.cylinSectorButton.config (relief = FLAT)
+        self.mode_polygon.set(False)
+        self.rectangleButton.config(relief = FLAT)
+        self.cylinderButton.config(relief = SUNKEN)
+        self.cylinSectorButton.config(relief = FLAT)
         # self.triangleButton.config (relief = FLAT)
-        self.polygonButton.config (relief = FLAT)
+        self.polygonButton.config(relief = FLAT)
 
-    def set_mode_cylin_sector (self):
+    def set_mode_cylin_sector(self, event = None):
+        "Set drawn shape to cylindrical sector"
         self.mode = "CylinSector"
-        self.mode_rectangle.set (False)
-        self.mode_cylinder.set (False)
-        self.mode_cylin_sector.set (True)
+        self.mode_rectangle.set(False)
+        self.mode_cylinder.set(False)
+        self.mode_cylin_sector.set(True)
         # self.mode_triangle.set (False)
-        self.mode_polygon.set (False)
-        self.rectangleButton.config (relief = FLAT)
-        self.cylinderButton.config (relief = FLAT)
-        self.cylinSectorButton.config (relief = SUNKEN)
+        self.mode_polygon.set(False)
+        self.rectangleButton.config(relief = FLAT)
+        self.cylinderButton.config(relief = FLAT)
+        self.cylinSectorButton.config(relief = SUNKEN)
         # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config (relief = FLAT)
     
-    def set_mode_triangle (self):
-        self.mode = "Triangle"
-        self.mode_rectangle.set (False)
-        self.mode_cylinder.set (False)
-        self.mode_cylin_sector.set (False)
-        # self.mode_triangle.set (True)
-        self.mode_polygon.set (False)
-        self.rectangleButton.config (relief = FLAT)
-        self.cylinderButton.config (relief = FLAT)
-        self.cylinSectorButton.config (relief = FLAT)
-        # self.triangleButton.config (relief = SUNKEN)
-        self.polygonButton.config (relief = FLAT)
+    # def set_mode_triangle (self):
+    #     self.mode = "Triangle"
+    #     self.mode_rectangle.set (False)
+    #     self.mode_cylinder.set (False)
+    #     self.mode_cylin_sector.set (False)
+    #     # self.mode_triangle.set (True)
+    #     self.mode_polygon.set (False)
+    #     self.rectangleButton.config (relief = FLAT)
+    #     self.cylinderButton.config (relief = FLAT)
+    #     self.cylinSectorButton.config (relief = FLAT)
+    #     # self.triangleButton.config (relief = SUNKEN)
+    #     self.polygonButton.config (relief = FLAT)
 
-    def set_mode_polygon(self):
+    def set_mode_polygon(self, event = None):
+        "Set drawn shape to polygon"
         self.mode = "Polygon"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(False)
@@ -612,23 +655,26 @@ class TApp(object):
         # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config(relief = SUNKEN)
 
-    def set_mouse_mode_draw(self):
+    def set_mouse_mode_draw(self, event = None):
         self.mouse_mode = "draw"
         self.draw_button.config(relief = SUNKEN)
         self.move_button.config(relief = FLAT)
         self.resize_button.config(relief = FLAT)
+        self.main_canvas.config(cursor = "pencil")
 
-    def set_mouse_mode_move(self):
+    def set_mouse_mode_move(self, event = None):
         self.mouse_mode = "move"
         self.draw_button.config(relief = FLAT)
         self.move_button.config(relief = SUNKEN)
         self.resize_button.config(relief = FLAT)
+        self.main_canvas.config(cursor = "fleur")
 
-    def set_mouse_mode_resize(self):
+    def set_mouse_mode_resize(self, event = None):
         self.mouse_mode = "resize"
         self.draw_button.config(relief = FLAT)
         self.move_button.config(relief = FLAT)
         self.resize_button.config(relief = SUNKEN)
+        self.main_canvas.config(cursor = "sizing")
 
     def canvas_double_click(self, event):
         if(self.mouse_mode == "draw" and self.mode == "Polygon"):
@@ -707,18 +753,18 @@ class TApp(object):
     
     def remove_polygon_vertex(self, event):
         "Provisional version. Must be rewritten."
-        shape_num = self.mouse_overlaps_shape (event.x, event.y, self.radius)
+        shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if (shape_num > -1):
-            if (self.shapes [shape_num].type == "Polygon"):
+            if(self.shapes [shape_num].type == "Polygon"):
                 self.operations.append(TOperation("edit", shape = deepcopy(self.shapes[shape_num]), \
                                                   num = shape_num))
                 for i, pt in enumerate(self.shapes[shape_num].points):
-                    if (event.x <= pt.x + self.radius and event.x >= pt.x - self.radius \
-                        and event.y <= pt.y + self.radius and event.y >= pt.y - self.radius):
+                    if(event.x <= pt.x + self.radius and event.x >= pt.x - self.radius \
+                       and event.y <= pt.y + self.radius and event.y >= pt.y - self.radius):
                         break
-                self.shapes [shape_num].remove_vertex (i)
-                self.main_canvas.delete ("all")
-                self.canvas_refresh ()
+                self.shapes[shape_num].remove_vertex(i)
+                self.main_canvas.delete("all")
+                self.canvas_refresh()
 
     def canvas_interrupt(self):
         self.first_click = False
@@ -1035,6 +1081,12 @@ class TApp(object):
         elif(x >= shape.point2.x - radius and x <= shape.point2.x + radius \
              and y >= shape.point2.y - radius and y <= shape.point2.y + radius):
             return deepcopy(shape.point2)
+        elif(x >= shape.point3.x - radius and x <= shape.point3.x + radius \
+             and y >= shape.point3.y - radius and y <= shape.point3.y + radius):
+            return deepcopy(shape.point3)
+        elif(x >= shape.point4.x - radius and x <= shape.point4.x + radius \
+             and y >= shape.point4.y - radius and y <= shape.point4.y + radius):
+            return deepcopy(shape.point4)
 
     def cylinder_overlap_coord(self, shape, x, y, radius):
         "Return coordinates of cylinder's characteristic point overlaped by mouse"
@@ -1289,9 +1341,12 @@ class TApp(object):
             self.main_canvas.delete("all")
             self.canvas_refresh()
             if(overlap_num > -1):
-                pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                self.main_canvas.create_rectangle (self.first_click_pos.x, self.first_click_pos.y, pt.x, pt.y, \
-                    outline = self.shapes_colour, width = self.shapes_width)
+                pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
+                                        self.radius)
+                self.main_canvas.create_rectangle(self.first_click_pos.x, \
+                                                  self.first_click_pos.y, pt.x, \
+                                                  pt.y, outline = self.shapes_colour, \
+                                                  width = self.shapes_width)
             else:
                 self.main_canvas.create_rectangle (self.first_click_pos.x, self.first_click_pos.y, event.x, event.y, \
                     outline = self.shapes_colour, width = self.shapes_width)
@@ -1404,6 +1459,10 @@ class TApp(object):
         self.shape_buffer.point1.y += offset_y
         self.shape_buffer.point2.x += offset_x
         self.shape_buffer.point2.y += offset_y
+        self.shape_buffer.point3.x += offset_x
+        self.shape_buffer.point3.y += offset_y
+        self.shape_buffer.point4.x += offset_x
+        self.shape_buffer.point4.y += offset_y
         self.shape_buffer.update_model_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
@@ -1596,7 +1655,7 @@ class TApp(object):
         self.shape_buffer = deepcopy(self.shapes[overlap_num])
         if(overlap_num > -1):
             self.operations.append(TOperation("resize", shape = deepcopy(self.shapes[overlap_num]), \
-                                          num = overlap_num))
+                                              num = overlap_num))
         try:
             del self.shapes[overlap_num]
         except Exception as message:
@@ -1621,9 +1680,26 @@ class TApp(object):
            self.resized_point.y == self.shape_buffer.point1.y):
             self.shape_buffer.point1.x += offset_x
             self.shape_buffer.point1.y += offset_y
-        else:
+            self.shape_buffer.point3.x += offset_x
+            self.shape_buffer.point4.y += offset_y
+        elif(self.resized_point.x == self.shape_buffer.point2.x and \
+             self.resized_point.y == self.shape_buffer.point2.y):
             self.shape_buffer.point2.x += offset_x
             self.shape_buffer.point2.y += offset_y
+            self.shape_buffer.point3.y += offset_y
+            self.shape_buffer.point4.x += offset_x
+        elif(self.resized_point.x == self.shape_buffer.point3.x and \
+             self.resized_point.y == self.shape_buffer.point3.y):
+            self.shape_buffer.point1.x += offset_x
+            self.shape_buffer.point2.y += offset_y
+            self.shape_buffer.point3.x += offset_x
+            self.shape_buffer.point3.y += offset_y
+        elif(self.resized_point.x == self.shape_buffer.point4.x and \
+             self.resized_point.y == self.shape_buffer.point4.y):
+            self.shape_buffer.point1.y += offset_y
+            self.shape_buffer.point2.x += offset_x
+            self.shape_buffer.point4.x += offset_x
+            self.shape_buffer.point4.y += offset_y
         self.shape_buffer.update_model_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
@@ -1767,11 +1843,24 @@ class TApp(object):
             pt1_y = self.shape_buffer.point1.y + offset_y
             pt2_x = self.shape_buffer.point2.x
             pt2_y = self.shape_buffer.point2.y
-        else:
+        elif(self.resized_point.x == self.shape_buffer.point2.x and \
+             self.resized_point.y == self.shape_buffer.point2.y):
             pt1_x = self.shape_buffer.point1.x
             pt1_y = self.shape_buffer.point1.y
             pt2_x = self.shape_buffer.point2.x + offset_x
             pt2_y = self.shape_buffer.point2.y + offset_y
+        elif(self.resized_point.x == self.shape_buffer.point3.x and \
+             self.resized_point.y == self.shape_buffer.point3.y):
+            pt1_x = self.shape_buffer.point1.x + offset_x
+            pt1_y = self.shape_buffer.point4.y
+            pt2_x = self.shape_buffer.point4.x
+            pt2_y = self.shape_buffer.point2.y + offset_y
+        elif(self.resized_point.x == self.shape_buffer.point4.x and \
+             self.resized_point.y == self.shape_buffer.point4.y):
+            pt1_x = self.shape_buffer.point1.x
+            pt1_y = self.shape_buffer.point1.y + offset_y
+            pt2_x = self.shape_buffer.point2.x + offset_x
+            pt2_y = self.shape_buffer.point2.y
         self.main_canvas.create_rectangle(pt1_x, pt1_y, pt2_x, pt2_y, \
                                           outline = self.shape_buffer.colour, \
                                           width = self.shape_buffer.width)
@@ -1942,6 +2031,8 @@ class TApp(object):
                     self.operations.append(operation)
             elif(operation.o_type == "remove"):
                 self.shapes.insert(operation.num, operation.shape)
+            elif(operation.o_type == "paste"):
+                del self.shapes[operation.num]
             else:
                 self.operations.append(operation)
             self.main_canvas.delete("all")
@@ -2271,47 +2362,81 @@ class TApp(object):
         dt = h5file.attrs["dt"]
         ver = h5file.attrs["gprMax"]
         nrx = h5file.attrs["nrx"]
-        traces = h5file["rxs"]["rx1"]["Ez"].shape[1]
+        try:
+            traces = h5file["rxs"]["rx1"]["Ez"].shape[1]
+        except:
+            traces = 1
+        dims = 2
+        if(traces == 1):
+            dims = 1
         metafilename = (filename.split("."))[0] + "_meta.txt"
         with open(metafilename, "w") as metafile:
             metafile.write("title: {}\n".format(title))
             metafile.write("gprMax version: {}\n".format(ver))
             metafile.write("no of iterations: {}\n".format(iterations))
-            metafile.write("time increment: {}\n".format(dt))
-            metafile.write("total time: {}\n".format(dt*iterations))
+            metafile.write("time increment [s]: {}\n".format(dt))
+            metafile.write("total time [s]: {}\n".format(dt*iterations))
             metafile.write("no of traces: {}\n".format(traces))
             metafile.write("no of rxs per src: {}\n".format(nrx))
-        ezfilename = (filename.split("."))[0] + "_ez.txt"
-        ezdata = h5file["rxs"]["rx1"]["Ez"]
-        ezdata = ezdata[()].transpose()
-        with open(ezfilename, "w") as ezfile:
-            self.write_array_to_file(ezfile, ezdata)
-        hxfilename = (filename.split("."))[0] + "_hx.txt"
-        hxdata = h5file["rxs"]["rx1"]["Hx"]
-        hxdata = hxdata[()].transpose()
-        with open(hxfilename, "w") as hxfile:
-            self.write_array_to_file(hxfile, hxdata)
-        hyfilename = (filename.split("."))[0] + "_hy.txt"
-        hydata = h5file["rxs"]["rx1"]["Hy"]
-        hydata = hydata[()].transpose()
-        with open(hyfilename, "w") as hyfile:
-            self.write_array_to_file(hyfile, hydata)
+        components_window = TTraceWindow(self.master, show_fft = False)
+        components = components_window.result
+        if("Ex" in components):
+            exfilename = (filename.split("."))[0] + "_ex.txt"
+            exdata = h5file["rxs"]["rx1"]["Ex"]
+            exdata = exdata[()].transpose()
+            with open(exfilename, "w") as exfile:
+                self.write_array_to_file(exfile, exdata, dims)
+        if("Ey" in components):
+            eyfilename = (filename.split("."))[0] + "_ey.txt"
+            eydata = h5file["rxs"]["rx1"]["Ey"]
+            eydata = eydata[()].transpose()
+            with open(eyfilename, "w") as eyfile:
+                self.write_array_to_file(eyfile, eydata, dims)
+        if("Ez" in components):
+            ezfilename = (filename.split("."))[0] + "_ez.txt"
+            ezdata = h5file["rxs"]["rx1"]["Ez"]
+            ezdata = ezdata[()].transpose()
+            with open(ezfilename, "w") as ezfile:
+                self.write_array_to_file(ezfile, ezdata, dims)
+        if("Hx" in components):
+            hxfilename = (filename.split("."))[0] + "_hx.txt"
+            hxdata = h5file["rxs"]["rx1"]["Hx"]
+            hxdata = hxdata[()].transpose()
+            with open(hxfilename, "w") as hxfile:
+                self.write_array_to_file(hxfile, hxdata, dims)
+        if("Hy" in components):
+            hyfilename = (filename.split("."))[0] + "_hy.txt"
+            hydata = h5file["rxs"]["rx1"]["Hy"]
+            hydata = hydata[()].transpose()
+            with open(hyfilename, "w") as hyfile:
+                self.write_array_to_file(hyfile, hydata, dims)
+        if("Hz" in components):
+            hzfilename = (filename.split("."))[0] + "_hz.txt"
+            hzdata = h5file["rxs"]["rx1"]["Hz"]
+            hzdata = hzdata[()].transpose()
+            with open(hzfilename, "w") as hzfile:
+                self.write_array_to_file(hzfile, hzdata, dims)
         
-    def write_array_to_file(self, fileh, array):
+    def write_array_to_file(self, fileh, array, dims = 2):
         length = len(array)
-        for i, row in enumerate(array):
-            for elem in row[:-1]:
+        if(dims > 1):
+            for i, row in enumerate(array):
+                for elem in row[:-1]:
+                    fileh.write(str(elem) + ", ")
+                fileh.write(str(row[-1]))
+                if(i != (length - 1)):
+                    fileh.write("\n")
+        else:
+            for elem in array[:-1]:
                 fileh.write(str(elem) + ", ")
-            fileh.write(str(row[-1]))
-            if(i != (length - 1)):
-                fileh.write("\n")
+            fileh.write(str(array[-1]))
     
     def merge_traces(self):
         "Invoke gprMax tools to merge output files containing traces"
-        remove_files = messagebox.askyesno("Merge files", "Do you wish to remove merged files?")
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         basename = (filename.split("."))[0]
+        remove_files = messagebox.askyesno("Merge files", "Do you wish to remove merged files?")
         if(basename != ""):
             command = "start cmd /K run_gprmax.bat merge " + "\"" + basename[:-1] + "\""
             if(remove_files == True):
@@ -2319,21 +2444,21 @@ class TApp(object):
             sts = subprocess.call(command, shell = True)
     
     def display_trace(self):
-        components_dialog = TTraceWindow(self.master)
-        components = components_dialog.result
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         if(filename != ""):
+            components_dialog = TTraceWindow(self.master)
+            components = components_dialog.result
             command = "start cmd /K run_gprmax.bat ascan " + "\"" + filename + "\"" + \
                       " " + components
             sts = subprocess.call(command, shell = True)
     
     def display_echogram(self):
-        component_dialog = TEchogramWindow(self.master)
-        component = component_dialog.result
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         if(filename != ""):
+            component_dialog = TEchogramWindow(self.master)
+            component = component_dialog.result
             command = "start cmd /K run_gprmax.bat bscan " + "\"" + filename + "\"" + \
                       " " + component
             sts = subprocess.call(command, shell = True)
@@ -2356,14 +2481,16 @@ class TApp(object):
                     self.move_const_point = self.shapes[shape_num].points[0]
                 else:
                     raise NotImplementedError("Invalid shape type")
-            self.manipulated_shape_num = len(self.shapes)
+            # self.manipulated_shape_num = len(self.shapes)
             self.shape_buffer = deepcopy(self.shapes[shape_num])
+            self.shape_buffer.width = 1
     
-    def paste_shape(self, event = None, *, deltax = 15, deltay = 15):
+    def paste_shape(self, event = None):
         "Paste shape into model"
+        self.manipulated_shape_num = len(self.shapes)
         if(event is not None):
             shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
-        if(self.shape_buffer is not None and event is not None):
+        if(self.shape_buffer is not None):
             if(self.shape_buffer.type == "Rectangle"):
                 self.rectangle_click_move_insert(event, shape_num)
             elif(self.shape_buffer.type == "Cylinder"):
@@ -2374,6 +2501,7 @@ class TApp(object):
                 self.polygon_click_move_insert(event, shape_num)
             else:
                 raise NotImplementedError("Invalid shape type")
+            self.operations.append(TOperation("paste", num = self.move_shape_num))
     
     def copy_ctrl_c(self, event):
         "ctrl+z keystroke event"
@@ -2383,9 +2511,52 @@ class TApp(object):
             return
         self.copy_shape(shape_num = shape_num)
 
-    def paste_ctrl_v(self, event):
+    def paste_ctrl_v(self, event, *, deltax = 15, deltay = 15):
         "ctrl+v keystroke event"
-        pass
+        event.x = self.move_const_point.x + deltax
+        event.y = self.move_const_point.y + deltay
+        self.paste_shape(event)
+    
+    def mouse_wheel(self, event):
+        "Mouse wheel event"
+         # respond to Linux or Windows wheel event
+        if event.num == 5 or event.delta == -120:
+            self.view_zoom_out()
+        if event.num == 4 or event.delta == 120:
+            self.view_zoom_in()
+    
+    def export_canvas_to_image(self):
+        "Exports model to an image"
+        white = (255, 255, 255)
+        width = int(TModel_Size.DOM_X/TModel_Size.DX)
+        height = int(TModel_Size.DOM_Y/TModel_Size.DY)
+        model_image = Image.new("RGB", (width, height), white)
+        gray_scale = []
+        scale_step = 256/(len(self.materials) + 1)
+        if(len(self.materials) <= 256):
+            scale_step = round(scale_step)
+        for i, _ in enumerate(self.materials):
+            shade = (255 - (i+1)*scale_step, 255 - (i+1)*scale_step, \
+                     255 - (i+1)*scale_step)
+            gray_scale.append(shade)
+        gray_scale += [(0, 0, 0), (255, 255, 255)]
+        material_names = []
+        for material in self.materials:
+            material_names.append(material.name)
+        for shape in self.shapes:
+            if(shape.material in material_names):
+                ind = material_names.index(shape.material)
+                draw_colour = gray_scale[ind]
+            elif(shape.material == "pec"):
+                draw_colour = gray_scale[-2]
+            else:
+                draw_colour = gray_scale[-1]
+            shape.draw_to_image(model_image, draw_colour)
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                                              filetypes = [("Portable Network Graphics", "*.png"), \
+                                                           ("All files", "*.*")])
+        if(filename != ""):
+            model_image.save(filename)
 
 
 def centre_window(window):
@@ -2411,3 +2582,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# EOF

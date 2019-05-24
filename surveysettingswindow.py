@@ -17,11 +17,11 @@ class TSurveySettingsWindow(simpledialog.Dialog):
         dy = TModel_Size.DY
         # dz = min(dx, dy)
         # dt = self.calculate_cfl_dt(dx = dx, dy = dy, dz = dz)
-        dt = 0.0
+        tsf = 1.0
         maxy = TModel_Size.DOM_Y
         twt = self.calculate_two_way_time(maxy = maxy)
 
-        width = 15
+        width = 20
         Label(master, text = "time stablity factor:", anchor = W, width = width).grid(row = 0, sticky = EW)
         Label(master, text = "time window [s]:", anchor = W, width = width).grid(row = 0, column = 2, sticky = EW, padx = (5,0))
         Label(master, text = "waveform:", anchor = W, width = width).grid(row = 1, sticky = EW)
@@ -44,10 +44,10 @@ class TSurveySettingsWindow(simpledialog.Dialog):
         Label(master, text = "max x [m]:", anchor = W, width = width).grid(row = 13, column = 0, sticky = EW)
         Label(master, text = "max y [m]:", anchor = W, width = width).grid(row = 13, column = 2, sticky = EW, padx = (5,0))
 
-        self.dt = Entry(master, width = width)
+        self.tsf = Entry(master, width = width)
         format_str = "." + str(TTicksSettings.ROUND_DIGITS + 1) + "g"
-        self.dt.insert(0, format(dt, format_str))
-        self.dt.grid(row = 0, column = 1, sticky = EW)
+        self.tsf.insert(0, format(tsf, format_str))
+        self.tsf.grid(row = 0, column = 1, sticky = EW)
 
         self.time_window = Entry(master, width = width)
         self.time_window.insert(0, format(twt, format_str))
@@ -149,7 +149,7 @@ class TSurveySettingsWindow(simpledialog.Dialog):
             self.rx_max_x.config(state = DISABLED)
             self.rx_max_y.config(state = DISABLED)
 
-        return self.dt
+        return self.tsf
 
     def change_survey_type(self):
         num = self.scan_type.get()

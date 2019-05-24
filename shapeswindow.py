@@ -1,5 +1,6 @@
 from copy import deepcopy
-from tkinter import Listbox, Frame, Scrollbar, messagebox, Menu, simpledialog
+from tkinter import Listbox, Frame, Scrollbar, messagebox, Menu, simpledialog, \
+                    Event
 from tkinter import NSEW, EW, NS, W, E, VERTICAL, BOTH, END
 from tkinter.ttk import Combobox
 
@@ -121,6 +122,9 @@ class TShapesWindow(Frame):
         self.shapes_list.selection_set(shape_num)
         self.shapes_list.activate(shape_num)
         self.shapes_list.focus_set()
+        if(shape_num > -1):
+            # self.shapes_list.yview_scroll(shape_num,"units")
+            self.shapes_list.see(shape_num)
 
     def init_popup_menu (self):
         "Inits shapes pane pup-up menu"
@@ -303,6 +307,6 @@ class TShapesWindow(Frame):
                 messagebox.showerror ("Error while manipulating shapes list!", message)
                 return
     
-    def paste_shape(self):
+    def paste_shape(self, *, deltax = 15, deltay = 15):
         "Paste selected shape from buffer"
-        pass
+        self.TApp.paste_ctrl_v(Event())
