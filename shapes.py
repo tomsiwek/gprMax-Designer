@@ -5,22 +5,31 @@ from random import randrange
 from tkinter import Tk, Canvas, Menu, messagebox, BooleanVar, Frame, Button
 from tkinter import LEFT, TOP, X, FLAT, RAISED, SUNKEN, ARC, PIESLICE, CHORD
 
-from settings import TWindow_Size, TModel_Size, TTicksSettings
-from point import TPoint
-from geometry import TGeometry as TG
 from abc import ABC, abstractmethod
+from geometry import TGeometry as TG
+from point import TPoint
+from random import randrange
+from settings import TWindow_Size, TModel_Size, TTicksSettings, TColours
+
 
 
 class TShape(ABC):
     """
     Abstract base class for shapes (i.e. rectangles, triangles and cylinders).
     """
-    def __init__(self, width = None, colour = None, fill = "", material = "pec"):
+    def __init__(self, width = None, colour = None, fill = "", material = "pec", \
+                 shape_type = "None"):
+        self.COLOURS = ("red", "blue", "yellow", "green", "orange", "purple", \
+                        "indigo", "fuchsia", "white", "navy", "brown")
         self.width = width
         self.colour = colour
-        self.fill = fill
-        self.type = "None"
+        self.type = shape_type
         self.material = material
+        num_of_colours = len(self.COLOURS)
+        random_index = randrange(0, num_of_colours)
+        self.fill = self.COLOURS[random_index]
+        # Adjust shape's position on screen according to new model coordinates
+        self.update_window_positions()
     
     @abstractmethod
     def draw(self):
@@ -78,25 +87,21 @@ class TRect(TShape):
             self.point4 = TPoint(self.point2.x, self.point1.y)
             # Coordinates in model's system
             self.update_model_positions()
-        # Material
-        self.material = material
-        # Line colour and width
-        self.colour = colour
-        self.fill = fill
-        self.width = width
-        # Type of shape
-        self.type = "Rectangle"
-        # Adjust shape's position on screen according to new model coordinates
-        self.update_window_positions()
+        super().__init__(colour = colour, width = width, shape_type = "Rectangle", \
+                         material = material)
 
     def draw(self, canvas):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         # visible = self.visible(min_model, max_model)
         # if(visible):
+        if(TColours.FILL):
+            fill = self.fill
+        else:
+            fill = None
         canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, \
                                 self.point2.y, outline = self.colour, \
-                                fill = self.fill, width = self.width)
+                                fill = fill, width = self.width)
         # elif(visible == "partly"):
         #     lower_x = max(self.point1.x, TWindow_Size.BOX_MIN_X)
         #     lower_y = min(self.point1.y, TWindow_Size.BOX_MIN_Y)
@@ -188,39 +193,35 @@ class TCylin(TShape):
     def __init__(self, centre = None, radius = None, centre_x = None, centre_y = None, colour = "black", fill = "", \
         width = 1, material = "pec", centre_mod = None, radius_mod = None):
         # Cylinder middle point
-        if (centre_mod and radius_mod):
-            self.centre_mod = copy (centre_mod)
+        if(centre_mod and radius_mod):
+            self.centre_mod = copy(centre_mod)
             self.radius_mod = radius_mod
         else:
-            self.centre = TPoint ()
-            if (centre):
-                self.centre = copy (centre)
-            elif (centre_x and centre_y):
+            self.centre = TPoint()
+            if(centre):
+                self.centre = copy(centre)
+            elif(centre_x and centre_y):
                 self.centre.x = centre_x
                 self.centre.y = centre_y
             # Cylinder radius
             self.radius = radius
             # Coordinates in model's system
             self.update_model_positions()
-        # Material
-        self.material = material
-        # Line colour and width
-        self.colour = colour
-        self.fill = fill
-        self.width = width
-        # Type of shape
-        self.type = "Cylinder"
-        # Adjust shape's position on screen according to new model coordinates
-        self.update_window_positions()
+        super().__init__(colour = colour, width = width, shape_type = "Cylinder", \
+                         material = material)
 
     def draw(self, canvas):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         # visible = self.visible(min_model, max_model)
         # if(visible):
+        if(TColours.FILL):
+            fill = self.fill
+        else:
+            fill = None
         canvas.create_oval(self.centre.x - self.radius, self.centre.y - self.radius, \
                            self.centre.x + self.radius, self.centre.y + self.radius, \
-                           outline = self.colour, fill = self.fill, width = self.width)
+                           outline = self.colour, fill = fill, width = self.width)
         # elif(visible == "partly"):
         #     self._draw_partly_visible(canvas)
         if(TG.point_visible(self.centre_mod, min_model, max_model)):
@@ -342,7 +343,7 @@ class TCylin(TShape):
                      fill = colour, outline = None)
 
 
-class TCylinSector(TCylin):
+class TCylinSector(TShape):
     """
     Class represents 2-dimensional cylinder sector (slice).
     Inherits after TCylin class.
@@ -352,7 +353,7 @@ class TCylinSector(TCylin):
         boundary_pt1 = None, boundary_pt2 = None, start = None, extent = None, material = "pec", centre_mod = None, radius_mod = None):
         self.boundary_pt1 = TPoint()
         self.boundary_pt2 = TPoint()
-        if (centre_mod and radius_mod and start != None and extent):
+        if(centre_mod and radius_mod and start != None and extent):
             self.centre_mod = copy(centre_mod)
             self.radius_mod = radius_mod
             self.start = start
@@ -361,20 +362,20 @@ class TCylinSector(TCylin):
             self.centre = TPoint()
             if(centre):
                 self.centre = copy(centre)
-            elif (centre_x and centre_y):
+            elif(centre_x and centre_y):
                 self.centre.x = centre_x
                 self.centre.y = centre_y
-            if (radius is not None):
+            if(radius is not None):
                 # Cylinder radius
                 self.radius = round(radius)
-            if (boundary_pt1):
+            if(boundary_pt1):
                 self.boundary_pt1 = copy(boundary_pt1)
-            if (boundary_pt2):
+            if(boundary_pt2):
                 self.boundary_pt2 = copy(boundary_pt2)
-            elif (boundary_pt1 and start and extent):
-                self.boundary_pt1.x = int (self.centre.x + cos(radians(start))*self.radius)
-                self.boundary_pt1.y = int (self.centre.y - sin(radians(start))*self.radius)
-            elif (not boundary_pt2 and start and extent):
+            elif(boundary_pt1 and start and extent):
+                self.boundary_pt1.x = int(self.centre.x + cos(radians(start))*self.radius)
+                self.boundary_pt1.y = int(self.centre.y - sin(radians(start))*self.radius)
+            elif(not boundary_pt2 and start and extent):
                 self.boundary_pt2.x = int(self.centre.x + cos(radians(start + extent))*self.radius)
                 self.boundary_pt2.y = int(self.centre.y - sin(radians(start + extent))*self.radius)
             # Compute start and extent angles
@@ -382,7 +383,7 @@ class TCylinSector(TCylin):
                 self.start = start
             elif(start == None and boundary_pt1 and boundary_pt2):
                 if(self.boundary_pt1.x >= self.centre.x):
-                    self.start = degrees (asin((self.centre.y-self.boundary_pt1.y)/self.radius))
+                    self.start = degrees(asin((self.centre.y-self.boundary_pt1.y)/self.radius))
                 else:
                     self.start = (180 - degrees(asin((self.centre.y-self.boundary_pt1.y)/self.radius)))
                 if(self.start < 0):
@@ -412,26 +413,27 @@ class TCylinSector(TCylin):
             self.boundary_pt2.y = int (self.centre.y - sin (radians (self.start + self.extent) )*self.radius )
             # Coordinates in model's system
             self.update_model_positions()
-        # Material
-        self.material = material
-        # Line colour and width
-        self.colour = colour
-        self.fill = fill
-        self.width = width
-        # Shape type
-        self.type = "CylinSector"
-        # Material
-        self.material = material
-        # Two boundary points defining slice angle
-        # TODO: Add posibility to pass boundry points coordinates as separate real numbers, like centre
-        self.update_window_positions ()
+            super().__init__(colour = colour, width = width, shape_type = "CylinSector", \
+                             material = material)
 
     def draw (self, canvas):
-        canvas.create_arc (self.centre.x - self.radius, self.centre.y - self.radius, self.centre.x + self.radius, self.centre.y + self.radius, \
-            outline = self.colour, fill = self.fill, width = self.width, style = PIESLICE, start = self.start, extent = self.extent)
-        canvas.create_oval (self.centre.x-3, self.centre.y-3, self.centre.x+3, self.centre.y+3, outline = self.colour, fill = self.colour, width = 1)
-        canvas.create_oval (self.boundary_pt1.x-3, self.boundary_pt1.y-3, self.boundary_pt1.x+3, self.boundary_pt1.y+3, outline = self.colour, fill = self.colour, width = 1)
-        canvas.create_oval (self.boundary_pt2.x-3, self.boundary_pt2.y-3, self.boundary_pt2.x+3, self.boundary_pt2.y+3, outline = self.colour, fill = self.colour, width = 1)
+        if(TColours.FILL):
+            fill = self.fill
+        else:
+            fill = None
+        canvas.create_arc(self.centre.x - self.radius, self.centre.y - self.radius, \
+                          self.centre.x + self.radius, self.centre.y + self.radius, \
+                          outline = self.colour, fill = fill, width = self.width, \
+                          style = PIESLICE, start = self.start, extent = self.extent)
+        canvas.create_oval(self.centre.x-3, self.centre.y-3, self.centre.x+3, \
+                           self.centre.y+3, outline = self.colour, fill = self.colour, \
+                           width = 1)
+        canvas.create_oval(self.boundary_pt1.x-3, self.boundary_pt1.y-3, \
+                           self.boundary_pt1.x+3, self.boundary_pt1.y+3, \
+                           outline = self.colour, fill = self.colour, width = 1)
+        canvas.create_oval(self.boundary_pt2.x-3, self.boundary_pt2.y-3, \
+                           self.boundary_pt2.x+3, self.boundary_pt2.y+3, \
+                           outline = self.colour, fill = self.colour, width = 1)
 
     def update_window_positions (self):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
@@ -561,8 +563,6 @@ class TPolygon(TShape):
     Class represents discretionary polygon.
     """
     def __init__(self, points = [], colour = "black", fill = "", width = 1, material = "pec", points_mod = []):
-        super().__init__(width, colour, fill)
-        self.type = "Polygon"
         if(points_mod):
             self.points_mod = self._remove_duplicates(points_mod)
             self.update_window_positions()
@@ -574,12 +574,15 @@ class TPolygon(TShape):
             self.unwrap_points ()
             # Coordinates in model's system
             self.update_model_positions()
-            self.update_window_positions()
-        # Material
-        self.material = material
+        super().__init__(colour = colour, width = width, shape_type = "Polygon", \
+                         material = material)
 
     def draw(self, canvas):
-        canvas.create_polygon(self.points_unwrapped, outline = self.colour, fill = self.fill, width = self.width)
+        if(TColours.FILL):
+            fill = self.fill
+        else:
+            fill = None
+        canvas.create_polygon(self.points_unwrapped, outline = self.colour, fill = fill, width = self.width)
         for pt in self.points:
             canvas.create_oval(pt.x-3, pt.y-3, pt.x+3, pt.y+3, outline = self.colour, fill = self.colour, width = 1)
     
@@ -594,8 +597,8 @@ class TPolygon(TShape):
                                                   min_window, max_window))
         self.points_unwrapped = []
         for pt in self.points:
-            self.points_unwrapped.append (pt.x)
-            self.points_unwrapped.append (pt.y)
+            self.points_unwrapped.append(pt.x)
+            self.points_unwrapped.append(pt.y)
     
     def remove_vertex(self, vertex_num):
         if(len (self.points) <= 3):
@@ -747,22 +750,56 @@ class TCoordSys(TRect):
         self.round_digits = round_digits
 
     def draw(self, canvas):
-        if(self.grid):
-            self.draw_grid(canvas)
-        # self.write_axis_labels(canvas)
+        # if(self.grid):
+        #     self.draw_grid(canvas)
         canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, self.point2.y, outline = self.colour, width = self.width)
     
-    def draw_ticks(self, canvas):
+    def draw_ticks(self, canvas, grid = False):
         width = abs(self.point2.x - self.point1.x)
         height = abs(self.point1.y - self.point2.y)
-        start_x = min(self.point1.x, self.point2.x)
-        start_y = max(self.point1.y, self.point2.y)
-        for i in range(round((width)/(self.ticintx)) - 1):
-            canvas.create_line (start_x + (i + 1)*self.ticintx, start_y, start_x + (i + 1)*self.ticintx, \
-                start_y - self.ticlenx, fill = self.colour, width = self.width)
-        for i in range(round((height)/(self.ticinty)) - 1):
-            canvas.create_line (start_x, start_y - (i + 1)*self.ticinty, start_x + self.ticleny, \
-                start_y - (i + 1)*self.ticinty, fill = self.colour, width = self.width)
+        current_tick_x = TG.round_to_multiple(self.model_min_x, self.ticintmetx)
+        current_pos_x = round((current_tick_x - self.model_min_x)*width/ \
+                              (self.model_max_x - self.model_min_x)) + TWindow_Size.BOX_MIN_X
+        current_tick_y = TG.round_to_multiple(self.model_min_y, self.ticintmety)
+        current_pos_y = TWindow_Size.BOX_MIN_Y - round((current_tick_y - self.model_min_y)*\
+                        height/(self.model_max_y - self.model_min_y))
+        text_offset = 7
+        if(current_tick_x < self.model_min_x):
+            current_tick_x += self.ticintmetx
+            current_pos_x += self.ticintx
+        if(current_tick_y < self.model_min_y):
+            current_tick_y += self.ticintmety
+            current_pos_y -= self.ticinty
+        border_x = min(self.point1.x, self.point2.x)
+        border_y = max(self.point1.y, self.point2.y)
+        while(current_tick_x <= self.model_max_x):
+            if(grid):
+                canvas.create_line(round(current_pos_x),  border_y - self.ticlenx, \
+                                   round(current_pos_x), self.margy, \
+                                   fill = self.grid_colour, width = self.width)
+            else:
+                canvas.create_line(round(current_pos_x), border_y, \
+                                round(current_pos_x), border_y - \
+                                self.ticlenx, fill = self.colour, width = self.width)
+                label_x = str(self.label_round(current_tick_x, self.round_digits))
+                canvas.create_text(round(current_pos_x), border_y + text_offset, \
+                                        text = label_x)
+            current_tick_x += self.ticintmetx
+            current_pos_x += self.ticintx
+        while(current_tick_y <= self.model_max_y):
+            if(grid):
+                canvas.create_line(border_x + self.ticleny, round(current_pos_y), \
+                                   self.maxx - self.margx, round(current_pos_y), \
+                                   fill = self.grid_colour, width = self.width)
+            else:
+                canvas.create_line(border_x, round(current_pos_y), \
+                                border_x + self.ticleny, round(current_pos_y), \
+                                fill = self.colour, width = self.width)
+                label_y = str(self.label_round(current_tick_y, self.round_digits))
+                canvas.create_text(border_x - text_offset, round(current_pos_y), \
+                                text = label_y)
+            current_tick_y += self.ticintmety
+            current_pos_y -= self.ticinty
     
     def obscure_protruding_edges(self, canvas):
         "Obscures edges protruding from model area with background-coloured rectangles"
@@ -803,23 +840,43 @@ class TCoordSys(TRect):
                 start_y - (i + 1)*self.ticinty, fill = self.grid_colour, width = self.width)
     
     def write_axis_labels(self, canvas):
-        width = abs(self.point2.x - self.point1.x)
-        height = abs(self.point1.y - self.point2.y)
-        start_x = min(self.point1.x, self.point2.x)
-        start_y = max(self.point1.y, self.point2.y)
-        try:
-            for i in range(round((width)/(self.ticintx)) + 1):
-                canvas.create_text(start_x + i*self.ticintx, start_y + 7, \
-                                   text = str(self.label_round(i*self.ticintmetx + \
-                                                               self.model_min_x, \
-                                                               self.round_digits)))
-            for i in range(round((height)/(self.ticinty)) + 1):
-                canvas.create_text(start_x - 7, start_y - i*self.ticinty, \
-                                   text = str(self.label_round(self.model_min_y + \
-                                                               i*self.ticintmety, \
-                                                               self.round_digits)))
-        except Exception as message:
-            messagebox.showerror("Error while writing axis labels!", message)
+        debug = True
+        if(debug):
+            marg = 5
+            start_x = min(self.point1.x, self.point2.x)
+            start_y = max(self.point1.y, self.point2.y)
+            end_x = max(self.point1.x, self.point2.x)
+            end_y = min(self.point1.y, self.point2.y)
+            canvas.create_text(start_x, start_y + marg, \
+                               text = str(self.label_round(self.model_min_x, \
+                                                           self.round_digits)))
+            canvas.create_text(end_x, start_y + marg, \
+                               text = str(self.label_round(self.model_max_x, \
+                                                           self.round_digits)))
+            canvas.create_text(start_x - marg, start_y, \
+                               text = str(self.label_round(self.model_min_y, \
+                                                           self.round_digits)))
+            canvas.create_text(start_x - marg, end_y, \
+                               text = str(self.label_round(self.model_max_y, \
+                                                           self.round_digits)))
+        else:
+            width = abs(self.point2.x - self.point1.x)
+            height = abs(self.point1.y - self.point2.y)
+            start_x = min(self.point1.x, self.point2.x)
+            start_y = max(self.point1.y, self.point2.y)
+            try:
+                for i in range(round((width)/(self.ticintx)) + 1):
+                    canvas.create_text(start_x + i*self.ticintx, start_y + 7, \
+                                    text = str(self.label_round(i*self.ticintmetx + \
+                                                                self.model_min_x, \
+                                                                self.round_digits)))
+                for i in range(round((height)/(self.ticinty)) + 1):
+                    canvas.create_text(start_x - 7, start_y - i*self.ticinty, \
+                                    text = str(self.label_round(self.model_min_y + \
+                                                                i*self.ticintmety, \
+                                                                self.round_digits)))
+            except Exception as message:
+                messagebox.showerror("Error while writing axis labels!", message)
     
     def label_round(self, label, digits):
         if(isinstance(label, float)):
@@ -836,7 +893,6 @@ class TCoordSys(TRect):
         self.model_max_y = TModel_Size.MAX_Y
         self.ticintx = float((self.maxx - self.minx - 2*self.margx)/(self.model_max_x - self.model_min_x))
         self.ticinty = float((self.maxy - self.miny - 2*self.margx)/(self.model_max_y - self.model_min_y))
-        # self.draw_grid ()
 
     def window_size_update(self):
         self.minx = TWindow_Size.MIN_X
@@ -855,24 +911,46 @@ class TCoordSys(TRect):
         mod_min_y = TModel_Size.MIN_Y
         len_x = round(mod_max_x - mod_min_x, TTicksSettings.ROUND_DIGITS)
         len_y = round(mod_max_y - mod_min_y, TTicksSettings.ROUND_DIGITS)
-        if(len_x > len_y):
-            # Model box extends in x direction
-            if((len_y/len_x)*canvas_width > canvas_height):
-                box_half_width = int((canvas_height)/2)
+        if(TModel_Size.FIT):
+            if(len_x > len_y):
+                # Model box extends in x direction
+                if((len_y/len_x)*canvas_width > canvas_height):
+                    box_half_width = int((canvas_height)/2)
+                else:
+                    box_half_width = int((canvas_width)/2)
+                box_half_height = int((len_y/len_x)*(box_half_width))
+            elif(len_x < len_y):
+                # Model box extends in y direction
+                if((len_x/len_y)*canvas_height > canvas_width):
+                    box_half_height = int((canvas_width)/2)
+                else:
+                    box_half_height = int((canvas_height)/2)
+                box_half_width = int((len_x/len_y)*(box_half_height))
             else:
-                box_half_width = int((canvas_width)/2)
-            box_half_height = int((len_y/len_x)*(box_half_width))
-        elif((mod_max_x - mod_min_x) < (mod_max_y - mod_min_y)):
-            # Model box extends in y direction
-            if((len_x/len_y)*canvas_height > canvas_width):
-                box_half_height = int((canvas_width)/2)
-            else:
-                box_half_height = int((canvas_height)/2)
-            box_half_width = int((len_x/len_y)*(box_half_height))
+                # Model box extends euqally in both directions
+                box_half_width = int(min(self.maxx - self.minx - 2*self.margx, \
+                                     self.maxy - self.miny - 2*self.margy)/2)
+                box_half_height = box_half_width
         else:
-            # Model box extends euqally in both directions
-            box_half_width = int(min(self.maxx - self.minx - 2*self.margx, self.maxy - self.miny - 2*self.margy)/2)
-            box_half_height = box_half_width
+            # View is magnified and window area is fully covered
+            # box_half_width = int(min(self.maxx - self.minx - 2*self.margx, \
+            #                          self.maxy - self.miny - 2*self.margy)/2)
+            # box_half_height = box_half_width
+            # len_x_mon = TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X
+            # len_y_mon = TWindow_Size.BOX_MIN_Y - TWindow_Size.BOX_MAX_Y
+            # if(len_x_mon > len_y_mon):
+            #     TModel_Size.MAX_X = TModel_Size.DOM_X
+            #     TModel_Size.MAX_Y = round(TModel_Size.DOM_X/len_x_mon*len_y_mon, \
+            #                               TTicksSettings.ROUND_DIGITS)
+            # elif(len_x_mon < len_y_mon):
+            #     TModel_Size.MAX_X = round(TModel_Size.DOM_Y/len_y_mon*len_x_mon, \
+            #                               TTicksSettings.ROUND_DIGITS)
+            #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
+            # else:
+            #     TModel_Size.MAX_X = TModel_Size.DOM_X
+            #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
+            box_half_width = int((self.maxx - self.minx - 2*self.margx)/2)
+            box_half_height = int((self.maxy - self.miny - 2*self.margy)/2)
         self.point1.x = centre_x - box_half_width
         self.point1.y = centre_y - box_half_height
         self.point2.x = centre_x + box_half_width

@@ -21,6 +21,7 @@ class TModel_Size():
     DOM_Y   = 10.00
     DX      =  0.01
     DY      =  0.01
+    FIT     = True
 
 
 class TTicksSettings():
@@ -50,3 +51,10 @@ class TSurveySettings():
     RX_STEP_Y   = 0.0
     RX_MAX_X    = 0.0
     RX_MAX_Y    = 0.0
+    MESSAGES    = "yes"
+    GEOM_VIEW   = "no"
+    GEOM_FILE   = ""
+
+class TColours():
+    "Colours diplay settings."
+    FILL = False

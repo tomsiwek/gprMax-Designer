@@ -25,25 +25,34 @@ class TParser (object):
         shapes -- list of shapes (TShape subclasses: TRect, TCylin, TCylinSector, TTriangle, TPolygon)
         """
         TParser.PARSE_STRING = ""
-        TParser.THICKNESS_2D = min (TModel_Size.DX, TModel_Size.DY)
+        TParser.THICKNESS_2D = min(TModel_Size.DX, TModel_Size.DY)
         # Title
         if (title):
             TParser.PARSE_STRING += "#title: " + title + "\n"
         # Domain
-        TParser.PARSE_STRING += "#domain: " + str(TModel_Size.DOM_X) + " " + str(TModel_Size.DOM_Y) + \
-            " " + str(TParser.THICKNESS_2D) + "\n"
+        TParser.PARSE_STRING += "#domain: " + str(TModel_Size.DOM_X) + " " + \
+                                str(TModel_Size.DOM_Y) + " " + \
+                                str(TParser.THICKNESS_2D) + "\n"
         # dx_dy_dz
-        TParser.PARSE_STRING += "#dx_dy_dz: " + str(TModel_Size.DX) + " " + str(TModel_Size.DY) + \
-            " " + str(TParser.THICKNESS_2D) + "\n"
+        TParser.PARSE_STRING += "#dx_dy_dz: " + str(TModel_Size.DX) + " " + \
+                                str(TModel_Size.DY) + " " + \
+                                str(TParser.THICKNESS_2D) + "\n"
         # Time window
         TParser.PARSE_STRING += "#time_window: " + str(TSurveySettings.TIME_WINDOW) + "\n"
         TParser.PARSE_STRING += "\n"
         # Wavefrom
-        TParser.PARSE_STRING += "#waveform: " + TSurveySettings.WAVE_TYPE + " " + str(TSurveySettings.AMPLITUDE) + " " + str(TSurveySettings.FREQUENCY) + " mysource\n"
+        TParser.PARSE_STRING += "#waveform: " + TSurveySettings.WAVE_TYPE + " " + \
+                                str(TSurveySettings.AMPLITUDE) + " " + \
+                                str(TSurveySettings.FREQUENCY) + " mysource\n"
         # Transmitter
-        TParser.PARSE_STRING += "#" + TSurveySettings.SRC_TYPE + ": z " + str(TSurveySettings.SRC_X) + " " + str(TSurveySettings.SRC_Y) + " " + str(TParser.FRONT_2D) + " mysource\n"
+        TParser.PARSE_STRING += "#" + TSurveySettings.SRC_TYPE + ": z " + \
+                                str(TSurveySettings.SRC_X) + " " + \
+                                str(TSurveySettings.SRC_Y) + " " + \
+                                str(TParser.FRONT_2D) + " mysource\n"
         # Receiver
-        TParser.PARSE_STRING += "#rx: " + str(TSurveySettings.RX_X) + " " + str(TSurveySettings.RX_Y) + " " + str(TParser.FRONT_2D) + "\n"
+        TParser.PARSE_STRING += "#rx: " + str(TSurveySettings.RX_X) + " " + \
+                                str(TSurveySettings.RX_Y) + " " + \
+                                str(TParser.FRONT_2D) + "\n"
         # rx array
         if(TSurveySettings.TYPE == "rx_array"):
             TParser.PARSE_STRING += "#rx_array: " + str(TSurveySettings.RX_X) + " " + str(TSurveySettings.RX_Y) + " " + str(TParser.FRONT_2D) + \
@@ -63,18 +72,29 @@ class TParser (object):
         TParser.PARSE_STRING += "\n"
         # Shapes
         for single_shape in shapes:
-            if (single_shape.type == "Rectangle"):
+            if(single_shape.type == "Rectangle"):
                 TParser.parse_rectangle(single_shape)
-            elif (single_shape.type == "Cylinder"):
+            elif(single_shape.type == "Cylinder"):
                 TParser.parse_cylinder(single_shape)
-            elif (single_shape.type == "CylinSector"):
+            elif(single_shape.type == "CylinSector"):
                 TParser.parse_cylinSector(single_shape)
             # elif (single_shape.type == "Triangle"):
             #     TParser.parse_triangle(single_shape)
-            elif (single_shape.type == "Polygon"):
+            elif(single_shape.type == "Polygon"):
                 TParser.parse_polygon(single_shape)
             else:
-                raise Exception ("Invalid shape in shapes' list!")
+                raise Exception("Invalid shape in shapes' list!")
+        # Messages:
+        if(TSurveySettings.MESSAGES == "no"):
+            TParser.PARSE_STRING += "#messages: n\n"
+        # Geometry view
+        if(TSurveySettings.GEOM_VIEW == "yes"):
+            TParser.PARSE_STRING += "#geometry_view: 0.0 0.0 0.0 " + str(TModel_Size.DOM_X) + \
+                                    " " + str(TModel_Size.DOM_Y) + " " + \
+                                    str(TParser.THICKNESS_2D) + " " + \
+                                    str(TModel_Size.DX) + " " + str(TModel_Size.DY) + \
+                                    " " + str(TParser.THICKNESS_2D) + " " + \
+                                    TSurveySettings.GEOM_FILE + " n\n"
         # except Exception as message:
             # messagebox.showerror ("Parser error!", message)
         return TParser.PARSE_STRING

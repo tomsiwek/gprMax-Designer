@@ -1,7 +1,7 @@
 from copy import deepcopy
 from tkinter import Listbox, Frame, Scrollbar, messagebox, Menu, simpledialog, \
                     Event
-from tkinter import NSEW, EW, NS, W, E, VERTICAL, BOTH, END
+from tkinter import NSEW, EW, NS, W, E, VERTICAL, BOTH, END, EXTENDED
 from tkinter.ttk import Combobox
 
 from operation import TOperation
@@ -19,7 +19,7 @@ class TShapesWindow(Frame):
 
     def init_widgets(self):
         # Listbox
-        self.shapes_list = Listbox(self, exportselection = False)
+        self.shapes_list = Listbox(self, exportselection = False, selectmode = EXTENDED)
         # self.shapes_list.config(exportselection = 0)
         self.grid_columnconfigure(0, weight = 1, minsize = 300)
         self.grid_rowconfigure(0, weight = 1)
@@ -43,6 +43,9 @@ class TShapesWindow(Frame):
         # Right click popup menu
         self.init_popup_menu()
         self.shapes_list.bind("<Button-3>", self.show_popoup_menu)
+
+        # Delete key removes selected shape(s)
+        self.shapes_list.bind("<Delete>", self.remove_shape)
    
     def update_list(self, shapes, *, swap = False):
         try:
@@ -53,14 +56,20 @@ class TShapesWindow(Frame):
         coord_string = ""
         for i, single_shape in enumerate(shapes):
             if(single_shape.type == "Rectangle"):
-                coord_string = "(" + str(round(single_shape.point1_mod.x, self.round_digits)) + ", " + str(round(single_shape.point1_mod.y, self.round_digits)) + "), (" + \
-                    str(round (single_shape.point2_mod.x, self.round_digits)) + ", " + str(round(single_shape.point2_mod.y, self.round_digits)) + ")"
+                coord_string = "(" + str(round(single_shape.point1_mod.x, self.round_digits)) + \
+                               ", " + str(round(single_shape.point1_mod.y, self.round_digits)) + \
+                               "), (" + str(round (single_shape.point2_mod.x, self.round_digits)) + \
+                               ", " + str(round(single_shape.point2_mod.y, self.round_digits)) + ")"
             elif(single_shape.type == "Cylinder"):
-                coord_string = "(" + str(round(single_shape.centre_mod.x, self.round_digits)) + ", " + str(round(single_shape.centre_mod.y, self.round_digits)) + "), " + \
-                    str(round(single_shape.radius_mod, self.round_digits))
+                coord_string = "(" + str(round(single_shape.centre_mod.x, self.round_digits)) + \
+                                ", " + str(round(single_shape.centre_mod.y, self.round_digits)) + \
+                                "), " + str(round(single_shape.radius_mod, self.round_digits))
             elif(single_shape.type == "CylinSector"):
-                coord_string = "(" + str(round(single_shape.centre_mod.x, self.round_digits)) + ", " + str(round(single_shape.centre_mod.y, self.round_digits)) + "), " + \
-                    str(round(single_shape.radius_mod, self.round_digits)) + ", " + str(round(single_shape.start, self.round_digits)) + ", " + str(round(single_shape.extent, self.round_digits))
+                coord_string = "(" + str(round(single_shape.centre_mod.x, self.round_digits)) + \
+                               ", " + str(round(single_shape.centre_mod.y, self.round_digits)) + \
+                               "), " + str(round(single_shape.radius_mod, self.round_digits)) + \
+                               ", " + str(round(single_shape.start, self.round_digits)) + \
+                               ", " + str(round(single_shape.extent, self.round_digits))
             # elif(single_shape.type == "Triangle"):
             #     coord_string = "(" + str (round (single_shape.point1_mod.x, self.round_digits) ) + ", " + str (round (single_shape.point1_mod.y, self.round_digits) ) + "), (" + \
             #         str(round(single_shape.point2_mod.x, self.round_digits)) + ", " + str(round (single_shape.point2_mod.y, self.round_digits)) + "), (" + \
@@ -95,8 +104,12 @@ class TShapesWindow(Frame):
                     return
 
     def shapes_list_selected_item(self, event):
+        "Handle listbox selection event"
+        # Add multiple selection
+        self.shapes_list.focus_force()
         try:
             shape_num = (self.shapes_list.curselection())[0]
+            selection = self.shapes_list.curselection()
         except IndexError:
             return
         except Exception as message:
@@ -115,39 +128,43 @@ class TShapesWindow(Frame):
         for single_shape in self.TApp.shapes:
             single_shape.width = 1
         
-        self.TApp.shapes[shape_num].width = 2
+        # self.TApp.shapes[shape_num].width = 2
+        for item in selection:
+            self.TApp.shapes[item].width = 2
         self.TApp.main_canvas.delete("all")
+        # self.shapes_list.focus_force()
         self.TApp.canvas_refresh()
-        self.shapes_list.select_clear(0, END)
-        self.shapes_list.selection_set(shape_num)
-        self.shapes_list.activate(shape_num)
-        self.shapes_list.focus_set()
-        if(shape_num > -1):
+        # # self.shapes_list.select_clear(0, END)
+        for item in selection:
+            self.shapes_list.selection_set(item)
+        # self.shapes_list.activate(shape_num)
+        # self.shapes_list.focus_set()
+        # if(shape_num > -1):
             # self.shapes_list.yview_scroll(shape_num,"units")
-            self.shapes_list.see(shape_num)
+            # self.shapes_list.see(shape_num)
 
     def init_popup_menu (self):
         "Inits shapes pane pup-up menu"
         self.popup_menu = Menu (self, tearoff = 0)
         self.popup_menu.add_command(label = "Edit shape", command = self.edit_shape)
         self.popup_menu.add_command(label = "Change shape colour", command = self.change_shape_colour)
-        self.popup_menu.add_command(label = "Remove shape", command = self.remove_shape)
+        self.popup_menu.add_command(label = "Remove shape(s)", command = self.remove_shape)
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Add vertex to polygon", command = self.add_vertex_to_polygon)
         self.popup_menu.add_separator()
-        self.popup_menu.add_command(label = "Copy shape", command = self.copy_shape)
-        self.popup_menu.add_command(label = "Paste shape", command = self.paste_shape)
+        self.popup_menu.add_command(label = "Copy shape(s)", command = self.copy_shape)
+        self.popup_menu.add_command(label = "Paste shape(s)", command = self.paste_shape)
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Move up", command = self.move_shape_up)
         self.popup_menu.add_command(label = "Move down", command = self.move_shape_down)
         self.popup_menu.add_command(label = "Move to top", command = self.move_shape_top)
         self.popup_menu.add_command(label = "Move to bottom", command = self.move_shape_bottom)
 
-    def show_popoup_menu (self, event):
+    def show_popoup_menu(self, event):
         try:
-            self.popup_menu.post (event.x_root, event.y_root)
+            self.popup_menu.post(event.x_root, event.y_root)
         finally:
-            self.popup_menu.grab_release ()
+            self.popup_menu.grab_release()
     
     def move_shape_up(self):
         try:
@@ -158,7 +175,7 @@ class TShapesWindow(Frame):
             return
         else:
             try:
-                self.TApp.shapes.insert(shape_num - 1, self.TApp.shapes.pop (shape_num) )
+                self.TApp.shapes.insert(shape_num - 1, self.TApp.shapes.pop(shape_num))
                 self.update_list(self.TApp.shapes)
                 self.TApp.main_canvas.delete("all")
                 self.TApp.canvas_refresh(swap = True)
@@ -170,35 +187,35 @@ class TShapesWindow(Frame):
     
     def move_shape_down (self):
         try:
-            shape_num = (self.shapes_list.curselection () ) [0]
+            shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
             return
         if (shape_num < 0):
             return
         else:
             try:
-                self.TApp.shapes.insert (shape_num + 1, self.TApp.shapes.pop (shape_num) )
-                self.update_list (self.TApp.shapes)
-                self.TApp.main_canvas.delete ("all")
+                self.TApp.shapes.insert(shape_num + 1, self.TApp.shapes.pop (shape_num))
+                self.update_list(self.TApp.shapes)
+                self.TApp.main_canvas.delete("all")
                 self.TApp.canvas_refresh(swap = True)
-                self.shapes_list.selection_set (shape_num + 1)
-                self.shapes_list.activate (shape_num + 1)
+                self.shapes_list.selection_set(shape_num + 1)
+                self.shapes_list.activate(shape_num + 1)
                 # self.shapes_list.focus_set ()
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes list!", message)
+                messagebox.showerror("Error while manipulating shapes list!", message)
                 return
     
-    def move_shape_top (self):
+    def move_shape_top(self):
         try:
-            shape_num = (self.shapes_list.curselection () ) [0]
+            shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
             return
         if (shape_num < 0):
             return
         else:
             try:
-                self.TApp.shapes.insert (0, self.TApp.shapes.pop (shape_num) )
-                self.update_list (self.TApp.shapes)
+                self.TApp.shapes.insert(0, self.TApp.shapes.pop(shape_num))
+                self.update_list(self.TApp.shapes)
                 self.TApp.main_canvas.delete ("all")
                 self.TApp.canvas_refresh(swap = True)
                 self.shapes_list.selection_set (0)
@@ -257,27 +274,32 @@ class TShapesWindow(Frame):
         else:
             self.TApp.change_shape_colour(shape_num = shape_num)
 
-    def remove_shape(self):
+    def remove_shape(self, event = None):
         try:
-            shape_num = (self.shapes_list.curselection())[0]
+            # shape_num = (self.shapes_list.curselection())[0]
+            selection = self.shapes_list.curselection()
         except IndexError:
             return
-        if (shape_num < 0):
+        # if (shape_num < 0):
+            # return
+        if(len(selection) == 0):
             return
         else:
             try:
-                del self.TApp.shapes[shape_num]
-                self.update_list (self.TApp.shapes)
-                if (shape_num == len (self.TApp.shapes) ):
-                    self.shapes_list.selection_set (shape_num - 1)
-                    self.shapes_list.activate (shape_num - 1)
-                else:
-                    self.shapes_list.selection_set (shape_num)
-                    self.shapes_list.activate (shape_num)
-                self.TApp.main_canvas.delete ("all")
-                self.TApp.canvas_refresh ()
+                for item in reversed(selection):
+                    del self.TApp.shapes[item]
+                # del self.TApp.shapes[shape_num]
+                self.update_list(self.TApp.shapes)
+                # if (shape_num == len(self.TApp.shapes)):
+                #     self.shapes_list.selection_set(shape_num - 1)
+                #     self.shapes_list.activate(shape_num - 1)
+                # else:
+                #     self.shapes_list.selection_set(shape_num)
+                #     self.shapes_list.activate(shape_num)
+                self.TApp.main_canvas.delete("all")
+                self.TApp.canvas_refresh()
             except Exception as message:
-                messagebox.showerror ("Error while manipulating shapes list!", message)
+                messagebox.showerror("Error while manipulating shapes list!", message)
                 return
 
     def add_vertex_to_polygon(self):

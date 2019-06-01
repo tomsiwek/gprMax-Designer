@@ -25,7 +25,8 @@ from outputpreviewwindow import TOutputPreviewWindow
 from parsetofile import TParser
 from point import TPoint
 from polygonwindow import TPolygonWindow
-from settings import TWindow_Size, TModel_Size, TTicksSettings, TSurveySettings
+from settings import TWindow_Size, TModel_Size, TTicksSettings, TSurveySettings, \
+                     TColours
 from shapes import TRect, TCylin, TCylinSector, TPolygon, TCoordSys
 from shapeswindow import TShapesWindow
 from surveysettingswindow import TSurveySettingsWindow
@@ -282,29 +283,31 @@ class TApp(object):
         self.resize_button = Button(self.main_toolbar, text = "R", relief = FLAT, \
                                     command = self.set_mouse_mode_resize)
         self.resize_button.grid(row = 0, column = 8, padx = 2, pady = 2)
-        Label(self.main_toolbar, text = "|").grid(row = 0, column = 9, padx=2, pady=2)
-        self.parseToGprMaxButton = Button(self.main_toolbar, text = "Parse to gprMax", \
-                                          relief = FLAT, command = self.parse_to_gprmax)
-        self.parseToGprMaxButton.grid(row = 0, column = 10, padx = 2, pady = 2)
-        Label(self.main_toolbar, text = "|").grid(row = 0, column = 11, padx = 2, pady = 2)
+        Label(self.main_toolbar, text = "|").grid(row = 0, column = 9, padx = 2, pady = 2)
         self.zoom_in_button = Button(self.main_toolbar, text = "+", relief = FLAT, \
                                      command = self.view_zoom_in)
-        self.zoom_in_button.grid(row = 0, column = 12, padx = 2, pady = 2)
+        self.zoom_in_button.grid(row = 0, column = 10, padx = 2, pady = 2)
         self.zoom_out_button = Button(self.main_toolbar, text = "-", relief = FLAT, \
                                       command = self.view_zoom_out)
-        self.zoom_out_button.grid(row = 0, column = 13, padx = 2, pady = 2)
+        self.zoom_out_button.grid(row = 0, column = 11, padx = 2, pady = 2)
+        Label(self.main_toolbar, text = "|").grid(row = 0, column = 12, padx=2, pady=2)
+        self.parseToGprMaxButton = Button(self.main_toolbar, text = "Parse to gprMax", \
+                                          relief = FLAT, command = self.parse_to_gprmax)
+        self.parseToGprMaxButton.grid(row = 0, column = 13, padx = 2, pady = 2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 14, padx=2, pady=2)
         self.exitButton = Button(self.main_toolbar, text = "Q", relief=FLAT, \
                                  command = self.master.destroy)
         self.exitButton.grid(row = 0, column = 15, padx=2, pady=2)
         self.main_toolbar.grid(row = 0, column = 0, sticky = EW)
 
-    
     def init_status_bar(self):
+        fwidth = 8
         self.status_bar = Frame(self.master, bd = 1)
-        self.pos_x_label = Label(self.status_bar, text = "X: -", width = 5, anchor = W)
+        self.pos_x_label = Label(self.status_bar, text = "X: -", width = fwidth, \
+                                 anchor = W)
         self.pos_x_label.grid(row = 0, column = 0)
-        self.pos_y_label = Label(self.status_bar, text = "Y: -", width = 5, anchor = W)
+        self.pos_y_label = Label(self.status_bar, text = "Y: -", width = fwidth, \
+                                 anchor = W)
         self.pos_y_label.grid(row = 0, column = 1)
         self.status_bar.grid(row = 3, column = 0, sticky = EW)
 
@@ -312,6 +315,9 @@ class TApp(object):
         self.main_canvas.bind("<Button-1>", self.canvas_click)
         self.main_canvas.bind("<Button-3>", self.display_right_button_popup)
         self.main_canvas.bind("<Motion>", self.canvas_mouse_move)
+        self.main_canvas.bind("<Button-2>", self.init_model_move)
+        self.main_canvas.bind("<B2-Motion>", self.move_visible_model)
+        self.main_canvas.bind("<ButtonRelease-2>", self.dispatch_model_move)
         self.main_canvas.bind("<Double-Button-1>", self.canvas_double_click)
         self.main_canvas.bind("<Configure>", self.canvas_resize)
         self.main_canvas.bind("<MouseWheel>", self.mouse_wheel)
@@ -333,32 +339,48 @@ class TApp(object):
         self.master.bind("<Key-c>", self.set_mode_cylinder)
         self.master.bind("<Key-s>", self.set_mode_cylin_sector)
         self.master.bind("<Key-p>", self.set_mode_polygon)
+        self.master.bind("<Escape>", self.canvas_interrupt)
+        # self.master.bind("<Delete>", self.remove_shape)
 
     def load_toolbar_icons(self):
         try:
-            self.rectangleIcon = PhotoImage (file = "./icons/icon_rectangle.gif")
-            self.cylinderIcon = PhotoImage (file = "./icons/icon_cylinder.gif")
-            self.cylinSectorIcon = PhotoImage (file = "./icons/icon_cylinder_sector.gif")
-            self.polygonIcon = PhotoImage (file = "./icons/icon_polygon.gif")
-            self.exitIcon = PhotoImage (file = "./icons/icon_exit.gif")
-            self.rectangleButton.config (image = self.rectangleIcon)
-            self.cylinderButton.config (image = self.cylinderIcon)
-            self.cylinSectorButton.config (image = self.cylinSectorIcon)
-            self.polygonButton.config (image = self.polygonIcon)
-            self.exitButton.config (image = self.exitIcon)
+            self.rectangleIcon = PhotoImage(file = "./icons/icon_rectangle.gif")
+            self.cylinderIcon = PhotoImage(file = "./icons/icon_cylinder.gif")
+            self.cylinSectorIcon = PhotoImage(file = "./icons/icon_cylinder_sector.gif")
+            self.polygonIcon = PhotoImage(file = "./icons/icon_polygon.gif")
+            self.exitIcon = PhotoImage(file = "./icons/icon_exit.gif")
+            self.plusIcon = PhotoImage(file = "./icons/icon_plus.gif")
+            self.minusIcon = PhotoImage(file = "./icons/icon_minus.gif")
+            self.playIcon = PhotoImage(file = "./icons/icon_play.gif")
+            self.drawIcon = PhotoImage(file = "./icons/icon_draw.gif")
+            self.moveIcon = PhotoImage(file = "./icons/icon_move.gif")
+            self.resizeIcon = PhotoImage(file = "./icons/icon_resize.gif")
+            self.rectangleButton.config(image = self.rectangleIcon)
+            self.cylinderButton.config(image = self.cylinderIcon)
+            self.cylinSectorButton.config(image = self.cylinSectorIcon)
+            self.polygonButton.config(image = self.polygonIcon)
+            self.exitButton.config(image = self.exitIcon)
+            self.zoom_in_button.config(image = self.plusIcon)
+            self.zoom_out_button.config(image = self.minusIcon)
+            self.parseToGprMaxButton.config(image = self.playIcon)
+            self.draw_button.config(image = self.drawIcon)
+            self.move_button.config(image = self.moveIcon)
+            self.resize_button.config(image = self.resizeIcon)
         except Exception as message:
             messagebox.showerror ("Error while loading icons", message)
         
     def canvas_refresh(self, *, swap = False):
         "Redraw all shapes on canvas"
+        if(self.coordsys.grid):
+            self.coordsys.draw_ticks(self.main_canvas, grid = True)
         for single_shape in self.shapes:
             single_shape.draw(self.main_canvas)
         if(not self.move and not self.resize):
             self.shapes_frame.update_list(self.shapes, swap = swap)
-        self.coordsys.draw(self.main_canvas)
-        self.coordsys.draw_ticks(self.main_canvas)
         self.coordsys.obscure_protruding_edges(self.main_canvas)
-        self.coordsys.write_axis_labels(self.main_canvas)
+        self.coordsys.draw_ticks(self.main_canvas)
+        self.coordsys.draw(self.main_canvas)
+        # self.coordsys.write_axis_labels(self.main_canvas)
                          
     def canvas_click(self, event):
         "Left mouse click event "
@@ -456,7 +478,7 @@ class TApp(object):
             single_rectangle.width = self.shapes_width
 
         self.main_canvas.delete("all")
-        self.canvas_refresh ()
+        self.canvas_refresh()
             
     # Keyboard down arrow press event
     def decrease_shapes_width(self, event):
@@ -469,13 +491,13 @@ class TApp(object):
 
     # Property fot self.shapes_width
     @property
-    def shapes_width (self):
+    def shapes_width(self):
         return self.__rectangles_width
 
     # Setter for self.rectangles_width 
     @shapes_width.setter
-    def shapes_width (self, shapes_width):
-        if (shapes_width <= 5 and shapes_width >= 1):
+    def shapes_width(self, shapes_width):
+        if(shapes_width <= 5 and shapes_width >= 1):
             self.__rectangles_width = shapes_width
         else:
             self.__rectangles_width = self.__rectangles_width
@@ -704,10 +726,16 @@ class TApp(object):
                 TModel_Size.DY = result[3]
                 self.len_tot_x = result[0]
                 self.len_tot_y = result[1]
-                TModel_Size.MIN_X = 0.0
-                TModel_Size.MIN_Y = 0.0
-                TModel_Size.MAX_X = TModel_Size.DOM_X
-                TModel_Size.MAX_Y = TModel_Size.DOM_Y
+                # if(TModel_Size.FIT):
+                #     TModel_Size.MIN_X = 0.0
+                #     TModel_Size.MIN_Y = 0.0
+                #     TModel_Size.MAX_X = TModel_Size.DOM_X
+                #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
+                # else:
+                #     TModel_Size.MIN_X = 0.0
+                #     TModel_Size.MIN_Y = 0.0
+                #     TModel_Size.MAX_X = min(TModel_Size.DOM_X, TModel_Size.DOM_Y)
+                #     TModel_Size.MAX_Y = min(TModel_Size.DOM_X, TModel_Size.DOM_Y)
                 self.view_zoom_reset()
             except Exception as message:
                 messagebox.showerror("Error while changing model size!", message)
@@ -725,22 +753,28 @@ class TApp(object):
         except Exception as message:
             messagebox.showerror("Error while changing canvas size!", message)
     
-    def display_settings (self):
+    def display_settings(self):
         input_dialog = TDisplaySettingsWindow(self.master, TTicksSettings.INT_X, \
                                               TTicksSettings.INT_Y, \
                                               TTicksSettings.ROUND_DIGITS, \
                                               TModel_Size.MIN_X, TModel_Size.MIN_Y, \
-                                              TModel_Size.MAX_X, TModel_Size.MAX_Y)
+                                              TModel_Size.MAX_X, TModel_Size.MAX_Y,
+                                              TModel_Size.FIT)
         result = input_dialog.result
         if(result != None):
             try:
                 TTicksSettings.INT_X = result[0]
                 TTicksSettings.INT_Y = result[1]
                 TTicksSettings.ROUND_DIGITS = result[2]
-                TModel_Size.MIN_X = result[3]
-                TModel_Size.MIN_Y = result[4]
-                TModel_Size.MAX_X = result[5]
-                TModel_Size.MAX_Y = result[6]
+                # TModel_Size.MIN_X = result[3]
+                # TModel_Size.MIN_Y = result[4]
+                # TModel_Size.MAX_X = result[5]
+                # TModel_Size.MAX_Y = result[6]
+                if(result[3] == "colour"):
+                    TColours.FILL = True
+                elif(result[4] == "none"):
+                    TColours.FILL = False
+                self.view_zoom_reset()
                 self.coordsys.model_size_update()
                 self.coordsys.window_size_update()
                 for single_shape in self.shapes:
@@ -766,7 +800,7 @@ class TApp(object):
                 self.main_canvas.delete("all")
                 self.canvas_refresh()
 
-    def canvas_interrupt(self):
+    def canvas_interrupt(self, event = None):
         self.first_click = False
         self.second_click = False
         self.resize = False
@@ -905,16 +939,19 @@ class TApp(object):
             TSurveySettings.SRC_Y = result[8]
             TSurveySettings.RX_X = result[9]
             TSurveySettings.RX_Y = result[10]
+            TSurveySettings.MESSAGES = result[11]
+            TSurveySettings.GEOM_VIEW = result[12]
+            TSurveySettings.GEOM_FILE = result[13]
             if(result[0] == "rx_array"):
-                TSurveySettings.RX_STEP_X = result[11]
-                TSurveySettings.RX_STEP_Y = result[12]
-                TSurveySettings.RX_MAX_X = result[13]
-                TSurveySettings.RX_MAX_Y = result[14]
+                TSurveySettings.RX_STEP_X = result[14]
+                TSurveySettings.RX_STEP_Y = result[15]
+                TSurveySettings.RX_MAX_X = result[16]
+                TSurveySettings.RX_MAX_Y = result[17]
             elif(result[0] == "bscan"):
-                TSurveySettings.SRC_STEP_X = result[11]
-                TSurveySettings.SRC_STEP_Y = result[12]
-                TSurveySettings.RX_STEP_X = result[13]
-                TSurveySettings.RX_STEP_Y = result[14]
+                TSurveySettings.SRC_STEP_X = result[14]
+                TSurveySettings.SRC_STEP_Y = result[15]
+                TSurveySettings.RX_STEP_X = result[16]
+                TSurveySettings.RX_STEP_Y = result[17]
     
     def edit_shape(self, event):
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -1151,21 +1188,24 @@ class TApp(object):
         "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'Rectangle'"
         if(not self.first_click):
             if(overlap_num > -1):
-                self.first_click_pos = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
+                click_pt = self.overlap_coord(self.shapes[overlap_num], \
+                                              event.x, event.y, self.radius)
             else:
-                self.first_click_pos = TPoint(event.x, event.y)
+                click_pt = TPoint(event.x, event.y)
+            self.first_click_pos = self.winmod(click_pt)
             self.first_click = True
         else:
-            self.main_canvas.delete ("all")
+            self.main_canvas.delete("all")
             if(overlap_num > -1):
-                pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                self.shapes.append(TRect(point1_x = self.first_click_pos.x, point1_y = self.first_click_pos.y, \
-                                         point2_x = pt.x, point2_y = pt.y, colour = self.shapes_colour, \
-                                         width = self.shapes_width) )
+                pt = self.overlap_coord(self.shapes[overlap_num], event.x, \
+                                        event.y, self.radius)
             else:
-                self.shapes.append(TRect(point1_x = self.first_click_pos.x, point1_y = self.first_click_pos.y, \
-                                         point2_x = event.x, point2_y = event.y, colour = self.shapes_colour, \
-                                         width = self.shapes_width) )
+                pt = TPoint(event.x, event.y)
+            pt_mod = self.winmod(pt)
+            self.shapes.append(TRect(point1_mod = self.first_click_pos, \
+                                     point2_mod = pt_mod, \
+                                     colour = self.shapes_colour, \
+                                     width = self.shapes_width))
             self.operations.append(TOperation("draw", shape = deepcopy(self.shapes[-1]), \
                                               num = len(self.shapes)-1))
             self.first_click = False
@@ -1176,21 +1216,23 @@ class TApp(object):
         "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'Cylinder'"
         if(not self.first_click):
             if(overlap_num > -1):
-                self.first_click_pos = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
+                click_pt = self.overlap_coord(self.shapes[overlap_num], \
+                                              event.x, event.y, self.radius)
             else:
-                self.first_click_pos = TPoint(event.x, event.y)
+                click_pt = TPoint(event.x, event.y)
+            self.first_click_pos = self.winmod(click_pt)
             self.first_click = True
         else:
             self.main_canvas.delete("all")
             if(overlap_num > -1):
                 pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                radius = ((pt.x - self.first_click_pos.x)**2 + (pt.y - self.first_click_pos.y)**2)**0.5
-                self.shapes.append (TCylin (centre = self.first_click_pos, radius = radius, \
-                    colour = self.shapes_colour, width = self.shapes_width) )
             else:
-                radius = ((event.x - self.first_click_pos.x)**2 + (event.y - self.first_click_pos.y)**2)**0.5
-                self.shapes.append(TCylin(centre = self.first_click_pos, radius = radius, \
-                                          colour = self.shapes_colour, width = self.shapes_width))
+                pt = TPoint(event.x, event.y)
+            pt_mod = self.winmod(pt)
+            radius = ((pt_mod.x - self.first_click_pos.x)**2 + (pt_mod.y - self.first_click_pos.y)**2)**0.5
+            self.shapes.append(TCylin(centre_mod = self.first_click_pos, \
+                                      radius_mod = radius, colour = self.shapes_colour, \
+                                      width = self.shapes_width))
             self.operations.append(TOperation("draw", shape = deepcopy(self.shapes[-1]), \
                                               num = len(self.shapes)-1))
             self.first_click = False
@@ -1201,30 +1243,39 @@ class TApp(object):
         "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'CylinSector'"
         if(not self.first_click and not self.second_click):
             if(overlap_num > -1):
-                self.first_click_pos = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
+                click_pt = self.overlap_coord(self.shapes[overlap_num], \
+                                                          event.x, event.y, self.radius)
             else:
-                self.first_click_pos = TPoint(event.x, event.y)
+                click_pt = TPoint(event.x, event.y)
+            self.first_click_pos = self.winmod(click_pt)
             self.first_click = True
             self.second_click = False
-        elif (self.first_click and not self.second_click):
+        elif(self.first_click and not self.second_click):
             if(overlap_num > -1):
-                self.second_click_pos = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
+                click_pt = self.overlap_coord(self.shapes[overlap_num], \
+                                                           event.x, event.y, self.radius)
             else:
-                self.second_click_pos = TPoint(event.x, event.y)
+                click_pt = TPoint(event.x, event.y)
+            self.second_click_pos = self.winmod(click_pt)
             self.first_click = False
             self.second_click = True
         elif(not self.first_click and self.second_click):
-            self.main_canvas.delete ("all")
-            radius = round(((self.second_click_pos.x - self.first_click_pos.x)**2 + (self.second_click_pos.y - self.first_click_pos.y)**2)**0.5, 0)
+            self.main_canvas.delete("all")
+            radius = ((self.second_click_pos.x - self.first_click_pos.x)**2 + \
+                      (self.second_click_pos.y - self.first_click_pos.y)**2)**0.5
             if(overlap_num > -1):
-                pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                self.shapes.append(TCylinSector(centre = self.first_click_pos, radius = radius, \
-                                                colour = self.shapes_colour, width = self.shapes_width, \
-                                                boundary_pt1 = self.second_click_pos, boundary_pt2 = pt))
+                bpt2 = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
             else:
-                self.shapes.append(TCylinSector(centre = self.first_click_pos, radius = radius, \
-                                                colour = self.shapes_colour, width = self.shapes_width, \
-                                                boundary_pt1 = self.second_click_pos, boundary_pt2 = TPoint(event.x, event.y)))
+                bpt2 = TPoint(event.x, event.y)
+            centre_mon = self.modwin(self.first_click_pos)
+            bpt1 = self.modwin(self.second_click_pos)
+            radius_mon = self.distmodwin(radius)
+            self.shapes.append(TCylinSector(centre = centre_mon, \
+                                            radius = radius_mon, \
+                                            colour = self.shapes_colour, \
+                                            width = self.shapes_width, \
+                                            boundary_pt1 = bpt1, \
+                                            boundary_pt2 = bpt2))
             self.operations.append(TOperation("draw", shape = deepcopy(self.shapes[-1]), \
                                               num = len(self.shapes)-1))
             self.first_click = False
@@ -1238,26 +1289,37 @@ class TApp(object):
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            self.polygon_points.append(pt)
         else:
-            self.polygon_points.append(TPoint(event.x, event.y))
+            pt = TPoint(event.x, event.y)
+        pt_mod = self.winmod(pt)
+        self.polygon_points.append(pt_mod)
         for i, _ in enumerate(self.polygon_points[1:], 1):
-            self.main_canvas.create_line(self.polygon_points[i-1].x, self.polygon_points [i-1].y, \
-                self.polygon_points [i].x, self.polygon_points [i].y, fill = self.shapes_colour, width = self.shapes_width)
-        self.main_canvas.create_line (self.polygon_points [-1].x, self.polygon_points [-1].y, event.x, event.y, fill = self.shapes_colour, width = self.shapes_width)
-        self.canvas_refresh ()
+            pt_prev = self.modwin(self.polygon_points[i-1])
+            pt_curr = self.modwin(self.polygon_points[i])
+            self.main_canvas.create_line(pt_prev.x, pt_prev.y, \
+                                         pt_curr.x, pt_curr.y, \
+                                         fill = self.shapes_colour, \
+                                         width = self.shapes_width)
+        pt_prev = self.modwin(self.polygon_points[-1])
+        self.main_canvas.create_line(pt_prev.x, pt_prev.y, \
+                                     event.x, event.y, \
+                                     fill = self.shapes_colour, \
+                                     width = self.shapes_width)
+        self.canvas_refresh()
 
     def polygon_double_click_draw(self, event):
         "Double click event while active mouse working mode is set to 'draw' and shape mode is set to 'Polygon'"
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(overlap_num > -1 and self.shapes[overlap_num].type == "Polygon"):
-            if(overlap_num == self.mouse_overlaps_shape(self.polygon_points[0].x, \
-                                                        self.polygon_points[0].y, \
+            pt_mon = self.modwin(self.polygon_points[0])
+            if(overlap_num == self.mouse_overlaps_shape(pt_mon.x, pt_mon.y, \
                                                         self.radius)):
                 # Move to separate function
                 self.adjacent_polygon(event, overlap_num)
         try:
-            self.shapes.append(TPolygon(self.polygon_points, colour = self.shapes_colour, width = self.shapes_width))
+            self.shapes.append(TPolygon(points_mod = self.polygon_points, \
+                                        colour = self.shapes_colour, \
+                                        width = self.shapes_width))
         except Exception as message:
             messagebox.showwarning("Cannot create polygon!", message)
         else:
@@ -1271,10 +1333,9 @@ class TApp(object):
 
     def adjacent_polygon(self, event, overlap_num = -1):
         "Completes one polygon using points from adjacent one"
-        pt_beg = self.overlap_coord(self.shapes[overlap_num], \
-                                            self.polygon_points[0].x, \
-                                            self.polygon_points[0].y, \
-                                            self.radius)
+        pt_beg_mon = self.modwin(self.polygon_points[0])
+        pt_beg = self.overlap_coord(self.shapes[overlap_num], pt_beg_mon.x, \
+                                    pt_beg_mon.y, self.radius)
         pt_end = self.overlap_coord(self.shapes[overlap_num], event.x, \
                                     event.y, self.radius)
         i_beg, i_end, reverse = self.detect_shared_points_begin_end(self.shapes[overlap_num], pt_beg, pt_end)
@@ -1282,26 +1343,26 @@ class TApp(object):
             if(not reverse):
                 # TODO: Calculating areas to one veratile and easy to read function
                 area1 = TG.polygon_area(self.polygon_points + \
-                                        self.shapes[overlap_num].points[i_end:i_beg:-1])  
+                                        self.shapes[overlap_num].points_mod[i_end:i_beg:-1])  
                 area2 = TG.polygon_area(self.polygon_points + \
-                                        self.shapes[overlap_num].points[i_end + 1:] +
-                                        self.shapes[overlap_num].points[:i_beg + 1])
+                                        self.shapes[overlap_num].points_mod[i_end + 1:] +
+                                        self.shapes[overlap_num].points_mod[:i_beg + 1])
                 if(area1 < area2):
-                    self.polygon_points += self.shapes[overlap_num].points[i_end:i_beg:-1]
+                    self.polygon_points += self.shapes[overlap_num].points_mod[i_end:i_beg:-1]
                 else:
-                    self.polygon_points += self.shapes[overlap_num].points[i_end + 1:] + \
-                                           self.shapes[overlap_num].points[:i_beg + 1]                 
+                    self.polygon_points += self.shapes[overlap_num].points_mod[i_end + 1:] + \
+                                           self.shapes[overlap_num].points_mod[:i_beg + 1]                 
             else:
                 area1 = TG.polygon_area(self.polygon_points + \
-                                        self.shapes[overlap_num].points[i_end:i_beg:-1])  
+                                        self.shapes[overlap_num].points_mod[i_end:i_beg:-1])  
                 area2 = TG.polygon_area(self.polygon_points + \
-                                        self.shapes[overlap_num].points[i_beg + 1:] +
-                                        self.shapes[overlap_num].points[:i_end + 1])
+                                        self.shapes[overlap_num].points_mod[i_beg + 1:] +
+                                        self.shapes[overlap_num].points_mod[:i_end + 1])
                 if(area1 < area2):
-                    self.polygon_points += self.shapes[overlap_num].points[i_beg::-1] + \
-                                           self.shapes[overlap_num].points[:i_end:-1]
+                    self.polygon_points += self.shapes[overlap_num].points_mod[i_beg::-1] + \
+                                           self.shapes[overlap_num].points_mod[:i_end:-1]
                 else:
-                    self.polygon_points += self.shapes[overlap_num].points[i_beg+1:i_end]
+                    self.polygon_points += self.shapes[overlap_num].points_mod[i_beg+1:i_end]
 
     def detect_shared_points_begin_end(self, polygon = None, pt_beg = None, pt_end = None):
         "Detects first and last of vertices shared by 2 polygons"
@@ -1340,55 +1401,72 @@ class TApp(object):
         if(self.first_click == True):
             self.main_canvas.delete("all")
             self.canvas_refresh()
+            first_click_mon = self.modwin(self.first_click_pos)
             if(overlap_num > -1):
                 pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
                                         self.radius)
-                self.main_canvas.create_rectangle(self.first_click_pos.x, \
-                                                  self.first_click_pos.y, pt.x, \
+                self.main_canvas.create_rectangle(first_click_mon.x, \
+                                                  first_click_mon.y, pt.x, \
                                                   pt.y, outline = self.shapes_colour, \
                                                   width = self.shapes_width)
             else:
-                self.main_canvas.create_rectangle (self.first_click_pos.x, self.first_click_pos.y, event.x, event.y, \
-                    outline = self.shapes_colour, width = self.shapes_width)
+                self.main_canvas.create_rectangle(first_click_mon.x, \
+                                                  first_click_mon.y, \
+                                                  event.x, event.y, \
+                                                  outline = self.shapes_colour, \
+                                                  width = self.shapes_width)
     
     def cylinder_mouse_move_draw(self, event, overlap_num = -1):
         "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'Cylinder'"
         if (self.first_click == True):
-            radius = ((event.x - self.first_click_pos.x)**2 + (event.y - self.first_click_pos.y)**2)**0.5
-            self.main_canvas.delete ("all")
-            self.canvas_refresh ()
+            self.main_canvas.delete("all")
+            self.canvas_refresh()
             if(overlap_num > -1):
-                pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                radius = ((pt.x - self.first_click_pos.x)**2 + (pt.y - self.first_click_pos.y)**2)**0.5
-                self.main_canvas.create_oval(self.first_click_pos.x - radius, self.first_click_pos.y -  radius, \
-                                             self.first_click_pos.x + radius, self.first_click_pos.y + radius, outline = self.shapes_colour, \
-                                             width = self.shapes_width)
+                first_click_mon = self.overlap_coord(self.shapes[overlap_num], \
+                                                     event.x, event.y, self.radius)
             else:
-                self.main_canvas.create_oval(self.first_click_pos.x - radius, self.first_click_pos.y -  radius, \
-                                             self.first_click_pos.x + radius, self.first_click_pos.y + radius, outline = self.shapes_colour, \
-                                             width = self.shapes_width)
+                first_click_mon = self.modwin(self.first_click_pos)
+            radius = ((event.x - first_click_mon.x)**2 + (event.y - first_click_mon.y)**2)**0.5                      
+            self.main_canvas.create_oval(first_click_mon.x - radius, \
+                                         first_click_mon.y - radius, \
+                                         first_click_mon.x + radius, \
+                                         first_click_mon.y + radius, \
+                                         outline = self.shapes_colour, \
+                                         width = self.shapes_width)
 
     def cylin_sector_mouse_move_draw(self, event, overlap_num = -1):
         "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'CylindSector'"
-        self.main_canvas.delete ("all")
-        self.canvas_refresh ()
+        self.main_canvas.delete("all")
+        self.canvas_refresh()
         if (self.first_click):
             if(overlap_num > -1):
                 pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                self.main_canvas.create_line (self.first_click_pos.x, self.first_click_pos.y, pt.x, pt.y, fill = self.shapes_colour, \
-                                              width = self.shapes_width)
             else:
-                self.main_canvas.create_line (self.first_click_pos.x, self.first_click_pos.y, event.x, event.y, fill = self.shapes_colour, \
-                                              width = self.shapes_width)
+                pt = TPoint(event.x, event.y)
+            first_click_mon = self.modwin(self.first_click_pos)
+            self.main_canvas.create_line(first_click_mon.x, first_click_mon.y, \
+                                         pt.x, pt.y, fill = self.shapes_colour, \
+                                         width = self.shapes_width)
         if(self.second_click):
             if(overlap_num > -1):
                 pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                event.x = pt.x
-                event.y = pt.y
+            else:
+                pt = TPoint(event.x, event.y)
+            first_click_mon = self.modwin(self.first_click_pos)
+            second_click_mon = self.modwin(self.second_click_pos)
             radius = ((self.second_click_pos.x - self.first_click_pos.x)**2 + (self.second_click_pos.y - self.first_click_pos.y)**2)**0.5
-            start, extent = self.calculate_cylin_sector_start_extent(self.first_click_pos, self.second_click_pos, event, radius)
-            self.main_canvas.create_arc(self.first_click_pos.x - radius, self.first_click_pos.y - radius, self.first_click_pos.x + radius, self.first_click_pos.y + radius, \
-                                        outline = self.shapes_colour, width = self.shapes_width, style = PIESLICE, start = start, extent = extent)
+            radius_mon = self.distmodwin(radius)
+            start, extent = self.calculate_cylin_sector_start_extent(first_click_mon, \
+                                                                     second_click_mon, \
+                                                                     pt, radius_mon)
+            self.main_canvas.create_arc(first_click_mon.x - radius_mon, \
+                                        first_click_mon.y - radius_mon, \
+                                        first_click_mon.x + radius_mon, \
+                                        first_click_mon.y + radius_mon, \
+                                        outline = self.shapes_colour, \
+                                        width = self.shapes_width, \
+                                        style = PIESLICE, start = start, \
+                                        extent = extent)
 
     def polygon_mouse_move_draw(self, event, overlap_num = -1):
         "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'Polygon'"
@@ -1396,13 +1474,20 @@ class TApp(object):
             self.main_canvas.delete("all")
             self.canvas_refresh()
             for i, _ in enumerate(self.polygon_points[1:], 1):
-                self.main_canvas.create_line(self.polygon_points [i-1].x, self.polygon_points [i-1].y, \
-                    self.polygon_points [i].x, self.polygon_points [i].y, fill = self.shapes_colour, width = self.shapes_width)
+                pt_prev = self.modwin(self.polygon_points[i-1])
+                pt_curr = self.modwin(self.polygon_points[i])
+                self.main_canvas.create_line(pt_prev.x, pt_prev.y, \
+                                             pt_curr.x, pt_curr.y, \
+                                             fill = self.shapes_colour, \
+                                             width = self.shapes_width)
             if(overlap_num > -1):
                 pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-                self.main_canvas.create_line (self.polygon_points [-1].x, self.polygon_points [-1].y, pt.x, pt.y, fill = self.shapes_colour, width = self.shapes_width)
             else:
-                self.main_canvas.create_line (self.polygon_points [-1].x, self.polygon_points [-1].y, event.x, event.y, fill = self.shapes_colour, width = self.shapes_width)
+                pt = TPoint(event.x, event.y)
+            pt_prev = self.modwin(self.polygon_points[-1])
+            self.main_canvas.create_line(pt_prev.x, pt_prev.y, pt.x, pt.y, \
+                                         fill = self.shapes_colour, \
+                                         width = self.shapes_width)
 
     # --------------------------------------------------------------------------
 
@@ -2059,21 +2144,51 @@ class TApp(object):
             sts = subprocess.call(command, shell = True)
     
     def view_zoom_in(self):
-        self.scale *= 2
-        x_lenght = TModel_Size.MAX_X - TModel_Size.MIN_X
-        y_lenght = TModel_Size.MAX_Y - TModel_Size.MIN_Y
-        x_min_new = TModel_Size.MIN_X + x_lenght/4
-        x_max_new = TModel_Size.MAX_X - x_lenght/4
-        y_min_new = TModel_Size.MIN_Y + y_lenght/4
-        y_max_new = TModel_Size.MAX_Y - y_lenght/4
-        TModel_Size.MIN_X = x_min_new
-        TModel_Size.MAX_X = x_max_new
-        TModel_Size.MIN_Y = y_min_new
-        TModel_Size.MAX_Y = y_max_new
-        TTicksSettings.INT_X /= 2
-        TTicksSettings.INT_Y /= 2
-        TTicksSettings.ROUND_DIGITS = int(log10(self.scale)) + 1
-        self.scrollbars_zoom_in()
+        if(TModel_Size.FIT):
+            TModel_Size.FIT = False
+            TModel_Size.MIN_X = 0.0
+            TModel_Size.MIN_Y = 0.0
+            len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+            len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                            2*TWindow_Size.MARG_Y
+            if(self.len_tot_x < self.len_tot_y):
+                TModel_Size.MAX_X = self.len_tot_x
+                TModel_Size.MAX_Y = round(self.len_tot_x/len_x_mon*len_y_mon, \
+                                          TTicksSettings.ROUND_DIGITS)
+            elif(self.len_tot_x > self.len_tot_y):
+                TModel_Size.MAX_X = round(self.len_tot_y/len_y_mon*len_x_mon, \
+                                          TTicksSettings.ROUND_DIGITS)
+                TModel_Size.MAX_Y = self.len_tot_y
+            else:
+                if(len_x_mon > len_y_mon):
+                    TModel_Size.MAX_X = self.len_tot_x
+                    TModel_Size.MAX_Y = round(self.len_tot_x/len_x_mon*len_y_mon, \
+                                            TTicksSettings.ROUND_DIGITS)
+                elif(len_x_mon < len_y_mon):
+                    TModel_Size.MAX_X = round(self.len_tot_y/len_y_mon*len_x_mon, \
+                                            TTicksSettings.ROUND_DIGITS)
+                    TModel_Size.MAX_Y = self.len_tot_y
+                else:
+                    TModel_Size.MAX_X = self.len_tot_x
+                    TModel_Size.MAX_Y = self.len_tot_y
+            self.scrollbars_zoom_in()
+        else:
+            self.scale *= 2
+            x_lenght = TModel_Size.MAX_X - TModel_Size.MIN_X
+            y_lenght = TModel_Size.MAX_Y - TModel_Size.MIN_Y
+            x_min_new = TModel_Size.MIN_X + x_lenght/4
+            x_max_new = TModel_Size.MAX_X - x_lenght/4
+            y_min_new = TModel_Size.MIN_Y + y_lenght/4
+            y_max_new = TModel_Size.MAX_Y - y_lenght/4
+            TModel_Size.MIN_X = x_min_new
+            TModel_Size.MAX_X = x_max_new
+            TModel_Size.MIN_Y = y_min_new
+            TModel_Size.MAX_Y = y_max_new
+            TTicksSettings.INT_X /= 2
+            TTicksSettings.INT_Y /= 2
+            TTicksSettings.ROUND_DIGITS = int(log10(self.scale)) + 1
+            self.scrollbars_zoom_in()
         self.coordsys.model_size_update()
         self.coordsys.window_size_update()
         for single_shape in self.shapes:
@@ -2101,9 +2216,31 @@ class TApp(object):
             return
         else:
             TModel_Size.MIN_X = 0.0
-            TModel_Size.MAX_X = self.len_tot_x
             TModel_Size.MIN_Y = 0.0
-            TModel_Size.MAX_Y = self.len_tot_y
+            len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+            len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                            2*TWindow_Size.MARG_Y
+            if(self.len_tot_x < self.len_tot_y):
+                TModel_Size.MAX_X = self.len_tot_x
+                TModel_Size.MAX_Y = round(self.len_tot_x/len_x_mon*len_y_mon, \
+                                          TTicksSettings.ROUND_DIGITS)
+            elif(self.len_tot_x > self.len_tot_y):
+                TModel_Size.MAX_X = round(self.len_tot_y/len_y_mon*len_x_mon, \
+                                          TTicksSettings.ROUND_DIGITS)
+                TModel_Size.MAX_Y = self.len_tot_y
+            else:
+                if(len_x_mon > len_y_mon):
+                    TModel_Size.MAX_X = self.len_tot_x
+                    TModel_Size.MAX_Y = round(self.len_tot_x/len_x_mon*len_y_mon, \
+                                            TTicksSettings.ROUND_DIGITS)
+                elif(len_x_mon < len_y_mon):
+                    TModel_Size.MAX_X = round(self.len_tot_y/len_y_mon*len_x_mon, \
+                                            TTicksSettings.ROUND_DIGITS)
+                    TModel_Size.MAX_Y = self.len_tot_y
+                else:
+                    TModel_Size.MAX_X = self.len_tot_x
+                    TModel_Size.MAX_Y = self.len_tot_y
         TTicksSettings.INT_X *= 2
         TTicksSettings.INT_Y *= 2
         self.scrollbars_zoom_out()
@@ -2116,6 +2253,7 @@ class TApp(object):
         self.canvas_refresh()
     
     def view_zoom_reset(self):
+        TModel_Size.FIT = True
         TModel_Size.MIN_X = 0.0
         TModel_Size.MAX_X = self.len_tot_x
         TModel_Size.MIN_Y = 0.0
@@ -2144,6 +2282,31 @@ class TApp(object):
             vsbar_new_lo = vsbar_pos[0] + vsbar_len/4
             vsbar_new_hi = vsbar_pos[1] - vsbar_len/4
             self.main_vertical_scrollbar.set(vsbar_new_lo, vsbar_new_hi)
+        elif(self.scale == 100.0 and TModel_Size.FIT):
+            self.main_horizontal_scrollbar.set(0, 1)
+            self.main_vertical_scrollbar.set(0, 1)
+        elif(self.scale == 100.0 and not TModel_Size.FIT):
+            ratio = self.len_tot_x/self.len_tot_y
+            len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                        2*TWindow_Size.MARG_X
+            len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                        2*TWindow_Size.MARG_Y
+            if(ratio > 1.0):
+                self.main_horizontal_scrollbar.set(0, len_x_mon/(ratio*len_y_mon))
+                self.main_vertical_scrollbar.set(0, 1)
+            elif(ratio < 1.0):
+                self.main_horizontal_scrollbar.set(0, 1)
+                self.main_vertical_scrollbar.set(1 - (ratio*len_y_mon/len_x_mon), 1)
+            else:
+                if(len_x_mon > len_y_mon):
+                    self.main_horizontal_scrollbar.set(0, 1)
+                    self.main_vertical_scrollbar.set(1-len_y_mon/len_x_mon, 1)
+                elif(len_x_mon < len_y_mon):
+                    self.main_horizontal_scrollbar.set(0, len_x_mon/len_y_mon)
+                    self.main_vertical_scrollbar.set(0, 1)
+                else:
+                    self.main_horizontal_scrollbar.set(0, 1)
+                    self.main_vertical_scrollbar.set(0, 1)
     
     def scrollbars_zoom_out(self):
         if(self.scale > 100.0):
@@ -2157,10 +2320,31 @@ class TApp(object):
             vsbar_new_lo = vsbar_pos[0] - vsbar_len/2
             vsbar_new_hi = vsbar_pos[1] + vsbar_len/2
             self.main_vertical_scrollbar.set(vsbar_new_lo, vsbar_new_hi)
-        elif(self.scale == 100.0):
+        elif(self.scale == 100.0 and TModel_Size.FIT):
             self.main_horizontal_scrollbar.set(0, 1)
             self.main_vertical_scrollbar.set(0, 1)
-
+        elif(self.scale == 100.0 and not TModel_Size.FIT):
+            ratio = self.len_tot_x/self.len_tot_y
+            if(ratio > 1.0):
+                self.main_horizontal_scrollbar.set(0, 1/ratio)
+                self.main_vertical_scrollbar.set(0, 1)
+            elif(ratio < 1.0):
+                self.main_horizontal_scrollbar.set(0, 1)
+                self.main_vertical_scrollbar.set(1 - ratio, 1)
+            else:
+                len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+                len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                                2*TWindow_Size.MARG_Y
+                if(len_x_mon > len_y_mon):
+                    self.main_horizontal_scrollbar.set(0, 1)
+                    self.main_vertical_scrollbar.set(1-len_y_mon/len_x_mon, 1)
+                elif(len_x_mon < len_y_mon):
+                    self.main_horizontal_scrollbar.set(0, len_x_mon/len_y_mon)
+                    self.main_vertical_scrollbar.set(0, 1)
+                else:
+                    self.main_horizontal_scrollbar.set(0, 1)
+                    self.main_vertical_scrollbar.set(0, 1)
     
     def model_horizontal_scroll(self, action, number, units = ""):
         "Handle visible model area move in x direction"
@@ -2168,6 +2352,17 @@ class TApp(object):
         hbar_pos = (Decimal(str(hbar_pos[0])), Decimal(str(hbar_pos[1])))
         hbar_len = Decimal(str(1/(self.scale/100)))
         scale_dec = Decimal(str(self.scale))/Decimal('100.0')
+        x_y_ratio = Decimal(str(min(self.len_tot_x, self.len_tot_y)/ \
+                                    max(self.len_tot_x, self.len_tot_y)))
+        len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+        len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                            2*TWindow_Size.MARG_Y
+        if(not TModel_Size.FIT and (self.len_tot_x > self.len_tot_y)):
+            hbar_len *= x_y_ratio*Decimal(str(len_x_mon/len_y_mon))
+        elif(not TModel_Size.FIT and (self.len_tot_x == self.len_tot_y) and \
+             (len_x_mon < len_y_mon)):
+            hbar_len *= Decimal(str(len_x_mon/len_y_mon))
         try:
             dx_float = self.main_horizontal_scrollbar.delta(int(number), 0)
             dx = Decimal(str(dx_float))
@@ -2176,21 +2371,30 @@ class TApp(object):
             new_pos_lower = Decimal(number)
             new_pos_upper = new_pos_lower + Decimal(str(hbar_len))
         else:
+            if(hbar_pos[0] + dx < 0):
+                dx = -hbar_pos[0]
+            elif(hbar_pos[1] + dx > 1):
+                dx = (1 - hbar_pos[1])
             new_pos_lower = hbar_pos[0] + dx
             new_pos_upper = hbar_pos[1] + dx
-        if(new_pos_lower < 0):
-            self.main_horizontal_scrollbar.set(0, hbar_len)
-            new_min_x = Decimal('0.0')
-            new_max_x = Decimal(str(self.len_tot_x))/scale_dec
-        elif(new_pos_upper > 1):
-            self.main_horizontal_scrollbar.set(1 - hbar_len, 1)
-            factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
-            new_min_x = Decimal(str(self.len_tot_x))*factor
-            new_max_x = Decimal(str(self.len_tot_x))
-        else:
-            self.main_horizontal_scrollbar.set(new_pos_lower, new_pos_upper)
-            new_min_x = (new_pos_lower)*Decimal(str(self.len_tot_x))
-            new_max_x = (new_pos_upper)*Decimal(str(self.len_tot_x))
+        # if(new_pos_lower < 0):
+        #     self.main_horizontal_scrollbar.set(0, hbar_len)
+        #     new_min_x = Decimal('0.0')
+        #     new_max_x = Decimal(str(self.len_tot_x))/scale_dec
+        #     if(not TModel_Size.FIT):
+        #         new_max_x *= x_y_ratio*Decimal(str(len_x_mon/len_y_mon))
+        # elif(new_pos_upper > 1):
+        #     self.main_horizontal_scrollbar.set(1 - hbar_len, 1)
+        #     factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
+        #     new_min_x = Decimal(str(self.len_tot_x))*factor
+        #     new_max_x = Decimal(str(self.len_tot_x))
+        #     if(not TModel_Size.FIT):
+        #         new_min_x = (Decimal('1.0') - x_y_ratio*Decimal(str(len_x_mon/len_y_mon))/scale_dec)*\
+        #                     Decimal(str(self.len_tot_x))
+        # else:
+        self.main_horizontal_scrollbar.set(new_pos_lower, new_pos_upper)
+        new_min_x = (new_pos_lower)*Decimal(str(self.len_tot_x))
+        new_max_x = (new_pos_upper)*Decimal(str(self.len_tot_x))
         TModel_Size.MIN_X = float(round(new_min_x, TTicksSettings.ROUND_DIGITS))
         TModel_Size.MAX_X = float(round(new_max_x, TTicksSettings.ROUND_DIGITS))
         # Pack set of instructions below into a single function
@@ -2210,6 +2414,17 @@ class TApp(object):
         vbar_pos = (Decimal(str(vbar_pos[0])), Decimal(str(vbar_pos[1])))
         vbar_len = Decimal(str(1/(self.scale/100)))
         scale_dec = Decimal(str(self.scale))/Decimal('100.0')
+        x_y_ratio = Decimal(str(min(self.len_tot_x, self.len_tot_y)/ \
+                                    max(self.len_tot_x, self.len_tot_y)))
+        len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+        len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                            2*TWindow_Size.MARG_Y
+        if(not TModel_Size.FIT and (self.len_tot_x < self.len_tot_y)):
+            vbar_len *= x_y_ratio*Decimal(str(len_y_mon/len_x_mon))
+        elif(not TModel_Size.FIT and (self.len_tot_x == self.len_tot_y) and \
+             (len_y_mon < len_x_mon)):
+            vbar_len *= Decimal(str(len_y_mon/len_x_mon))
         try:
             dy_float = self.main_horizontal_scrollbar.delta(int(number), 0)
             dy = Decimal(str(dy_float))
@@ -2217,21 +2432,30 @@ class TApp(object):
             new_pos_lower = Decimal(number)
             new_pos_upper = new_pos_lower + Decimal(str(vbar_len))
         else:
+            if(vbar_pos[0] + dy < 0.0):
+                dy = -vbar_pos[0]
+            elif(vbar_pos[1] + dy > 1.0):
+                dy = (1 - vbar_pos[1])
             new_pos_lower = vbar_pos[0] + dy
             new_pos_upper = vbar_pos[1] + dy
-        if(new_pos_lower < 0):
-            self.main_vertical_scrollbar.set(0, vbar_len)
-            factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
-            new_min_y = Decimal(str(self.len_tot_y))*factor
-            new_max_y = Decimal(str(self.len_tot_y))
-        elif(new_pos_upper > 1):
-            self.main_vertical_scrollbar.set(1 - vbar_len, 1)
-            new_min_y = Decimal('0.0')
-            new_max_y = Decimal(str(self.len_tot_y))/scale_dec
-        else:
-            self.main_vertical_scrollbar.set(new_pos_lower, new_pos_upper)
-            new_min_y = (Decimal('1.0') - new_pos_upper)*Decimal(str(self.len_tot_y))
-            new_max_y = (Decimal('1.0') - new_pos_lower)*Decimal(str(self.len_tot_y))
+        # if(new_pos_lower < 0):
+        #     self.main_vertical_scrollbar.set(0, vbar_len)
+        #     factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
+        #     new_min_y = Decimal(str(self.len_tot_y))*factor
+        #     new_max_y = Decimal(str(self.len_tot_y))
+        #     if(not TModel_Size.FIT):
+        #         new_min_y = Decimal(str(self.len_tot_y))*(Decimal('1.0') - x_y_ratio*\
+        #                             Decimal(str(len_y_mon/len_x_mon)))*scale_dec
+        # elif(new_pos_upper > 1):
+        #     self.main_vertical_scrollbar.set(1 - vbar_len, 1)
+        #     new_min_y = Decimal('0.0')
+        #     new_max_y = Decimal(str(self.len_tot_y))/scale_dec
+        #     if(not TModel_Size.FIT):
+        #         new_max_y *= (x_y_ratio*Decimal(str(len_y_mon/len_x_mon)))
+        # else:
+        self.main_vertical_scrollbar.set(new_pos_lower, new_pos_upper)
+        new_min_y = (Decimal('1.0') - new_pos_upper)*Decimal(str(self.len_tot_y))
+        new_max_y = (Decimal('1.0') - new_pos_lower)*Decimal(str(self.len_tot_y))
         TModel_Size.MIN_Y = float(round(new_min_y, TTicksSettings.ROUND_DIGITS))
         TModel_Size.MAX_Y = float(round(new_max_y, TTicksSettings.ROUND_DIGITS))
         # Pack set of instructions below into a single function
@@ -2557,6 +2781,92 @@ class TApp(object):
                                                            ("All files", "*.*")])
         if(filename != ""):
             model_image.save(filename)
+
+    def init_model_move(self, event):
+        self.move_const_point = TPoint(event.x, event.y)
+
+    def move_visible_model(self, event):
+        dr = TPoint(self.move_const_point.x - event.x, \
+                    event.y - self.move_const_point.y)
+        len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
+                            2*TWindow_Size.MARG_X
+        len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
+                            2*TWindow_Size.MARG_Y
+        len_x_mod = TModel_Size.MAX_X - TModel_Size.MIN_X
+        len_y_mod = TModel_Size.MAX_Y - TModel_Size.MIN_Y
+        dr.x = dr.x * len_x_mod/len_x_mon
+        dr.y = dr.y * len_y_mod/len_y_mon
+        if(TModel_Size.MIN_X + dr.x <= 0.0):
+            dr.x = -TModel_Size.MIN_X
+        if(TModel_Size.MIN_Y + dr.y <= 0.0):
+            dr.y = -TModel_Size.MIN_Y
+        if(TModel_Size.MAX_X + dr.x >= TModel_Size.DOM_X):
+            dr.x = TModel_Size.DOM_X - TModel_Size.MAX_X
+        if(TModel_Size.MAX_Y + dr.y >= TModel_Size.DOM_Y):
+            dr.y = TModel_Size.DOM_Y - TModel_Size.MAX_Y
+        TModel_Size.MIN_X += dr.x
+        TModel_Size.MIN_Y += dr.y
+        TModel_Size.MAX_X += dr.x
+        TModel_Size.MAX_Y += dr.y
+        # print(TModel_Size.MIN_X, TModel_Size.MIN_Y, TModel_Size.MAX_X, TModel_Size.MAX_Y)
+        self.coordsys.model_size_update()
+        self.coordsys.window_size_update()
+        for single_shape in self.shapes:
+            single_shape.update_window_positions()
+        self.coordsys.display_settings_update()
+        self.main_horizontal_scrollbar.set(TModel_Size.MIN_X/TModel_Size.DOM_X, \
+                                           TModel_Size.MAX_X/TModel_Size.DOM_X)
+        self.main_vertical_scrollbar.set(1 - TModel_Size.MAX_Y/TModel_Size.DOM_Y, \
+                                         1 - TModel_Size.MIN_Y/TModel_Size.DOM_Y)
+        self.main_canvas.delete("all")
+        self.canvas_refresh()
+        # self.draw_mouse_move()
+        self.move_const_point = TPoint(event.x, event.y)
+
+    def dispatch_model_move(self, event):
+        self.move_const_point = None
+    
+    def modwin(self, pt):
+        return TG.model_to_window(pt, \
+                                  TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
+                                  TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y), \
+                                  TPoint(TWindow_Size.BOX_MIN_X, \
+                                         TWindow_Size.BOX_MIN_Y), \
+                                  TPoint(TWindow_Size.BOX_MAX_X, \
+                                         TWindow_Size.BOX_MAX_Y))
+    
+    def winmod(self, pt):
+        return TG.window_to_model(pt, \
+                                  TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
+                                  TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y), \
+                                  TPoint(TWindow_Size.BOX_MIN_X, \
+                                         TWindow_Size.BOX_MIN_Y), \
+                                  TPoint(TWindow_Size.BOX_MAX_X, \
+                                         TWindow_Size.BOX_MAX_Y), \
+                                  TModel_Size.DX, TModel_Size.DY)
+    
+    def distmodwin(self, dist):
+        return TG.dist_model_to_window(dist,  \
+                                       TPoint(TModel_Size.MIN_X, \
+                                              TModel_Size.MIN_Y), \
+                                       TPoint(TModel_Size.MAX_X, \
+                                              TModel_Size.MAX_Y), \
+                                       TPoint(TWindow_Size.BOX_MIN_X, \
+                                              TWindow_Size.BOX_MIN_Y), \
+                                       TPoint(TWindow_Size.BOX_MAX_X, \
+                                              TWindow_Size.BOX_MAX_Y))
+    
+    def distwinmod(self, dist):
+        return TG.dist_window_to_model(dist,  \
+                                       TPoint(TModel_Size.MIN_X, \
+                                              TModel_Size.MIN_Y), \
+                                       TPoint(TModel_Size.MAX_X, \
+                                              TModel_Size.MAX_Y), \
+                                       TPoint(TWindow_Size.BOX_MIN_X, \
+                                              TWindow_Size.BOX_MIN_Y), \
+                                       TPoint(TWindow_Size.BOX_MAX_X, \
+                                              TWindow_Size.BOX_MAX_Y), \
+                                       TModel_Size.DX, TModel_Size.DY)
 
 
 def centre_window(window):
