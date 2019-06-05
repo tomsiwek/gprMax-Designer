@@ -9,7 +9,7 @@ import subprocess
 import sys
 from tkinter import Tk, Canvas, Menu, messagebox, BooleanVar, Frame, Button, \
                     Toplevel, Text, Label, PanedWindow, PhotoImage, simpledialog, \
-                    colorchooser, filedialog, Scrollbar
+                    colorchooser, filedialog, Scrollbar, Event
 from tkinter import LEFT, TOP, X, Y, FLAT, RAISED, SUNKEN, ARC, PIESLICE, INSERT, \
                     END, RIGHT, BOTTOM, VERTICAL, N, S, E, W, NS, EW, NSEW, BOTH, \
                     ACTIVE, HORIZONTAL, VERTICAL
@@ -72,6 +72,7 @@ class TApp(object):
     scale = 100.0
     len_tot_x = 10.0
     len_tot_y = 10.0
+    prev_mouse_pos = None
 
     def __init__ (self, master):
         self.master = master
@@ -291,13 +292,23 @@ class TApp(object):
                                       command = self.view_zoom_out)
         self.zoom_out_button.grid(row = 0, column = 11, padx = 2, pady = 2)
         Label(self.main_toolbar, text = "|").grid(row = 0, column = 12, padx=2, pady=2)
+        self.model_settings_button = Button(self.main_toolbar, text = "model", relief = FLAT,\
+                                            command = self.change_model_size)
+        self.model_settings_button.grid(row = 0, column = 13, padx=2, pady=2)
+        self.survey_settings_button = Button(self.main_toolbar, text = "survey", relief = FLAT,\
+                                            command = self.survey_settings)
+        self.survey_settings_button.grid(row = 0, column = 14, padx=2, pady=2)
+        self.display_settings_button = Button(self.main_toolbar, text = "display", relief = FLAT,\
+                                            command = self.display_settings)
+        self.display_settings_button.grid(row = 0, column = 15, padx=2, pady=2)
+        Label(self.main_toolbar, text = "|").grid(row = 0, column = 16, padx=2, pady=2)
         self.parseToGprMaxButton = Button(self.main_toolbar, text = "Parse to gprMax", \
                                           relief = FLAT, command = self.parse_to_gprmax)
-        self.parseToGprMaxButton.grid(row = 0, column = 13, padx = 2, pady = 2)
-        Label(self.main_toolbar, text = "|").grid(row = 0, column = 14, padx=2, pady=2)
+        self.parseToGprMaxButton.grid(row = 0, column = 17, padx = 2, pady = 2)
+        Label(self.main_toolbar, text = "|").grid(row = 0, column = 18, padx=2, pady=2)
         self.exitButton = Button(self.main_toolbar, text = "Q", relief=FLAT, \
                                  command = self.master.destroy)
-        self.exitButton.grid(row = 0, column = 15, padx=2, pady=2)
+        self.exitButton.grid(row = 0, column = 19, padx=2, pady=2)
         self.main_toolbar.grid(row = 0, column = 0, sticky = EW)
 
     def init_status_bar(self):
@@ -341,6 +352,8 @@ class TApp(object):
         self.master.bind("<Key-p>", self.set_mode_polygon)
         self.master.bind("<Escape>", self.canvas_interrupt)
         # self.master.bind("<Delete>", self.remove_shape)
+        self.master.bind("<Key-plus>", self.view_zoom_in)
+        self.master.bind("<Key-minus>", self.view_zoom_out)        
 
     def load_toolbar_icons(self):
         try:
@@ -355,6 +368,9 @@ class TApp(object):
             self.drawIcon = PhotoImage(file = "./icons/icon_draw.gif")
             self.moveIcon = PhotoImage(file = "./icons/icon_move.gif")
             self.resizeIcon = PhotoImage(file = "./icons/icon_resize.gif")
+            self.modelIcon = PhotoImage(file = "./icons/icon_model.gif")
+            self.surveyIcon = PhotoImage(file = "./icons/icon_survey.gif")
+            self.displayIcon = PhotoImage(file = "./icons/icon_display.gif")
             self.rectangleButton.config(image = self.rectangleIcon)
             self.cylinderButton.config(image = self.cylinderIcon)
             self.cylinSectorButton.config(image = self.cylinSectorIcon)
@@ -366,8 +382,11 @@ class TApp(object):
             self.draw_button.config(image = self.drawIcon)
             self.move_button.config(image = self.moveIcon)
             self.resize_button.config(image = self.resizeIcon)
+            self.model_settings_button.config(image = self.modelIcon)
+            self.survey_settings_button.config(image = self.surveyIcon)
+            self.display_settings_button.config(image = self.displayIcon)
         except Exception as message:
-            messagebox.showerror ("Error while loading icons", message)
+            messagebox.showerror("Error while loading icons", message)
         
     def canvas_refresh(self, *, swap = False):
         "Redraw all shapes on canvas"
@@ -463,13 +482,13 @@ class TApp(object):
                 self.main_canvas.delete("all")
                 self.canvas_refresh()
 
-    def toogle_grid (self):
-        if (self.coordsys.grid):
-            self.coordsys.toogle_grid ("Off")
+    def toogle_grid(self):
+        if(self.coordsys.grid):
+            self.coordsys.toogle_grid("Off")
         else:
-            self.coordsys.toogle_grid ("On")
-        self.main_canvas.delete ("all")
-        self.canvas_refresh ()
+            self.coordsys.toogle_grid("On")
+        self.main_canvas.delete("all")
+        self.canvas_refresh()
 
     # Keyboard up arrow press event
     def increase_shapes_width(self, event):
@@ -607,7 +626,7 @@ class TApp(object):
             self.right_button_popup.post(event.x_root, event.y_root)
         finally:
             self.right_button_popup.grab_release()
-    
+
     def set_mode_rectangle(self, event = None):
         "Set drawn shape to rectangle"
         self.mode = "Rectangle"
@@ -743,11 +762,24 @@ class TApp(object):
     def canvas_resize(self, event):
         # Resize canvas, should the window resize occur
         try:
+            # if(not TModel_Size.FIT):
+            #     deltax = event.width - TWindow_Size.MAX_X
+            #     deltay = event.height - TWindow_Size.MAX_Y
+            #     deltax_mod = self.distwinmod(deltax)
+            #     deltay_mod = self.distwinmod(deltay)
+            #     TModel_Size.MAX_X += deltax_mod
+            #     TModel_Size.MAX_Y += deltay_mod
+                # self.coordsys.model_size_update()
+                # self.main_horizontal_scrollbar.set(TModel_Size.MIN_X/TModel_Size.DOM_X, \
+                #                                    TModel_Size.MIN_X/TModel_Size.DOM_X)
+                # self.main_vertical_scrollbar.set(TModel_Size.MIN_Y/TModel_Size.DOM_Y, \
+                #                                  TModel_Size.MIN_Y/TModel_Size.DOM_Y)
             TWindow_Size.MAX_X = event.width
             TWindow_Size.MAX_Y = event.height
             self.coordsys.window_size_update()
             for single_shape in self.shapes:
                 single_shape.update_window_positions()
+            self.view_zoom_reset()
             self.main_canvas.delete("all")
             self.canvas_refresh()
         except Exception as message:
@@ -759,7 +791,7 @@ class TApp(object):
                                               TTicksSettings.ROUND_DIGITS, \
                                               TModel_Size.MIN_X, TModel_Size.MIN_Y, \
                                               TModel_Size.MAX_X, TModel_Size.MAX_Y,
-                                              TModel_Size.FIT)
+                                              TModel_Size.FIT, TTicksSettings.LABEL_INT)
         result = input_dialog.result
         if(result != None):
             try:
@@ -772,8 +804,9 @@ class TApp(object):
                 # TModel_Size.MAX_Y = result[6]
                 if(result[3] == "colour"):
                     TColours.FILL = True
-                elif(result[4] == "none"):
+                elif(result[3] == "none"):
                     TColours.FILL = False
+                TTicksSettings.LABEL_INT = result[4]
                 self.view_zoom_reset()
                 self.coordsys.model_size_update()
                 self.coordsys.window_size_update()
@@ -812,7 +845,6 @@ class TApp(object):
         self.resize_shape_num = -1
         self.manipulated_shape_num = -1
         self.resize_moving_point = -1
-        self.main_canvas.config(cursor = "arrow")
         self.main_canvas.delete("all")
         self.copy_pos = None
         # self.canvas_refresh()
@@ -857,17 +889,21 @@ class TApp(object):
                                               num = len(self.shapes) - 1))
 
     def create_cylin_sector(self):
-        input_str = simpledialog.askstring ("Input coordinates", "Give cylinder sector's centre coordinates,\nradius, start and extent angles")
+        input_str = simpledialog.askstring ("Input coordinates", "Give cylinder \
+                                             sector's centre coordinates,\nradius, \
+                                             start and extent angles")
         try:
             tokens = input_str.split ()
             centre = TPoint (float (tokens [0] ), float(tokens [1] ) )
             radius = float(tokens[2])
             start =  float(tokens[3])
             extent = float(tokens[4])
-            self.shapes.append (TCylinSector (centre_mod = centre, radius_mod = radius, start = start, extent = extent, \
-                colour = self.shapes_colour, width = self.shapes_width) )
+            self.shapes.append(TCylinSector(centre_mod = centre, radius_mod = radius, \
+                                            start = start, extent = extent, \
+                                            colour = self.shapes_colour, \
+                                            width = self.shapes_width))
             self.main_canvas.delete ("all")
-            self.canvas_refresh ()
+            self.canvas_refresh()
         except Exception as message:
             messagebox.showerror("Error while creating polygon!", message)
         else:
@@ -929,7 +965,7 @@ class TApp(object):
         result = input_dialog.result
         if(result):
             TSurveySettings.TYPE = result[0]
-            TSurveySettings.DT = result[1]
+            TSurveySettings.TSF = result[1]
             TSurveySettings.TIME_WINDOW = result[2]
             TSurveySettings.WAVE_TYPE = result[3]
             TSurveySettings.AMPLITUDE = result[4]
@@ -942,16 +978,19 @@ class TApp(object):
             TSurveySettings.MESSAGES = result[11]
             TSurveySettings.GEOM_VIEW = result[12]
             TSurveySettings.GEOM_FILE = result[13]
+            TSurveySettings.SNAPSHOT = result[14]
+            TSurveySettings.SNAP_TIME = result[15]
+            TSurveySettings.SNAP_FILE = result[16]
             if(result[0] == "rx_array"):
-                TSurveySettings.RX_STEP_X = result[14]
-                TSurveySettings.RX_STEP_Y = result[15]
-                TSurveySettings.RX_MAX_X = result[16]
-                TSurveySettings.RX_MAX_Y = result[17]
+                TSurveySettings.RX_STEP_X = result[17]
+                TSurveySettings.RX_STEP_Y = result[18]
+                TSurveySettings.RX_MAX_X = result[19]
+                TSurveySettings.RX_MAX_Y = result[20]
             elif(result[0] == "bscan"):
-                TSurveySettings.SRC_STEP_X = result[14]
-                TSurveySettings.SRC_STEP_Y = result[15]
-                TSurveySettings.RX_STEP_X = result[16]
-                TSurveySettings.RX_STEP_Y = result[17]
+                TSurveySettings.SRC_STEP_X = result[17]
+                TSurveySettings.SRC_STEP_Y = result[18]
+                TSurveySettings.RX_STEP_X = result[19]
+                TSurveySettings.RX_STEP_Y = result[20]
     
     def edit_shape(self, event):
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -1167,6 +1206,78 @@ class TApp(object):
             if(x >= pt.x - radius and x <= pt.x + radius \
                and y >= pt.y - radius and y <= pt.y + radius):
                 return deepcopy(pt)
+        
+    def overlap_coord_mod(self, shape, x, y, radius):
+        "Return coordinates of shapes's characteristic point or vertex overlaped by mouse"
+        if(shape.type == "Rectangle"):
+            return self.rectangle_overlap_coord_mod(shape, x, y, radius)
+        elif(shape.type == "Cylinder"):
+            try:
+                return self.cylinder_overlap_coord_mod(shape, x, y, radius)
+            except:
+                return TPoint(x, y)
+        elif(shape.type == "CylinSector"):
+            return self.cylin_sector_overlap_coord_mod(shape, x, y, radius)
+        elif(shape.type == "Polygon"):
+            return self.polygon_overlap_coord_mod(shape, x, y, radius)
+    
+    def rectangle_overlap_coord_mod(self, shape, x, y, radius):
+        "Return coordinates of rectangle's vertex overlaped by mouse"
+        if(x >= shape.point1.x - radius and x <= shape.point1.x + radius \
+           and y >= shape.point1.y - radius and y <= shape.point1.y + radius):
+            return deepcopy(shape.point1_mod)
+        elif(x >= shape.point2.x - radius and x <= shape.point2.x + radius \
+             and y >= shape.point2.y - radius and y <= shape.point2.y + radius):
+            return deepcopy(shape.point2_mod)
+        elif(x >= shape.point3.x - radius and x <= shape.point3.x + radius \
+             and y >= shape.point3.y - radius and y <= shape.point3.y + radius):
+            return deepcopy(shape.point3_mod)
+        elif(x >= shape.point4.x - radius and x <= shape.point4.x + radius \
+             and y >= shape.point4.y - radius and y <= shape.point4.y + radius):
+            return deepcopy(shape.point4_mod)
+
+    def cylinder_overlap_coord_mod(self, shape, x, y, radius):
+        "Return coordinates of cylinder's characteristic point overlaped by mouse"
+        if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
+           and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
+            return deepcopy(shape.centre_mod)
+        elif(x >= shape.centre.x + shape.radius - radius and \
+             x <= shape.centre.x + shape.radius + radius and \
+             y >= shape.centre.y - radius and y <= shape.centre.y + radius):
+             return TPoint(shape.centre_mod.x + shape.radius_mod, shape.centre_mod.y)
+        elif(x >= shape.centre.x - shape.radius - radius and \
+             x <= shape.centre.x - shape.radius + radius and \
+             y >= shape.centre_mod.y - radius and y <= shape.centre_mod.y + radius):
+             return TPoint(shape.centre_mod.x - shape.radius_mod, shape.centre_mod.y)
+        elif(x >= shape.centre.x - radius and x <= shape.centre.x  + radius and \
+             y >= shape.centre.y + shape.radius - radius and \
+             y <= shape.centre.y + shape.radius + radius):
+             return TPoint(shape.centre_mod.x, shape.centre_mod.y + shape.radius_mod)
+        elif(x >= shape.centre.x - radius and x <= shape.centre.x  + radius and \
+             y >= shape.centre.y - shape.radius - radius and \
+             y <= shape.centre.y - shape.radius + radius):
+             return TPoint(shape.centre_mod.x, shape.centre_mod.y - shape.radius_mod)
+        else:
+            raise Exception("Can't stick to circle's edge")
+    
+    def cylin_sector_overlap_coord_mod(self, shape, x, y, radius):
+        "Return coordinates of cylinder sector's characteristic point overlaped by mouse"
+        if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
+           and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
+            return deepcopy(shape.centre_mod)
+        elif(x >= shape.boundary_pt1.x - radius and x <= shape.boundary_pt1.x + radius \
+             and y >= shape.boundary_pt1.y - radius and y <= shape.boundary_pt1.y + radius):
+            return deepcopy(shape.boundary_pt1_mod)
+        elif(x >= shape.boundary_pt2.x - radius and x <= shape.boundary_pt2.x + radius \
+             and y >= shape.boundary_pt2.y - radius and y <= shape.boundary_pt2.y + radius):
+            return deepcopy(shape.boundary_pt2_mod)
+    
+    def polygon_overlap_coord_mod(self, shape, x, y, radius):
+        "Return coordinates of polygon's vertex overlaped by mouse"
+        for i, pt in enumerate(shape.points):
+            if(x >= pt.x - radius and x <= pt.x + radius \
+               and y >= pt.y - radius and y <= pt.y + radius):
+                return deepcopy(shape.points_mod[i])
     
     # --------------------------------------------------------------------------
 
@@ -1528,27 +1639,30 @@ class TApp(object):
         else:
             self.manipulated_shape_num = overlap_num
             self.move = True
-            self.move_const_point = self.overlap_coord(self.shape_buffer, event.x, event.y, self.radius)
+            self.move_const_point = self.overlap_coord_mod(self.shape_buffer, \
+                                                           event.x, event.y, \
+                                                           self.radius)
     
     def rectangle_click_move_insert(self, event, overlap_num = -1):
         "Click event while active mouse working mode is set to 'move', there is a shape being moved and shape mode is set to 'Rectangle'"
         self.main_canvas.delete("all")
         if(overlap_num > -1):
-            pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
+            pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
+                                    self.radius)
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
-        self.shape_buffer.point1.x += offset_x
-        self.shape_buffer.point1.y += offset_y
-        self.shape_buffer.point2.x += offset_x
-        self.shape_buffer.point2.y += offset_y
-        self.shape_buffer.point3.x += offset_x
-        self.shape_buffer.point3.y += offset_y
-        self.shape_buffer.point4.x += offset_x
-        self.shape_buffer.point4.y += offset_y
-        self.shape_buffer.update_model_positions()
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        self.shape_buffer.point1_mod.x += offset_x
+        self.shape_buffer.point1_mod.y += offset_y
+        self.shape_buffer.point2_mod.x += offset_x
+        self.shape_buffer.point2_mod.y += offset_y
+        self.shape_buffer.point3_mod.x += offset_x
+        self.shape_buffer.point3_mod.y += offset_y
+        self.shape_buffer.point4_mod.x += offset_x
+        self.shape_buffer.point4_mod.y += offset_y
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.move_const_point = None
@@ -1561,14 +1675,14 @@ class TApp(object):
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
-        self.shape_buffer.centre.x += offset_x
-        self.shape_buffer.centre.y += offset_y
-        self.shape_buffer.update_model_positions()
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        self.shape_buffer.centre_mod.x += offset_x
+        self.shape_buffer.centre_mod.y += offset_y
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.move_const_point = None
@@ -1581,20 +1695,22 @@ class TApp(object):
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
-        self.shape_buffer.centre.x += offset_x
-        self.shape_buffer.centre.y += offset_y
-        bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(self.shape_buffer.centre,\
-                                                                   self.shape_buffer.radius, \
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        self.shape_buffer.centre_mod.x += offset_x
+        self.shape_buffer.centre_mod.y += offset_y
+        centre_win = self.modwin(self.shape_buffer.centre_mod)
+        radius_win = self.distmodwin(self.shape_buffer.radius_mod)
+        bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(centre_win,\
+                                                                   radius_win, \
                                                                    self.shape_buffer.start, \
                                                                    self.shape_buffer.extent)
-        self.shape_buffer.boundary_pt1 = bp1
-        self.shape_buffer.boundary_pt2 = bp2
-        self.shape_buffer.update_model_positions()
+        self.shape_buffer.boundary_pt1_mod = self.winmod(bp1)
+        self.shape_buffer.boundary_pt2_mod = self.winmod(bp2)
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.move_const_point = None
@@ -1607,15 +1723,15 @@ class TApp(object):
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
-        for pt in self.shape_buffer.points:
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        for pt in self.shape_buffer.points_mod:
             pt.x += offset_x
             pt.y += offset_y
-        self.shape_buffer.update_model_positions()
+        # self.shape_buffer.update_model_positions()
         self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
@@ -1646,52 +1762,69 @@ class TApp(object):
         "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Rectangle'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        offset_x_win = self.distmodwin(offset_x)
+        offset_y_win = -self.distmodwin(offset_y)
         self.main_canvas.delete("all")
         self.canvas_refresh()
-        self.main_canvas.create_rectangle(self.shape_buffer.point1.x + offset_x, \
-                                          self.shape_buffer.point1.y + offset_y, \
-                                          self.shape_buffer.point2.x + offset_x, \
-                                          self.shape_buffer.point2.y + offset_y, \
+        pt1_win = self.modwin(self.shape_buffer.point1_mod)
+        pt2_win = self.modwin(self.shape_buffer.point2_mod)
+        self.main_canvas.create_rectangle(pt1_win.x + offset_x_win, \
+                                          pt1_win.y + offset_y_win, \
+                                          pt2_win.x + offset_x_win, \
+                                          pt2_win.y + offset_y_win, \
                                           outline = self.shape_buffer.colour, \
                                           width = self.shape_buffer.width)
     
     def cylinder_mouse_move_move(self, event, overlap_num):
         "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Cylinder'"
         if(overlap_num > -1):
-            pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
+            pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
+                                    self.radius)
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        offset_x_win = self.distmodwin(offset_x)
+        offset_y_win = -self.distmodwin(offset_y)
+        centre_win = self.modwin(self.shape_buffer.centre_mod)
+        radius_win = self.distmodwin(self.shape_buffer.radius_mod)
         self.main_canvas.delete("all")
         self.canvas_refresh()
-        self.main_canvas.create_oval(self.shape_buffer.centre.x + offset_x + self.shape_buffer.radius, \
-                                     self.shape_buffer.centre.y + offset_y + self.shape_buffer.radius, \
-                                     self.shape_buffer.centre.x + offset_x - self.shape_buffer.radius, \
-                                     self.shape_buffer.centre.y + offset_y - self.shape_buffer.radius, \
+        self.main_canvas.create_oval(centre_win.x + offset_x_win + \
+                                     radius_win, \
+                                     centre_win.y + offset_y_win + \
+                                     radius_win, \
+                                     centre_win.x + offset_x_win - \
+                                     radius_win, \
+                                     centre_win.y + offset_y_win - \
+                                     radius_win, \
                                      outline = self.shape_buffer.colour, width = self.shape_buffer.width)
     
     def cylin_sector_mouse_move_move(self, event, overlap_num):
         "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'CylinSector'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
+        offset_x_win = self.distmodwin(offset_x)
+        offset_y_win = -self.distmodwin(offset_y)
+        centre_win = self.modwin(self.shape_buffer.centre_mod)
+        radius_win = self.distmodwin(self.shape_buffer.radius_mod)
         self.main_canvas.delete("all")
-        self.canvas_refresh ()
-        self.main_canvas.create_arc(self.shape_buffer.centre.x + offset_x + self.shape_buffer.radius, \
-                                    self.shape_buffer.centre.y + offset_y + self.shape_buffer.radius, \
-                                    self.shape_buffer.centre.x + offset_x - self.shape_buffer.radius, \
-                                    self.shape_buffer.centre.y + offset_y - self.shape_buffer.radius, \
+        self.canvas_refresh()
+        self.main_canvas.create_arc(centre_win.x + offset_x_win + radius_win, \
+                                    centre_win.y + offset_y_win + radius_win, \
+                                    centre_win.x + offset_x_win - radius_win, \
+                                    centre_win.y + offset_y_win - radius_win, \
                                     start = self.shape_buffer.start, extent = self.shape_buffer.extent, \
                                     outline = self.shape_buffer.colour, width = self.shape_buffer.width)
 
@@ -1699,14 +1832,18 @@ class TApp(object):
         "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Polygon'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.move_const_point.x
-            offset_y = pt.y - self.move_const_point.y
         else:
-            offset_x = event.x - self.move_const_point.x
-            offset_y = event.y - self.move_const_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.move_const_point.x
+        offset_y = pt.y - self.move_const_point.y
         self.main_canvas.delete("all")
         self.canvas_refresh()
-        points_unwrapped = [xs for pt in self.shape_buffer.points for xs in (pt.x + offset_x, pt.y + offset_y)]
+        points_unwrapped = []
+        for pt in self.shape_buffer.points_mod:
+            tmp = self.modwin(TPoint(pt.x + offset_x, pt.y + offset_y))
+            points_unwrapped.append(tmp.x)
+            points_unwrapped.append(tmp.y)
         self.main_canvas.create_polygon(points_unwrapped, outline = self.shape_buffer.colour, \
                                         width = self.shape_buffer.width, fill = "")
 
@@ -1749,43 +1886,56 @@ class TApp(object):
         else:
             self.manipulated_shape_num = overlap_num
             self.resize = True
-            self.resized_point = self.overlap_coord(self.shape_buffer, event.x, event.y, self.radius)
+            self.resized_point = self.overlap_coord_mod(self.shape_buffer, \
+                                                        event.x, event.y, \
+                                                        self.radius)
 
     def rectangle_click_resize_insert(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'resize', there is a shape being moved and shape mode is set to 'Rectangle'"
+        """
+        Click event while active mouse working mode is set to 'resize', there 
+        is a shape being moved and shape mode is set to 'Rectangle'
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
-        if(self.resized_point.x == self.shape_buffer.point1.x and \
-           self.resized_point.y == self.shape_buffer.point1.y):
-            self.shape_buffer.point1.x += offset_x
-            self.shape_buffer.point1.y += offset_y
-            self.shape_buffer.point3.x += offset_x
-            self.shape_buffer.point4.y += offset_y
-        elif(self.resized_point.x == self.shape_buffer.point2.x and \
-             self.resized_point.y == self.shape_buffer.point2.y):
-            self.shape_buffer.point2.x += offset_x
-            self.shape_buffer.point2.y += offset_y
-            self.shape_buffer.point3.y += offset_y
-            self.shape_buffer.point4.x += offset_x
-        elif(self.resized_point.x == self.shape_buffer.point3.x and \
-             self.resized_point.y == self.shape_buffer.point3.y):
-            self.shape_buffer.point1.x += offset_x
-            self.shape_buffer.point2.y += offset_y
-            self.shape_buffer.point3.x += offset_x
-            self.shape_buffer.point3.y += offset_y
-        elif(self.resized_point.x == self.shape_buffer.point4.x and \
-             self.resized_point.y == self.shape_buffer.point4.y):
-            self.shape_buffer.point1.y += offset_y
-            self.shape_buffer.point2.x += offset_x
-            self.shape_buffer.point4.x += offset_x
-            self.shape_buffer.point4.y += offset_y
-        self.shape_buffer.update_model_positions()
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
+        if(self.resized_point.x == self.shape_buffer.point1_mod.x and \
+           self.resized_point.y == self.shape_buffer.point1_mod.y):
+            self.shape_buffer.point1_mod.x += offset_x
+            self.shape_buffer.point1_mod.y += offset_y
+            self.shape_buffer.point3_mod.x += offset_x
+            self.shape_buffer.point4_mod.y += offset_y
+        elif(self.resized_point.x == self.shape_buffer.point2_mod.x and \
+             self.resized_point.y == self.shape_buffer.point2_mod.y):
+            self.shape_buffer.point2_mod.x += offset_x
+            self.shape_buffer.point2_mod.y += offset_y
+            self.shape_buffer.point3_mod.y += offset_y
+            self.shape_buffer.point4_mod.x += offset_x
+        elif(self.resized_point.x == self.shape_buffer.point3_mod.x and \
+             self.resized_point.y == self.shape_buffer.point3_mod.y):
+            self.shape_buffer.point1_mod.x += offset_x
+            self.shape_buffer.point2_mod.y += offset_y
+            self.shape_buffer.point3_mod.x += offset_x
+            self.shape_buffer.point3_mod.y += offset_y
+        elif(self.resized_point.x == self.shape_buffer.point4_mod.x and \
+             self.resized_point.y == self.shape_buffer.point4_mod.y):
+            self.shape_buffer.point1_mod.y += offset_y
+            self.shape_buffer.point2_mod.x += offset_x
+            self.shape_buffer.point4_mod.x += offset_x
+            self.shape_buffer.point4_mod.y += offset_y
+        self.shape_buffer.point1_mod.x = TG.round_to_multiple(self.shape_buffer.point1_mod.x, TModel_Size.DX)
+        self.shape_buffer.point1_mod.y = TG.round_to_multiple(self.shape_buffer.point1_mod.y, TModel_Size.DY)
+        self.shape_buffer.point2_mod.x = TG.round_to_multiple(self.shape_buffer.point2_mod.x, TModel_Size.DX)
+        self.shape_buffer.point2_mod.y = TG.round_to_multiple(self.shape_buffer.point2_mod.y, TModel_Size.DY)
+        self.shape_buffer.point3_mod.x = TG.round_to_multiple(self.shape_buffer.point3_mod.x, TModel_Size.DX)
+        self.shape_buffer.point3_mod.y = TG.round_to_multiple(self.shape_buffer.point3_mod.y, TModel_Size.DY)
+        self.shape_buffer.point4_mod.x = TG.round_to_multiple(self.shape_buffer.point4_mod.x, TModel_Size.DX)
+        self.shape_buffer.point4_mod.y = TG.round_to_multiple(self.shape_buffer.point4_mod.y, TModel_Size.DY)
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.resized_point = None
@@ -1794,19 +1944,22 @@ class TApp(object):
         self.canvas_refresh()
 
     def cylinder_click_resize_insert(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'resize', there is a shape being moved and shape mode is set to 'Cylinder'"
+        """
+        Click event while active mouse working mode is set to 'resize', there 
+        is a shape being moved and shape mode is set to 'Cylinder'
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
-        radius = ((self.resized_point.x + offset_x - self.shape_buffer.centre.x)**2 + \
-                  (self.resized_point.y + offset_y - self.shape_buffer.centre.y)**2)**0.5
-        self.shape_buffer.radius = radius
-        self.shape_buffer.update_model_positions()
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
+        radius = ((self.resized_point.x + offset_x - self.shape_buffer.centre_mod.x)**2 + \
+                  (self.resized_point.y + offset_y - self.shape_buffer.centre_mod.y)**2)**0.5
+        self.shape_buffer.radius_mod = radius
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.resized_point = None
@@ -1815,54 +1968,61 @@ class TApp(object):
         self.canvas_refresh()
 
     def cylin_sector_click_resize_insert(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'resize', there is a shape being moved and shape mode is set to 'CylinSector'"
-        self.main_canvas.delete ("all")
-        radius = ((event.x - self.shape_buffer.centre.x)**2 + \
-                  (event.y - self.shape_buffer.centre.y)**2)**0.5
+        """
+        Click event while active mouse working mode is set to 'resize', there is 
+        a shape being moved and shape mode is set to 'CylinSector'"
+        """
+        self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            radius = ((pt.x - self.shape_buffer.centre.x)**2 + \
-                      (pt.y - self.shape_buffer.centre.y)**2)**0.5
-            event.x = pt.x
-            event.y = pt.y
-        if(self.resized_point.x == self.shape_buffer.boundary_pt1.x and \
-           self.resized_point.y == self.shape_buffer.boundary_pt1.y):
-            start, extent = self.calculate_cylin_sector_start_extent(self.shape_buffer.centre, \
-                                                                     event, \
-                                                                     self.shape_buffer.boundary_pt2, \
-                                                                     radius)
+        else:
+            pt = TPoint(event.x, event.y)
+        pt_mon = deepcopy(pt)
+        pt = self.winmod(pt)
+        radius = ((pt.x - self.shape_buffer.centre_mod.x)**2 + \
+                  (pt.y - self.shape_buffer.centre_mod.y)**2)**0.5
+        radius_mon = self.distmodwin(radius)
+        centre_mon = self.modwin(self.shape_buffer.centre_mod)
+        bpt1_mon = self.modwin(self.shape_buffer.boundary_pt1_mod)
+        bpt2_mon = self.modwin(self.shape_buffer.boundary_pt2_mod)
+        if(self.resized_point.x == self.shape_buffer.boundary_pt1_mod.x and \
+           self.resized_point.y == self.shape_buffer.boundary_pt1_mod.y):
+            start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
+                                                                     pt_mon, \
+                                                                     bpt2_mon, \
+                                                                     radius_mon)
             start = TG.round_to_multiple(start, min(TModel_Size.DX, TModel_Size.DY))
             extent = TG.round_to_multiple(extent, min(TModel_Size.DX, TModel_Size.DY))
-            self.shape_buffer.radius = radius
+            self.shape_buffer.radius_mod = radius
             self.shape_buffer.start = start
             self.shape_buffer.extent = extent
-            bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(self.shape_buffer.centre, \
-                                                                       radius, start, extent)
-            self.shape_buffer.boundary_pt1 = bp1
-            self.shape_buffer.boundary_pt2 = bp2
-        elif(self.resized_point.x == self.shape_buffer.boundary_pt2.x and \
-             self.resized_point.y == self.shape_buffer.boundary_pt2.y):
-            radius = ((self.shape_buffer.boundary_pt1.x - self.shape_buffer.centre.x)**2 + \
-                      (self.shape_buffer.boundary_pt1.y - self.shape_buffer.centre.y)**2)**(0.5)
-            start, extent = self.calculate_cylin_sector_start_extent(self.shape_buffer.centre, \
-                                                                     self.shape_buffer.boundary_pt1, \
-                                                                     TPoint(event.x, event.y), \
-                                                                     self.shape_buffer.radius)
+            bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(centre_mon, \
+                                                                       radius_mon, start, extent)
+            self.shape_buffer.boundary_pt1_mod = self.winmod(bp1)
+            self.shape_buffer.boundary_pt2_mod = self.winmod(bp2)
+        elif(self.resized_point.x == self.shape_buffer.boundary_pt2_mod.x and \
+             self.resized_point.y == self.shape_buffer.boundary_pt2_mod.y):
+            radius = ((self.shape_buffer.boundary_pt1_mod.x - self.shape_buffer.centre_mod.x)**2 + \
+                      (self.shape_buffer.boundary_pt1_mod.y - self.shape_buffer.centre_mod.y)**2)**(0.5)
+            radius_mon = self.distmodwin(radius)
+            start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
+                                                                     bpt1_mon, pt_mon, \
+                                                                     radius_mon)
             start = TG.round_to_multiple(start, min(TModel_Size.DX, TModel_Size.DY))
             extent = TG.round_to_multiple(extent, min(TModel_Size.DX, TModel_Size.DY))
             self.shape_buffer.extent = extent
-            _, bp2 = self.calculate_cylin_sector_boundary_pts_window(self.shape_buffer.centre, \
-                                                                     radius, start, extent)
-            self.shape_buffer.boundary_pt2 = bp2
+            _, bp2 = self.calculate_cylin_sector_boundary_pts_window(centre_mon, \
+                                                                     radius_mon, start, extent)
+            self.shape_buffer.boundary_pt2_mod = self.winmod(bp2)
         else:
-            self.shape_buffer.radius = radius
-            bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(self.shape_buffer.centre, \
-                                                                       radius, \
+            self.shape_buffer.radius_mod = radius
+            bp1, bp2 = self.calculate_cylin_sector_boundary_pts_window(centre_mon, \
+                                                                       radius_mon, \
                                                                        self.shape_buffer.start, \
                                                                        self.shape_buffer.extent)
-            self.shape_buffer.boundary_pt1 = bp1
-            self.shape_buffer.boundary_pt2 = bp2
-        self.shape_buffer.update_model_positions()
+            self.shape_buffer.boundary_pt1_mod = self.winmod(bp1)
+            self.shape_buffer.boundary_pt2_mod = self.winmod(bp2)
+        self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
         self.resized_point = None
@@ -1871,21 +2031,24 @@ class TApp(object):
         self.canvas_refresh()
 
     def polygon_click_resize_insert(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'resize', there is a shape being moved and shape mode is set to 'Polygon'"
+        """
+        Click event while active mouse working mode is set to 'resize', there is
+        a shape being moved and shape mode is set to 'Polygon'
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
-        for num, pt in enumerate(self.shape_buffer.points):
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
+        for num, pt in enumerate(self.shape_buffer.points_mod):
             if(pt.x == self.resized_point.x and pt.y == self.resized_point.y):
                 break
-        self.shape_buffer.points[num] = TPoint(self.resized_point.x + offset_x, \
-                                               self.resized_point.y + offset_y)
-        self.shape_buffer.update_model_positions()
+        self.shape_buffer.points_mod[num] = TPoint(self.resized_point.x + offset_x, \
+                                                   self.resized_point.y + offset_y)
+        # self.shape_buffer.update_model_positions()
         self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
@@ -1915,38 +2078,42 @@ class TApp(object):
         "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'Rectangle'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
         self.main_canvas.delete("all")
-        self.canvas_refresh ()
-        if(self.resized_point.x == self.shape_buffer.point1.x and \
-           self.resized_point.y == self.shape_buffer.point1.y):
-            pt1_x = self.shape_buffer.point1.x + offset_x
-            pt1_y = self.shape_buffer.point1.y + offset_y
-            pt2_x = self.shape_buffer.point2.x
-            pt2_y = self.shape_buffer.point2.y
-        elif(self.resized_point.x == self.shape_buffer.point2.x and \
-             self.resized_point.y == self.shape_buffer.point2.y):
-            pt1_x = self.shape_buffer.point1.x
-            pt1_y = self.shape_buffer.point1.y
-            pt2_x = self.shape_buffer.point2.x + offset_x
-            pt2_y = self.shape_buffer.point2.y + offset_y
-        elif(self.resized_point.x == self.shape_buffer.point3.x and \
-             self.resized_point.y == self.shape_buffer.point3.y):
-            pt1_x = self.shape_buffer.point1.x + offset_x
-            pt1_y = self.shape_buffer.point4.y
-            pt2_x = self.shape_buffer.point4.x
-            pt2_y = self.shape_buffer.point2.y + offset_y
-        elif(self.resized_point.x == self.shape_buffer.point4.x and \
-             self.resized_point.y == self.shape_buffer.point4.y):
-            pt1_x = self.shape_buffer.point1.x
-            pt1_y = self.shape_buffer.point1.y + offset_y
-            pt2_x = self.shape_buffer.point2.x + offset_x
-            pt2_y = self.shape_buffer.point2.y
-        self.main_canvas.create_rectangle(pt1_x, pt1_y, pt2_x, pt2_y, \
+        self.canvas_refresh()
+        if(self.resized_point.x == self.shape_buffer.point1_mod.x and \
+           self.resized_point.y == self.shape_buffer.point1_mod.y):
+            pt1_x = self.shape_buffer.point1_mod.x + offset_x
+            pt1_y = self.shape_buffer.point1_mod.y + offset_y
+            pt2_x = self.shape_buffer.point2_mod.x
+            pt2_y = self.shape_buffer.point2_mod.y
+        elif(self.resized_point.x == self.shape_buffer.point2_mod.x and \
+             self.resized_point.y == self.shape_buffer.point2_mod.y):
+            pt1_x = self.shape_buffer.point1_mod.x
+            pt1_y = self.shape_buffer.point1_mod.y
+            pt2_x = self.shape_buffer.point2_mod.x + offset_x
+            pt2_y = self.shape_buffer.point2_mod.y + offset_y
+        elif(self.resized_point.x == self.shape_buffer.point3_mod.x and \
+             self.resized_point.y == self.shape_buffer.point3_mod.y):
+            pt1_x = self.shape_buffer.point1_mod.x + offset_x
+            pt1_y = self.shape_buffer.point4_mod.y
+            pt2_x = self.shape_buffer.point4_mod.x
+            pt2_y = self.shape_buffer.point2_mod.y + offset_y
+        elif(self.resized_point.x == self.shape_buffer.point4_mod.x and \
+             self.resized_point.y == self.shape_buffer.point4_mod.y):
+            pt1_x = self.shape_buffer.point1_mod.x
+            pt1_y = self.shape_buffer.point1_mod.y + offset_y
+            pt2_x = self.shape_buffer.point2_mod.x + offset_x
+            pt2_y = self.shape_buffer.point2_mod.y
+        pt1 = TPoint(pt1_x, pt1_y)
+        pt2 = TPoint(pt2_x, pt2_y)
+        pt1 = self.modwin(pt1)
+        pt2 = self.modwin(pt2)
+        self.main_canvas.create_rectangle(pt1.x, pt1.y, pt2.x, pt2.y, \
                                           outline = self.shape_buffer.colour, \
                                           width = self.shape_buffer.width)
 
@@ -1954,74 +2121,89 @@ class TApp(object):
         "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'Cylinder'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
+            pt = TPoint(event.x, event.y)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
         self.main_canvas.delete("all")
-        self.canvas_refresh ()
-        radius = ((self.resized_point.x + offset_x - self.shape_buffer.centre.x)**2 + \
-                  (self.resized_point.y + offset_y - self.shape_buffer.centre.y)**2)**0.5
-        self.main_canvas.create_oval(self.shape_buffer.centre.x + radius, \
-                                     self.shape_buffer.centre.y + radius, \
-                                     self.shape_buffer.centre.x - radius, \
-                                     self.shape_buffer.centre.y - radius, \
+        self.canvas_refresh()
+        radius = ((self.resized_point.x + offset_x - self.shape_buffer.centre_mod.x)**2 + \
+                  (self.resized_point.y + offset_y - self.shape_buffer.centre_mod.y)**2)**0.5
+        radius_mon = self.distmodwin(radius)
+        centre_mon = self.modwin(self.shape_buffer.centre_mod)
+        self.main_canvas.create_oval(centre_mon.x + radius_mon, \
+                                     centre_mon.y + radius_mon, \
+                                     centre_mon.x - radius_mon, \
+                                     centre_mon.y - radius_mon, \
                                      outline = self.shape_buffer.colour, width = self.shape_buffer.width)
 
     def cylin_sector_mouse_move_resize(self, event, overlap_num):
         "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'CylinSector'"
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            radius = ((pt.x - self.shape_buffer.centre.x)**2 + \
-                      (pt.y - self.shape_buffer.centre.y)**2)**0.5
-            event.x = pt.x
-            event.y = pt.y
-        radius = ((event.x - self.shape_buffer.centre.x)**2 + \
-                  (event.y - self.shape_buffer.centre.y)**2)**0.5
-        self.main_canvas.delete("all")
-        self.canvas_refresh ()
-        if(self.resized_point.x == self.shape_buffer.boundary_pt1.x and \
-           self.resized_point.y == self.shape_buffer.boundary_pt1.y):
-            start, extent = self.calculate_cylin_sector_start_extent(self.shape_buffer.centre, \
-                                                                     event, \
-                                                                     self.shape_buffer.boundary_pt2, \
-                                                                     radius)
-        elif(self.resized_point.x == self.shape_buffer.boundary_pt2.x and \
-             self.resized_point.y == self.shape_buffer.boundary_pt2.y):
-            radius = ((self.shape_buffer.boundary_pt1.x - self.shape_buffer.centre.x)**2 + \
-                      (self.shape_buffer.boundary_pt1.y - self.shape_buffer.centre.y)**2)**(0.5)
-            start, extent = self.calculate_cylin_sector_start_extent(self.shape_buffer.centre, \
-                                                                     self.shape_buffer.boundary_pt1, \
-                                                                     TPoint(event.x, event.y), \
-                                                                     self.shape_buffer.radius)
+        else:
+            pt = TPoint(event.x, event.y)
+        pt_mon = deepcopy(pt)
+        pt = self.winmod(pt)
+        radius = ((pt.x - self.shape_buffer.centre_mod.x)**2 + \
+                  (pt.y - self.shape_buffer.centre_mod.y)**2)**0.5
+        radius_mon = self.distmodwin(radius)
+        centre_mon = self.modwin(self.shape_buffer.centre_mod)
+        bpt1_mon = self.modwin(self.shape_buffer.boundary_pt1_mod)
+        bpt2_mon = self.modwin(self.shape_buffer.boundary_pt2_mod)
+        if(self.resized_point.x == self.shape_buffer.boundary_pt1_mod.x and \
+           self.resized_point.y == self.shape_buffer.boundary_pt1_mod.y):
+            start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
+                                                                     pt_mon, bpt2_mon, \
+                                                                     radius_mon)
+        elif(self.resized_point.x == self.shape_buffer.boundary_pt2_mod.x and \
+             self.resized_point.y == self.shape_buffer.boundary_pt2_mod.y):
+            radius = ((self.shape_buffer.boundary_pt1_mod.x - self.shape_buffer.centre_mod.x)**2 + \
+                      (self.shape_buffer.boundary_pt1_mod.y - self.shape_buffer.centre_mod.y)**2)**(0.5)
+            radius_mon = self.distmodwin(radius)
+            start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
+                                                                     bpt1_mon, pt_mon, 
+                                                                     radius_mon)
         else:
             start = self.shape_buffer.start
             extent = self.shape_buffer.extent
-        self.main_canvas.create_arc(self.shape_buffer.centre.x + radius, \
-                                    self.shape_buffer.centre.y + radius, \
-                                    self.shape_buffer.centre.x - radius, \
-                                    self.shape_buffer.centre.y - radius, \
+        self.main_canvas.delete("all")
+        self.canvas_refresh()
+        self.main_canvas.create_arc(centre_mon.x + radius_mon, \
+                                    centre_mon.y + radius_mon, \
+                                    centre_mon.x - radius_mon, \
+                                    centre_mon.y - radius_mon, \
                                     start = start, extent = extent, \
-                                    outline = self.shape_buffer.colour, width = self.shape_buffer.width)
+                                    outline = self.shape_buffer.colour, \
+                                    width = self.shape_buffer.width)
 
     def polygon_mouse_move_resize(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'resize' and moved shape type is 'Polygon'"
+        """
+        Mouse move event while active mouse working mode is set to 'resize' and 
+        moved shape type is 'Polygon'
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
-            offset_x = pt.x - self.resized_point.x
-            offset_y = pt.y - self.resized_point.y
         else:
-            offset_x = event.x - self.resized_point.x
-            offset_y = event.y - self.resized_point.y
-        points_unwrapped = [xs for pt in self.shape_buffer.points for xs in (pt.x, pt.y)]
-        for num, pt in enumerate(self.shape_buffer.points):
+            pt = TPoint(event.x, event.y)
+        # pt_mon = deepcopy(pt)
+        pt = self.winmod(pt)
+        offset_x = pt.x - self.resized_point.x
+        offset_y = pt.y - self.resized_point.y
+        # points_unwrapped = [xs for pt in self.shape_buffer.points_mod for xs in (pt.x, pt.y)]
+        pts_mod = deepcopy(self.shape_buffer.points_mod)
+        pts_mon = []
+        for pt in pts_mod:
             if(pt.x == self.resized_point.x and pt.y == self.resized_point.y):
-                points_unwrapped[2*num] += offset_x
-                points_unwrapped[2*num + 1] += offset_y                
+                pt.x += offset_x
+                pt.y += offset_y
+            tmp = self.modwin(pt)
+            pts_mon.append(tmp.x)
+            pts_mon.append(tmp.y)
         self.main_canvas.delete("all")
-        self.canvas_refresh ()
-        self.main_canvas.create_polygon(points_unwrapped, outline = self.shape_buffer.colour, \
+        self.canvas_refresh()
+        self.main_canvas.create_polygon(pts_mon, outline = self.shape_buffer.colour, \
                                         width = self.shape_buffer.width, fill = "")
     
     # --------------------------------------------------------------------------
@@ -2048,8 +2230,10 @@ class TApp(object):
         return start, extent
     
     def calculate_cylin_sector_boundary_pts_window(self, centre, radius, start, extent):
-        """Auxiliary method used to calculate cylinder sector's boundary points in window's 
-           coordinates system given its centre, radius, start and extent angles"""
+        """
+        Auxiliary method used to calculate cylinder sector's boundary points in window's 
+        coordinates system given its centre, radius, start and extent angles
+        """
         bp1 = TPoint(int(centre.x + cos(radians(start))*radius), \
                      int(centre.y - sin(radians(start))*radius))
         bp2 = TPoint(int(centre.x + cos(radians(start + extent))*radius), \
@@ -2143,7 +2327,7 @@ class TApp(object):
                       " -n " + str(n_iter) + " --geometry-fixed"
             sts = subprocess.call(command, shell = True)
     
-    def view_zoom_in(self):
+    def view_zoom_in(self, event = None):
         if(TModel_Size.FIT):
             TModel_Size.FIT = False
             TModel_Size.MIN_X = 0.0
@@ -2196,8 +2380,17 @@ class TApp(object):
         self.coordsys.display_settings_update()
         self.main_canvas.delete("all")
         self.canvas_refresh()
+        if(event is None):
+            x = self.main_canvas.winfo_pointerx()
+            y = self.main_canvas.winfo_pointery()
+            abs_coord_x = x - self.main_canvas.winfo_rootx()
+            abs_coord_y = y - self.main_canvas.winfo_rooty()
+            event = Event()
+            event.x = abs_coord_x
+            event.y = abs_coord_y
+        self.canvas_mouse_move(event)
 
-    def view_zoom_out(self):
+    def view_zoom_out(self, event = None):
         self.scale /= 2
         if(self.scale > 100.0):
             x_lenght = TModel_Size.MAX_X - TModel_Size.MIN_X
@@ -2251,6 +2444,15 @@ class TApp(object):
         self.coordsys.display_settings_update()
         self.main_canvas.delete("all")
         self.canvas_refresh()
+        if(event is None):
+            x = self.main_canvas.winfo_pointerx()
+            y = self.main_canvas.winfo_pointery()
+            abs_coord_x = x - self.main_canvas.winfo_rootx()
+            abs_coord_y = y - self.main_canvas.winfo_rooty()
+            event = Event()
+            event.x = abs_coord_x
+            event.y = abs_coord_y
+        self.canvas_mouse_move(event)
     
     def view_zoom_reset(self):
         TModel_Size.FIT = True
@@ -2269,6 +2471,14 @@ class TApp(object):
         self.coordsys.display_settings_update()
         self.main_canvas.delete("all")
         self.canvas_refresh()
+        x = self.main_canvas.winfo_pointerx()
+        y = self.main_canvas.winfo_pointery()
+        abs_coord_x = x - self.main_canvas.winfo_rootx()
+        abs_coord_y = y - self.main_canvas.winfo_rooty()
+        event = Event()
+        event.x = abs_coord_x
+        event.y = abs_coord_y
+        self.canvas_mouse_move(event)
     
     def scrollbars_zoom_in(self):
         if(self.scale > 100.0):
@@ -2578,7 +2788,7 @@ class TApp(object):
 
     def export_hdf5_to_ascii(self):
         "Export a gprMax output file in HDF5 format to ASCII"
-        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+        filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         h5file = h5py.File(filename)
         iterations = h5file.attrs["Iterations"]
@@ -2709,7 +2919,7 @@ class TApp(object):
             self.shape_buffer = deepcopy(self.shapes[shape_num])
             self.shape_buffer.width = 1
     
-    def paste_shape(self, event = None):
+    def paste_shape(self, event = None, deltax = 15, deltay = 15):
         "Paste shape into model"
         self.manipulated_shape_num = len(self.shapes)
         if(event is not None):
@@ -2728,7 +2938,7 @@ class TApp(object):
             self.operations.append(TOperation("paste", num = self.move_shape_num))
     
     def copy_ctrl_c(self, event):
-        "ctrl+z keystroke event"
+        "ctrl+c keystroke event"
         try:
             shape_num = (self.shapes_frame.shapes_list.curselection())[0]
         except IndexError:
@@ -2776,18 +2986,18 @@ class TApp(object):
             else:
                 draw_colour = gray_scale[-1]
             shape.draw_to_image(model_image, draw_colour)
-        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
-                                              filetypes = [("Portable Network Graphics", "*.png"), \
-                                                           ("All files", "*.*")])
+        filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
+                                                filetypes = [("Portable Network Graphics", "*.png"), \
+                                                             ("All files", "*.*")])
         if(filename != ""):
             model_image.save(filename)
 
     def init_model_move(self, event):
-        self.move_const_point = TPoint(event.x, event.y)
+        self.prev_mouse_pos = TPoint(event.x, event.y)
 
     def move_visible_model(self, event):
-        dr = TPoint(self.move_const_point.x - event.x, \
-                    event.y - self.move_const_point.y)
+        dr = TPoint(self.prev_mouse_pos.x - event.x, \
+                    event.y - self.prev_mouse_pos.y)
         len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
                             2*TWindow_Size.MARG_X
         len_y_mon = TWindow_Size.MAX_Y - TWindow_Size.MIN_Y - \
@@ -2820,11 +3030,11 @@ class TApp(object):
                                          1 - TModel_Size.MIN_Y/TModel_Size.DOM_Y)
         self.main_canvas.delete("all")
         self.canvas_refresh()
-        # self.draw_mouse_move()
-        self.move_const_point = TPoint(event.x, event.y)
+        self.canvas_mouse_move(event)
+        self.prev_mouse_pos = TPoint(event.x, event.y)
 
     def dispatch_model_move(self, event):
-        self.move_const_point = None
+        self.prev_mouse_pos = None
     
     def modwin(self, pt):
         return TG.model_to_window(pt, \

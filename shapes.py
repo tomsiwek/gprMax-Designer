@@ -3,7 +3,7 @@ from math import asin, acos, atan, degrees, sin, cos, radians, ceil, floor, pi
 from PIL import Image, ImageDraw
 from random import randrange
 from tkinter import Tk, Canvas, Menu, messagebox, BooleanVar, Frame, Button
-from tkinter import LEFT, TOP, X, FLAT, RAISED, SUNKEN, ARC, PIESLICE, CHORD
+from tkinter import LEFT, TOP, X, FLAT, RAISED, SUNKEN, ARC, PIESLICE, CHORD, W, S
 
 from abc import ABC, abstractmethod
 from geometry import TGeometry as TG
@@ -440,14 +440,14 @@ class TCylinSector(TShape):
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
         max_window = TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y)
-        self.centre = TG.model_to_window (self.centre_mod, min_model, max_model, \
-                                          min_window, max_window)
-        self.radius = TG.dist_model_to_window (self.radius_mod, min_model, max_model, \
-                                               min_window, max_window) 
-        self.boundary_pt1.x = int(self.centre.x + cos(radians (self.start))*self.radius)
-        self.boundary_pt1.y = int(self.centre.y - sin(radians (self.start))*self.radius)
-        self.boundary_pt2.x = int(self.centre.x + cos(radians (self.start + self.extent))*self.radius)
-        self.boundary_pt2.y = int(self.centre.y - sin(radians (self.start + self.extent))*self.radius)
+        self.centre = TG.model_to_window(self.centre_mod, min_model, max_model, \
+                                         min_window, max_window)
+        self.radius = TG.dist_model_to_window(self.radius_mod, min_model, max_model, \
+                                              min_window, max_window) 
+        self.boundary_pt1.x = TG.round_to_multiple(self.centre.x + cos(radians(self.start))*self.radius, 1)
+        self.boundary_pt1.y = TG.round_to_multiple(self.centre.y - sin(radians(self.start))*self.radius, 1)
+        self.boundary_pt2.x = TG.round_to_multiple(self.centre.x + cos(radians(self.start + self.extent))*self.radius, 1)
+        self.boundary_pt2.y = TG.round_to_multiple(self.centre.y - sin(radians(self.start + self.extent))*self.radius, 1)
 
     def update_model_positions(self):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
@@ -460,20 +460,20 @@ class TCylinSector(TShape):
                                              min_window, max_window, dx, dy)
         self.boundary_pt1_mod = TG.window_to_model(self.boundary_pt1, min_model, max_model, \
                                                    min_window, max_window, dx, dy)
-        self.Boundary_pt2_mod = TG.window_to_model(self.boundary_pt2, min_model, max_model, \
+        self.boundary_pt2_mod = TG.window_to_model(self.boundary_pt2, min_model, max_model, \
                                                    min_window, max_window, dx, dy)
         self.radius_mod = TG.dist_window_to_model(self.radius,  min_model, max_model, \
                                                   min_window, max_window, dx, dy)
     
     def visible(self, min_model, max_model):
         min_x = min(self.centre_mod.x - self.radius_mod, self.boundary_pt1_mod.x, \
-                    self.Boundary_pt2_mod.x)
+                    self.boundary_pt2_mod.x)
         min_y = min(self.centre_mod.y - self.radius_mod, self.boundary_pt1_mod.y, \
-                    self.Boundary_pt2_mod.y)
+                    self.boundary_pt2_mod.y)
         max_x = max(self.centre_mod.x + self.radius_mod, self.boundary_pt1_mod.x, \
-                    self.Boundary_pt2_mod.x)
+                    self.boundary_pt2_mod.x)
         max_y = max(self.centre_mod.y + self.radius_mod, self.boundary_pt1_mod.y, \
-                    self.Boundary_pt2_mod.y)
+                    self.boundary_pt2_mod.y)
         min_pt = TPoint(min_x, min_y)
         max_pt = TPoint(max_x, max_y)
         if(min_pt.x >= min_model.x and min_pt.y >= min_model.y and \
@@ -581,10 +581,12 @@ class TPolygon(TShape):
         if(TColours.FILL):
             fill = self.fill
         else:
-            fill = None
-        canvas.create_polygon(self.points_unwrapped, outline = self.colour, fill = fill, width = self.width)
+            fill = ""
+        canvas.create_polygon(self.points_unwrapped, outline = self.colour, \
+                              fill = fill, width = self.width)
         for pt in self.points:
-            canvas.create_oval(pt.x-3, pt.y-3, pt.x+3, pt.y+3, outline = self.colour, fill = self.colour, width = 1)
+            canvas.create_oval(pt.x-3, pt.y-3, pt.x+3, pt.y+3, outline = self.colour, \
+                               fill = self.colour, width = 1)
     
     def update_window_positions(self):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
@@ -755,6 +757,9 @@ class TCoordSys(TRect):
         canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, self.point2.y, outline = self.colour, width = self.width)
     
     def draw_ticks(self, canvas, grid = False):
+        fsize = 7
+        fname = "Arial"
+        text_offset = 20
         width = abs(self.point2.x - self.point1.x)
         height = abs(self.point1.y - self.point2.y)
         current_tick_x = TG.round_to_multiple(self.model_min_x, self.ticintmetx)
@@ -763,7 +768,6 @@ class TCoordSys(TRect):
         current_tick_y = TG.round_to_multiple(self.model_min_y, self.ticintmety)
         current_pos_y = TWindow_Size.BOX_MIN_Y - round((current_tick_y - self.model_min_y)*\
                         height/(self.model_max_y - self.model_min_y))
-        text_offset = 7
         if(current_tick_x < self.model_min_x):
             current_tick_x += self.ticintmetx
             current_pos_x += self.ticintx
@@ -782,8 +786,9 @@ class TCoordSys(TRect):
                                 round(current_pos_x), border_y - \
                                 self.ticlenx, fill = self.colour, width = self.width)
                 label_x = str(self.label_round(current_tick_x, self.round_digits))
-                canvas.create_text(round(current_pos_x), border_y + text_offset, \
-                                        text = label_x)
+                if(current_tick_x % TTicksSettings.LABEL_INT == 0.0):
+                    canvas.create_text(round(current_pos_x), border_y + text_offset, \
+                                    text = label_x, font = (fname, fsize), anchor = S)
             current_tick_x += self.ticintmetx
             current_pos_x += self.ticintx
         while(current_tick_y <= self.model_max_y):
@@ -793,11 +798,12 @@ class TCoordSys(TRect):
                                    fill = self.grid_colour, width = self.width)
             else:
                 canvas.create_line(border_x, round(current_pos_y), \
-                                border_x + self.ticleny, round(current_pos_y), \
-                                fill = self.colour, width = self.width)
+                                   border_x + self.ticleny, round(current_pos_y), \
+                                   fill = self.colour, width = self.width)
                 label_y = str(self.label_round(current_tick_y, self.round_digits))
-                canvas.create_text(border_x - text_offset, round(current_pos_y), \
-                                text = label_y)
+                if(current_tick_y % TTicksSettings.LABEL_INT == 0.0):
+                    canvas.create_text(border_x - text_offset, round(current_pos_y), \
+                                    text = label_y, font = (fname, fsize), anchor = W)
             current_tick_y += self.ticintmety
             current_pos_y -= self.ticinty
     
@@ -933,22 +939,6 @@ class TCoordSys(TRect):
                 box_half_height = box_half_width
         else:
             # View is magnified and window area is fully covered
-            # box_half_width = int(min(self.maxx - self.minx - 2*self.margx, \
-            #                          self.maxy - self.miny - 2*self.margy)/2)
-            # box_half_height = box_half_width
-            # len_x_mon = TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X
-            # len_y_mon = TWindow_Size.BOX_MIN_Y - TWindow_Size.BOX_MAX_Y
-            # if(len_x_mon > len_y_mon):
-            #     TModel_Size.MAX_X = TModel_Size.DOM_X
-            #     TModel_Size.MAX_Y = round(TModel_Size.DOM_X/len_x_mon*len_y_mon, \
-            #                               TTicksSettings.ROUND_DIGITS)
-            # elif(len_x_mon < len_y_mon):
-            #     TModel_Size.MAX_X = round(TModel_Size.DOM_Y/len_y_mon*len_x_mon, \
-            #                               TTicksSettings.ROUND_DIGITS)
-            #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
-            # else:
-            #     TModel_Size.MAX_X = TModel_Size.DOM_X
-            #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
             box_half_width = int((self.maxx - self.minx - 2*self.margx)/2)
             box_half_height = int((self.maxy - self.miny - 2*self.margy)/2)
         self.point1.x = centre_x - box_half_width
@@ -975,10 +965,3 @@ class TCoordSys(TRect):
         self.round_digits = TTicksSettings.ROUND_DIGITS
         self.ticintx = (abs(TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X)*self.ticintmetx)/(self.model_max_x - self.model_min_x)
         self.ticinty = (abs(TWindow_Size.BOX_MAX_Y - TWindow_Size.BOX_MIN_Y)*self.ticintmety)/(self.model_max_y - self.model_min_y)
-
-
-if __name__ == "__main__":
-    assert TG.intersect(TPoint(1,1), TPoint(5,5), TPoint(1,5), TPoint(5,1)) == True
-    assert TG.intersect(TPoint(1,1), TPoint(1,5), TPoint(5,5), TPoint(5,1)) == False
-    assert TG.intersect(TPoint(2.15,0.75), TPoint(5,0.8), TPoint(2.95,0.55), TPoint(3.25,1.75)) == True
-    assert TG.intersect(TPoint(3.8,2.1), TPoint(6.05,1.25), TPoint(3.0,1.25), TPoint(4.7,2.7)) == True

@@ -31,8 +31,6 @@ class TShapesWindow(Frame):
                                                command = self.shapes_list.yview)
         self.shapes_list_scrollbar.grid(row = 0, column = 0, sticky = NS + E, padx = (0, 5), pady = 5)
         self.shapes_list.config(yscrollcommand = self.shapes_list_scrollbar.set)
-        # self.shapes_list.bind("<Up>", lambda x: "break")
-        # self.shapes_list.bind("<Down>", lambda x: "break")
 
         # Drop down menu with materials
         self.material_box = Combobox(self, values = ["pec", "free_space"] )
@@ -48,10 +46,11 @@ class TShapesWindow(Frame):
         self.shapes_list.bind("<Delete>", self.remove_shape)
    
     def update_list(self, shapes, *, swap = False):
+        selection = self.shapes_list.curselection()
         try:
-            cursel = self.shapes_list.curselection()[0]
+            shape_num = selection[0]
         except:
-            cursel = 0
+            shape_num = 0
         self.shapes_list.delete(0, END)
         coord_string = ""
         for i, single_shape in enumerate(shapes):
@@ -80,12 +79,13 @@ class TShapesWindow(Frame):
             coord_string = ""
         if(not swap):
             self.shapes_list.select_clear(0, END)
-            if(cursel >= self.shapes_list.size()):
-                self.shapes_list.selection_set(cursel - 1)
-                self.shapes_list.activate(cursel)
+            if(shape_num >= self.shapes_list.size()):
+                self.shapes_list.selection_set(shape_num - 1)
+                self.shapes_list.activate(shape_num)
             else:
-                self.shapes_list.selection_set(cursel)
-                self.shapes_list.activate(cursel)
+                for item in selection:
+                    self.shapes_list.selection_set(item)
+                self.shapes_list.activate(shape_num)
     
     def assign_material_to_shape(self, event):
         material = self.material_box.get()
@@ -133,10 +133,10 @@ class TShapesWindow(Frame):
             self.TApp.shapes[item].width = 2
         self.TApp.main_canvas.delete("all")
         # self.shapes_list.focus_force()
-        self.TApp.canvas_refresh()
         # # self.shapes_list.select_clear(0, END)
         for item in selection:
             self.shapes_list.selection_set(item)
+        self.TApp.canvas_refresh()
         # self.shapes_list.activate(shape_num)
         # self.shapes_list.focus_set()
         # if(shape_num > -1):
@@ -152,8 +152,8 @@ class TShapesWindow(Frame):
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Add vertex to polygon", command = self.add_vertex_to_polygon)
         self.popup_menu.add_separator()
-        self.popup_menu.add_command(label = "Copy shape(s)", command = self.copy_shape)
-        self.popup_menu.add_command(label = "Paste shape(s)", command = self.paste_shape)
+        self.popup_menu.add_command(label = "Copy shape", command = self.copy_shape)
+        self.popup_menu.add_command(label = "Paste shape", command = self.paste_shape)
         self.popup_menu.add_separator()
         self.popup_menu.add_command(label = "Move up", command = self.move_shape_up)
         self.popup_menu.add_command(label = "Move down", command = self.move_shape_down)
@@ -317,17 +317,14 @@ class TShapesWindow(Frame):
     def copy_shape(self):
         "Copy selected shape to buffer"
         try:
-            shape_num = (self.shapes_list.curselection())[0]
-        except IndexError:
-            return
-        if (shape_num < 0):
-            return
-        else:
+            shape_num = self.shapes_list.curselection()[0]
+        except:
+            shape_num = -1
+        if(shape_num > -1):
             try:
                 self.TApp.copy_shape(shape_num = shape_num)
             except Exception as message:
                 messagebox.showerror ("Error while manipulating shapes list!", message)
-                return
     
     def paste_shape(self, *, deltax = 15, deltay = 15):
         "Paste selected shape from buffer"

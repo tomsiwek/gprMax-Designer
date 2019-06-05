@@ -39,6 +39,9 @@ class TParser (object):
                                 str(TParser.THICKNESS_2D) + "\n"
         # Time window
         TParser.PARSE_STRING += "#time_window: " + str(TSurveySettings.TIME_WINDOW) + "\n"
+        # Time stability factor
+        if(TSurveySettings.TSF != 1.0):
+            TParser.PARSE_STRING += "#time_stability_factor: " + str(TSurveySettings.TSF) + "\n"
         TParser.PARSE_STRING += "\n"
         # Wavefrom
         TParser.PARSE_STRING += "#waveform: " + TSurveySettings.WAVE_TYPE + " " + \
@@ -55,13 +58,23 @@ class TParser (object):
                                 str(TParser.FRONT_2D) + "\n"
         # rx array
         if(TSurveySettings.TYPE == "rx_array"):
-            TParser.PARSE_STRING += "#rx_array: " + str(TSurveySettings.RX_X) + " " + str(TSurveySettings.RX_Y) + " " + str(TParser.FRONT_2D) + \
-                                    " " + str(TSurveySettings.RX_MAX_X) + " " + str(TSurveySettings.RX_MAX_Y) + " " + str(TParser.FRONT_2D) + \
-                                    " " + str(TSurveySettings.RX_STEP_X) + " " + str(TSurveySettings.RX_STEP_Y) + " " + str(TParser.FRONT_2D) + "\n"
+            TParser.PARSE_STRING += "#rx_array: " + str(TSurveySettings.RX_X) + \
+                                    " " + str(TSurveySettings.RX_Y) + " " + \
+                                    str(TParser.FRONT_2D) + " " + \
+                                    str(TSurveySettings.RX_MAX_X) + " " + \
+                                    str(TSurveySettings.RX_MAX_Y) + " " + \
+                                    str(TParser.FRONT_2D) + " " + \
+                                    str(TSurveySettings.RX_STEP_X) + " " + \
+                                    str(TSurveySettings.RX_STEP_Y) + " " + \
+                                    str(TParser.FRONT_2D) + "\n"
         # bscan
         if(TSurveySettings.TYPE == "bscan"):
-            TParser.PARSE_STRING += "#src_steps: " + str(TSurveySettings.SRC_STEP_X) + " " + str(TSurveySettings.SRC_STEP_Y) + " " + str(TParser.FRONT_2D) + "\n"
-            TParser.PARSE_STRING += "#rx_steps: " + str(TSurveySettings.RX_STEP_X) + " " + str(TSurveySettings.RX_STEP_Y) + " " + str(TParser.FRONT_2D) + "\n"
+            TParser.PARSE_STRING += "#src_steps: " + str(TSurveySettings.SRC_STEP_X) + \
+                                    " " + str(TSurveySettings.SRC_STEP_Y) + " " + \
+                                    str(TParser.FRONT_2D) + "\n"
+            TParser.PARSE_STRING += "#rx_steps: " + str(TSurveySettings.RX_STEP_X) + \
+                                    " " + str(TSurveySettings.RX_STEP_Y) + " " + \
+                                    str(TParser.FRONT_2D) + "\n"
         TParser.PARSE_STRING += "\n"
         # try:
         # Materials
@@ -95,6 +108,15 @@ class TParser (object):
                                     str(TModel_Size.DX) + " " + str(TModel_Size.DY) + \
                                     " " + str(TParser.THICKNESS_2D) + " " + \
                                     TSurveySettings.GEOM_FILE + " n\n"
+        # Snapshot
+        if(TSurveySettings.SNAPSHOT == "yes"):
+            TParser.PARSE_STRING += "#snapshot: 0.0 0.0 0.0 " + str(TModel_Size.DOM_X) + \
+                                    " " + str(TModel_Size.DOM_Y) + " " + \
+                                    str(TParser.THICKNESS_2D) + " " + \
+                                    str(TModel_Size.DX) + " " + str(TModel_Size.DY) + \
+                                    " " + str(TParser.THICKNESS_2D) + " " + \
+                                    str(TSurveySettings.SNAP_TIME) + " " + \
+                                    TSurveySettings.SNAP_FILE + " n\n"
         # except Exception as message:
             # messagebox.showerror ("Parser error!", message)
         return TParser.PARSE_STRING
