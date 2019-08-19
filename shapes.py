@@ -12,10 +12,21 @@ from random import randrange
 from settings import TWindow_Size, TModel_Size, TTicksSettings, TColours
 
 
-
 class TShape(ABC):
     """
-    Abstract base class for shapes (i.e. rectangles, triangles and cylinders).
+    An abstract base class for shapes (i.e. rectangles, cylinders, cylinder sectors,
+    and polygons).
+
+    :param width: shape outline width in pixels.
+    :param type: integer.
+    :param colour: shape outline colour.
+    :param type: string.
+    :param fill: shape fill colour.
+    :param type: string.
+    :param material: shape material.
+    :param type: string.
+    :param shape_type: shape type (ie. rectangle, cylinder etc.).
+    :param type: string.
     """
     def __init__(self, width = None, colour = None, fill = "", material = "pec", \
                  shape_type = "None"):
@@ -33,39 +44,96 @@ class TShape(ABC):
     
     @abstractmethod
     def draw(self):
-        "Abstract method"
+        """
+        Draw a shape.
+        """
         pass
     
     @abstractmethod
     def update_window_positions(self):
+        """
+        Recalculate window positions of the shape from its model positions.
+        """
         pass
 
     @abstractmethod
     def update_model_positions(self):
+        """
+        Recalculate model positions of the shape from its window positions.
+        """
         pass
     
     @abstractmethod
     def visible(self, min_model, max_model):
+        """
+        Determine wether the shape lies within the visible model area.
+
+        :param min_model: lower left visible model corner.
+        :param type: TPoint.
+        :param max_model: upper right visible model corner.
+        :param type: TPoint.
+
+        :rtype: boolean.
+        """
         pass
     
     @abstractmethod
     def area(self):
+        """
+        Calculate shape area.
+
+        :rtype: float.
+        """
         pass
     
     @abstractmethod
     def draw_to_image(self, image, colour):
+        """
+        Draw the shape to a png image file.
+
+        :param image: png image.
+        :param type: PIL.Image.
+        :param colour: shape colour.
+        :param type: tuple.
+        """
         pass
 
 class TRect(TShape):
     """
-    Class represents single rectangle.
-    Each rectangle is described by two vertices (class TPoint), 
-    line colour and width (from one to five).
+    Class represents a rectangle.
+    
+    :param point1: lower left rectangle point in pixels.
+    :param type: TPoint.
+    :param point2: upper right rectangle point in pixels.
+    :param type: TPoint.
+    :param point1_x: lower left rectangle point x coordinate in pixels.
+    :param type: integer.
+    :param point1_y: lower left rectangle point y coordinate in pixels.
+    :param type: integer.
+    :param point2_x: upper right rectangle point x coordinate in pixels.
+    :param type: integer.
+    :param point2_y: upper right rectangle point y coordinate in pixels.
+    :param type: integer.
+    :param colour: shape outline colour.
+    :param type: string.
+    :param fill: shape fill colour.
+    :param type: string.
+    :param width: shape outline width in pixels.
+    :param type: integer.
+    :param material: shape material.
+    :param type: string.
+    :param point1_mod: lower left rectangle point in metres.
+    :param type: TPoint.
+    :param point2_mod: upper right rectangle point in metres.
+    :param type: TPoint.
     """    
     def __init__(self, point1 = None, point2 = None, point1_x = None, \
                  point1_y = None, point2_x = None, point2_y = None, \
                  colour = "black", fill = "", width = 1, material = "pec", \
                  point1_mod = None, point2_mod = None):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         # Rectangle vertices
         if(point1_mod and point2_mod):
             self.point1_mod = TPoint(min(point1_mod.x, point2_mod.x), min(point1_mod.y, point2_mod.y))
@@ -93,8 +161,6 @@ class TRect(TShape):
     def draw(self, canvas):
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
-        # visible = self.visible(min_model, max_model)
-        # if(visible):
         if(TColours.FILL):
             fill = self.fill
         else:
@@ -102,14 +168,6 @@ class TRect(TShape):
         canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, \
                                 self.point2.y, outline = self.colour, \
                                 fill = fill, width = self.width)
-        # elif(visible == "partly"):
-        #     lower_x = max(self.point1.x, TWindow_Size.BOX_MIN_X)
-        #     lower_y = min(self.point1.y, TWindow_Size.BOX_MIN_Y)
-        #     upper_x = min(self.point2.x, TWindow_Size.BOX_MAX_X)
-        #     upper_y = max(self.point2.y, TWindow_Size.BOX_MAX_Y)
-        #     canvas.create_rectangle(lower_x, lower_y, upper_x, upper_y, \
-        #                             outline = self.colour, fill = self.fill, \
-        #                             width = self.width)
         if(TG.point_visible(self.point1_mod, min_model, max_model)):
             canvas.create_oval(self.point1.x-3, self.point1.y-3, self.point1.x+3, \
                                self.point1.y+3, outline = self.colour, \
@@ -358,6 +416,7 @@ class TCylinSector(TShape):
             self.radius_mod = radius_mod
             self.start = start
             self.extent = extent
+            self.update_window_positions()
         else:
             self.centre = TPoint()
             if(centre):
@@ -413,8 +472,8 @@ class TCylinSector(TShape):
             self.boundary_pt2.y = int (self.centre.y - sin (radians (self.start + self.extent) )*self.radius )
             # Coordinates in model's system
             self.update_model_positions()
-            super().__init__(colour = colour, width = width, shape_type = "CylinSector", \
-                             material = material)
+        super().__init__(colour = colour, width = width, shape_type = "CylinSector", \
+                         material = material)
 
     def draw (self, canvas):
         if(TColours.FILL):

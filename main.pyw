@@ -1,3 +1,10 @@
+"""
+.. module:: main program module.
+:synopsis: module contains main class TApp, responsible for handling events.
+
+.. moduleauthor:: Tomasz Siwek <tsiwek@g.pl>
+"""
+
 from copy import copy, deepcopy
 from decimal import Decimal
 import h5py
@@ -36,46 +43,53 @@ from tracewindow import TTraceWindow
 class TApp(object):
     """
     Class represents application as a whole. It handles events.
+
+    :param master: tk root object.
+    :param type: Tk() object.
     """
 
     # Make this a Frame
     # Change all names of entities regarding shapes as a whole
 
-    # Static (not so) variables
-    first_click = False
-    first_click_pos = None
-    second_click = False
-    second_click_pos = None
-    resize = False
-    resize_const_pos = None
-    resize_const_pos2 = None
-    resize_shape_num = -1
-    resize_start = 0.0
-    resize_extent = 0.0
-    move = False
-    move_const_point = None
-    move_shape_num = -1
-    move_points = []
-    move_const_radius = 0.0
-    manipulated_shape_num = -1
-    move_start = 0
-    move_extent = 0
-    polygon_points = []
-    double_click = False
-    resize_const_points = []
-    resize_moving_point = -1
-    sector_point_type = ""
-    resize_const_radius = 0.0
-    shape_buffer = None
-    resized_point = None
-    AVAILABLE_COLOURS = ("red", "blue", "yellow", "green", "orange", "purple", "indigo", "fuchsia", "white", "navy", "brown")
-    scale = 100.0
-    len_tot_x = 10.0
-    len_tot_y = 10.0
-    prev_mouse_pos = None
+    # Static variables
+    first_click = False         #: first LMB click flag.
+    first_click_pos = None      #: position of first click in pixels.
+    second_click = False        #: second LMB click flag.
+    second_click_pos = None     #: position of second click in pixels.
+    resize = False              #: shape resize mouse mode flag.
+    # resize_const_pos = None     #: 
+    # resize_const_pos2 = None    #:
+    # resize_shape_num = -1       #:
+    # resize_start = 0.0          #:
+    # resize_extent = 0.0         #:
+    move = False                #: shape move mouse mode flag.
+    move_const_point = None     #: reference point dor calculating move offset.
+    # move_shape_num = -1         #:
+    # move_points = []            #:
+    # move_const_radius = 0.0     #:
+    manipulated_shape_num = -1  #: list index of the manipulated (moved/resized) shape.
+    # move_start = 0              #:
+    # move_extent = 0             #:
+    polygon_points = []         #: buffor containing vertices of polygon being drawn.
+    double_click = False        #: double LMB click flag.
+    # resize_const_points = []    #:
+    # resize_moving_point = -1    #:
+    # sector_point_type = ""      #:
+    # resize_const_radius = 0.0   #:
+    shape_buffer = None         #: buffor containing shape being manipulated (/moved/resized).
+    resized_point = None        #: coordinates of manipulated shape point/vertex.
+    AVAILABLE_COLOURS = ("red", "blue", "yellow", "green", "orange", "purple", \
+                         "indigo", "fuchsia", "white", "navy", "brown")
+    """List of named colours from which a randome one will be drawn."""
+    scale = 100.0                   #: zoom scale in percent.
+    len_tot_x = TModel_Size.MAX_X   #: total model length in x direction.
+    len_tot_y = TModel_Size.MAX_Y   #: total model length in y direction.
+    prev_mouse_pos = None           #: previous mouse position.
 
-    def __init__ (self, master):
+    def __init__(self, master):
         self.master = master
+
+        # Window title
         master.title("gprMax Designer")
 
         # Configure grid cells weights
@@ -124,15 +138,17 @@ class TApp(object):
         # Active drawing mode
         self.mode = "Rectangle"
 
-        # Model's title
+        # Model title
         self.title = ""
 
         # Create coordinate system
         self.coordsys = TCoordSys(self.shapes_colour, self.shapes_width, grid_colour = self.grid_colour)
 
+        # Shapes frame
         self.shapes_frame = TShapesWindow(self.master, self)
         self.shapes_frame.grid(row = 0, column = 1, rowspan = 2, sticky = NSEW)
 
+        # Materials frame
         self.materials_frame = TMaterialsWindow(self.master, self, self.shapes_frame)
         self.materials_frame.grid(row = 2, column = 1, rowspan = 2, sticky = NSEW)
 
@@ -143,16 +159,21 @@ class TApp(object):
         # Try to load toolbar icons
         self.load_toolbar_icons()
 
-        # Initialize operation queue
+        # Initialise operation queue
         self.operations = []
 
     def init_grid(self):
+        """
+        Init main window grid properties.
+        """
         self.master.rowconfigure(1, weight = 1)
         self.master.rowconfigure(2, weight = 1)
         self.master.columnconfigure(0, weight = 1)
 
     def init_canvas(self):
-        "Inits frame containing main canvas and its scrollbars"
+        """
+        Init frame containing main canvas and its scrollbars.
+        """
         self.canvas_frame = Frame(self.master)
         self.main_canvas = Canvas(self.canvas_frame, width = TWindow_Size.MAX_X, \
                                   height = TWindow_Size.MAX_Y, bd = 0, \
@@ -175,6 +196,9 @@ class TApp(object):
         self.main_canvas.config(cursor = "pencil")
 
     def init_main_menu(self):
+        """
+        Create main menu and its positions.
+        """
         self.main_menubar = Menu(self.master)
         self.file_menu = Menu(self.main_menubar, tearoff = 0)
         self.edit_menu = Menu(self.main_menubar, tearoff = 0)
@@ -187,7 +211,7 @@ class TApp(object):
         self.file_menu.add_command(label = "Parse to gprMax", \
                                    command = self.parse_to_gprmax)
         self.file_menu.add_command(label = "Run gprMax in terminal", \
-                                   command = self.run_gprmax_terminal)
+                                   command = self.run_gprmax)
         self.file_menu.add_command(label = "Export hdf5 to ascii", \
                                    command = self.export_hdf5_to_ascii)
         self.file_menu.add_command(label = "Merge traces", \
@@ -209,9 +233,8 @@ class TApp(object):
         self.edit_menu.add_command(label = "Create polygon", command = self.create_polygon)
         self.edit_menu.add_command(label = "Recolour randomly", command = self.recolour_randomly)
         self.edit_menu.add_command(label = "Delete all", command = self.remove_all_shapes)
-        # self.edit_menu.add_command(label = "Refresh_canvas", command = self.canvas_refresh)
         self.view_menu.add_command(label = "Display", command = self.display_settings)
-        self.view_menu.add_command(label = "Toogle grid", command = self.toogle_grid)
+        self.view_menu.add_command(label = "Toggle grid", command = self.toggle_grid)
         self.view_menu.add_command(label = "Zoom in", command = self.view_zoom_in)
         self.view_menu.add_command(label = "Zoom out", command = self.view_zoom_out)
         self.view_menu.add_command(label = "Reset zoom", command = self.view_zoom_reset)
@@ -224,7 +247,9 @@ class TApp(object):
         self.main_menubar.add_cascade(label = "Settings", menu = self.settings_menu)
 
     def init_popup_menu(self):
-        # Crates a right-click popup menu
+        """
+        Create a right-click popup menu.
+        """
         self.mode_rectangle = BooleanVar()
         self.mode_rectangle.set(True)
         self.mode_cylinder = BooleanVar()
@@ -261,6 +286,9 @@ class TApp(object):
                                                 offvalue = False, variable = self.mode_polygon)
     
     def init_main_toolbar(self):
+        """
+        Create main toolbar and its buttons.
+        """
         self.main_toolbar = Frame(self.master, bd = 1, relief = RAISED)
         self.rectangleButton = Button(self.main_toolbar, text = "R", relief=SUNKEN, \
                                       command = self.set_mode_rectangle)
@@ -312,6 +340,9 @@ class TApp(object):
         self.main_toolbar.grid(row = 0, column = 0, sticky = EW)
 
     def init_status_bar(self):
+        """
+        Init status bar.
+        """
         fwidth = 8
         self.status_bar = Frame(self.master, bd = 1)
         self.pos_x_label = Label(self.status_bar, text = "X: -", width = fwidth, \
@@ -323,6 +354,9 @@ class TApp(object):
         self.status_bar.grid(row = 3, column = 0, sticky = EW)
 
     def bind_canvas_events(self):
+        """
+        Bind canvas events to handling methods.
+        """
         self.main_canvas.bind("<Button-1>", self.canvas_click)
         self.main_canvas.bind("<Button-3>", self.display_right_button_popup)
         self.main_canvas.bind("<Motion>", self.canvas_mouse_move)
@@ -336,6 +370,9 @@ class TApp(object):
         self.main_canvas.bind("<Button-5>", self.mouse_wheel)
     
     def bind_application_events(self):
+        """
+        Bind application events to handling methods.
+        """
         self.master.bind("<Up>", self.move_cursor_up)
         self.master.bind("<Down>", self.move_cursor_down)
         self.master.bind("<Left>", self.move_cursor_left)
@@ -356,6 +393,9 @@ class TApp(object):
         self.master.bind("<Key-minus>", self.view_zoom_out)        
 
     def load_toolbar_icons(self):
+        """
+        Try to load toolbar buttons icons. At failing, display appropriate message.
+        """
         try:
             self.rectangleIcon = PhotoImage(file = "./icons/icon_rectangle.gif")
             self.cylinderIcon = PhotoImage(file = "./icons/icon_cylinder.gif")
@@ -389,7 +429,12 @@ class TApp(object):
             messagebox.showerror("Error while loading icons", message)
         
     def canvas_refresh(self, *, swap = False):
-        "Redraw all shapes on canvas"
+        """
+        Redraw all shapes on canvas.
+
+        :param swap: ???.
+        :param type: boolean.
+        """
         if(self.coordsys.grid):
             self.coordsys.draw_ticks(self.main_canvas, grid = True)
         for single_shape in self.shapes:
@@ -402,7 +447,12 @@ class TApp(object):
         # self.coordsys.write_axis_labels(self.main_canvas)
                          
     def canvas_click(self, event):
-        "Left mouse click event "
+        """
+        Handle a left mouse click event.
+        
+        :param event: tk mouse click event object.
+        :param type: tkinter.Event.
+        """
         self.main_canvas.focus_force()
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
         max_window = TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y)
@@ -419,7 +469,12 @@ class TApp(object):
                 raise Exception("Invalid mouse working mode!")
     
     def canvas_mouse_move(self, event):
-        "Mouse move event"
+        """
+        Handle a mouse move event.
+        
+        :param event: tk mouse move event object.
+        :param type: tkinter.Event.
+        """
         if(self.mouse_mode == "draw"):
             self.draw_mouse_move(event)
         elif(self.mouse_mode == "move"):
@@ -432,6 +487,12 @@ class TApp(object):
         self.display_mouse_position(event)
 
     def display_mouse_position(self, event):
+        """
+        Display current mouse position in m on the status bar.
+
+        :param event: tk mouse move event object.
+        :param type: Tk.Event.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -450,7 +511,9 @@ class TApp(object):
             self.pos_y_label.config(text = "Y: -" )
             
     def remove_all_shapes(self):
-        "Removes all shapes"
+        """
+        Remove all shapes.
+        """
         # Register every single deletion operation in stack
         for i, single_shape in enumerate(self.shapes):
             self.operations.append(TOperation("remove_all", shape = deepcopy(single_shape), \
@@ -460,7 +523,9 @@ class TApp(object):
         self.canvas_refresh()
 
     def remove_top_shape(self):
-        "Right mouse button click event"
+        """
+        Remove shape at the top of the list.
+        """
         try:
             self.shapes.pop()
         except IndexError:
@@ -469,7 +534,12 @@ class TApp(object):
         self.canvas_refresh()
     
     def remove_shape(self, event):
-        "Remove shape if mouse overlapses it"
+        """
+        Remove a shape if mouse overlapses it.
+
+        :param event: event evoking this method (Del keystroke, RMB click)
+        :param type: tkinter.Event.
+        """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
             try:
@@ -482,16 +552,24 @@ class TApp(object):
                 self.main_canvas.delete("all")
                 self.canvas_refresh()
 
-    def toogle_grid(self):
+    def toggle_grid(self):
+        """
+        Toggle displaying grid lines.
+        """
         if(self.coordsys.grid):
-            self.coordsys.toogle_grid("Off")
+            self.coordsys.toggle_grid("Off")
         else:
-            self.coordsys.toogle_grid("On")
+            self.coordsys.toggle_grid("On")
         self.main_canvas.delete("all")
         self.canvas_refresh()
 
-    # Keyboard up arrow press event
     def increase_shapes_width(self, event):
+        """
+        Increase width of all shapes in the list.
+
+        :param event: tk up arrow press event object.
+        :param type: tkinter.Event.
+        """
         self.shapes_width += 1
         for single_rectangle in self.shapes:
             single_rectangle.width = self.shapes_width
@@ -499,8 +577,13 @@ class TApp(object):
         self.main_canvas.delete("all")
         self.canvas_refresh()
             
-    # Keyboard down arrow press event
     def decrease_shapes_width(self, event):
+        """
+        Decrease width of all shapes in the list.
+
+        :param event: tk up arrow press event object.
+        :param type: tkinter.Event.
+        """
         self.shapes_width -= 1
         for single_rectangle in self.shapes:
             single_rectangle.width = self.shapes_width
@@ -508,21 +591,42 @@ class TApp(object):
         self.main_canvas.delete("all")
         self.canvas_refresh()
 
-    # Property fot self.shapes_width
     @property
     def shapes_width(self):
+        """
+        Property for self.shapes_width.
+
+        :rtype: integer.
+        """
         return self.__rectangles_width
 
-    # Setter for self.rectangles_width 
     @shapes_width.setter
     def shapes_width(self, shapes_width):
+        """
+        Setter for self.rectangles_width.
+
+        :param shapes_width: new shapes line width in pixels.
+        :param type: integer.
+        """
         if(shapes_width <= 5 and shapes_width >= 1):
             self.__rectangles_width = shapes_width
         else:
             self.__rectangles_width = self.__rectangles_width
     
-    # Checks whether mouse pointer overlaps a shape
     def mouse_overlaps_shape(self, x, y, radius):
+        """
+        Check whether the mouse pointer overlaps a shape. If so, return its list index;
+        otherwise return -1.
+
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: integer.
+        """
         shape_num = -1
         for single_shape in self.shapes:
             shape_num += 1
@@ -538,18 +642,27 @@ class TApp(object):
                 if(self.mouse_overlaps_cylinder_sector(self.shapes[shape_num], \
                                                        x, y, radius)):
                     return shape_num
-            elif(single_shape.type == "Triangle"):
-                if(self.mouse_overlaps_triangle(self.shapes[shape_num], \
-                                                x, y, radius)): 
-                    return shape_num
             elif(single_shape.type == "Polygon"):
                 if(self.mouse_overlaps_polygon(self.shapes[shape_num], \
                                                x, y, radius)): 
                     return shape_num
         return -1
 
-    # Check wether mouse overlaps rectangle
     def mouse_overlaps_rectangle(self, shape, x, y, radius):
+        """
+        Check whether the mouse pointer overlaps a rectangle.
+
+        :param shape: examined shape object.
+        :param type: TRect.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: boolean.
+        """
         if((x >= shape.point1.x - radius and x <= shape.point1.x + radius \
             and y >= shape.point1.y - radius and y <= shape.point1.y + radius) or \
            (x >= shape.point2.x - radius and x <= shape.point2.x + radius \
@@ -562,8 +675,21 @@ class TApp(object):
             return True
         return False
     
-    # Check wether mouse overlaps cylinder
     def mouse_overlaps_cylinder(self, shape, x, y, radius):
+        """
+        Check whether the mouse pointer overlaps a cylinder.
+
+        :param shape: examined shape object.
+        :param type: TCylin.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: boolean.
+        """
         if(((x - shape.centre.x)**2 + (y - shape.centre.y)**2 >= (shape.radius - radius)**2 and \
             (x - shape.centre.x)**2 + (y - shape.centre.y)**2 <= (shape.radius + radius)**2  ) or\
             (x >= shape.centre.x - radius and x <= shape.centre.x + radius \
@@ -573,6 +699,20 @@ class TApp(object):
     
     # Check wether mouse overlaps cylinder sector
     def mouse_overlaps_cylinder_sector(self, shape, x, y, radius):
+        """
+        Check whether the mouse pointer overlaps a cylinder sector.
+
+        :param shape: examined shape object.
+        :param type: TCylinSector.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: boolean.
+        """
         if((x <= shape.centre.x + radius and x >= shape.centre.x - radius \
             and y <= shape.centre.y + radius and y >= shape.centre.y - radius) or\
             (x <= shape.boundary_pt1.x + radius and x >= shape.boundary_pt1.x - radius \
@@ -582,27 +722,35 @@ class TApp(object):
             return True
         return False
     
-    # Check wether mouse overlaps triangle
-    def mouse_overlaps_triangle (self, shape, x, y, radius):
-        if ( (x <= shape.point1.x + radius and x >= shape.point1.x - radius \
-            and y <= shape.point1.y + radius and y >= shape.point1.y - radius) or\
-            (x <= shape.point2.x + radius and x >= shape.point2.x - radius \
-            and y <= shape.point2.y + radius and y >= shape.point2.y - radius) or\
-            (x <= shape.point3.x + radius and x >= shape.point3.x - radius \
-            and y <= shape.point3.y + radius and y >= shape.point3.y - radius) ):
-            return True
-        return False
-    
     # Check wether mouse overlaps polygon
     def mouse_overlaps_polygon(self, shape, x, y, radius):
+        """
+        Check whether the mouse pointer overlaps a polygib.
+
+        :param shape: examined shape object.
+        :param type: TPolygon.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: boolean.
+        """
         for pt in shape.points:
             if (x <= pt.x + radius and x >= pt.x - radius \
                 and y <= pt.y + radius and y >= pt.y - radius):
                 return True
         return False
 
-    # Displays right mouse button popup (context) menu
     def display_right_button_popup(self, event):
+        """
+        Display right mouse button popup (context) menu.
+
+        :param event: RMB press event object.
+        :param type: tkinter.Event.
+        """
         self.canvas_interrupt()
         try:
             self.right_button_popup.entryconfig("Select shape", command = lambda: \
@@ -628,7 +776,12 @@ class TApp(object):
             self.right_button_popup.grab_release()
 
     def set_mode_rectangle(self, event = None):
-        "Set drawn shape to rectangle"
+        """
+        Set drawn shape to a rectangle.
+        
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mode = "Rectangle"
         self.mode_rectangle.set(True)
         self.mode_cylinder.set(False)
@@ -642,7 +795,12 @@ class TApp(object):
         self.polygonButton.config(relief = FLAT)
     
     def set_mode_cylinder(self, event = None):
-        "Set drawn shape to cylinder"
+        """
+        Set drawn shape to a cylinder.
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mode = "Cylinder"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(True)
@@ -656,7 +814,12 @@ class TApp(object):
         self.polygonButton.config(relief = FLAT)
 
     def set_mode_cylin_sector(self, event = None):
-        "Set drawn shape to cylindrical sector"
+        """
+        Set drawn shape to a cylinder sector.
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mode = "CylinSector"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(False)
@@ -668,22 +831,14 @@ class TApp(object):
         self.cylinSectorButton.config(relief = SUNKEN)
         # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config (relief = FLAT)
-    
-    # def set_mode_triangle (self):
-    #     self.mode = "Triangle"
-    #     self.mode_rectangle.set (False)
-    #     self.mode_cylinder.set (False)
-    #     self.mode_cylin_sector.set (False)
-    #     # self.mode_triangle.set (True)
-    #     self.mode_polygon.set (False)
-    #     self.rectangleButton.config (relief = FLAT)
-    #     self.cylinderButton.config (relief = FLAT)
-    #     self.cylinSectorButton.config (relief = FLAT)
-    #     # self.triangleButton.config (relief = SUNKEN)
-    #     self.polygonButton.config (relief = FLAT)
 
     def set_mode_polygon(self, event = None):
-        "Set drawn shape to polygon"
+        """
+        Set drawn shape to a polygon.
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mode = "Polygon"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(False)
@@ -697,6 +852,12 @@ class TApp(object):
         self.polygonButton.config(relief = SUNKEN)
 
     def set_mouse_mode_draw(self, event = None):
+        """
+        Set mouse mode to "draw".
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mouse_mode = "draw"
         self.draw_button.config(relief = SUNKEN)
         self.move_button.config(relief = FLAT)
@@ -704,6 +865,12 @@ class TApp(object):
         self.main_canvas.config(cursor = "pencil")
 
     def set_mouse_mode_move(self, event = None):
+        """
+        Set mouse mode to "move".
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mouse_mode = "move"
         self.draw_button.config(relief = FLAT)
         self.move_button.config(relief = SUNKEN)
@@ -711,6 +878,12 @@ class TApp(object):
         self.main_canvas.config(cursor = "fleur")
 
     def set_mouse_mode_resize(self, event = None):
+        """
+        Set mouse mode to "resize".
+
+        :param event: button click event object.
+        :param type: tkinter.Event.
+        """
         self.mouse_mode = "resize"
         self.draw_button.config(relief = FLAT)
         self.move_button.config(relief = FLAT)
@@ -718,14 +891,30 @@ class TApp(object):
         self.main_canvas.config(cursor = "sizing")
 
     def canvas_double_click(self, event):
+        """
+        Handle a canvas double click, which ends drawing a polygon.
+
+        :param event: canvas double LMB click event object.
+        :param type: tkinter.Event.
+        """
         if(self.mouse_mode == "draw" and self.mode == "Polygon"):
             self.polygon_double_click_draw(event)
 
     def assign_material_to_shape(self, shape_num, material):
+        """
+        Assign material to a chosen shape.
+
+        :param shape_num: shape list index.
+        :param type: integer.
+        :param material: material name.
+        :param type: string.
+        """
         self.shapes [shape_num].material = str(material)
     
     def parse_to_gprmax(self):
-        "Parses model created in program to gprMax compliant text file"
+        """
+        Parse model created in program to a gprMax compliant text file.
+        """
         parser_string = TParser.parse_shapes(self.materials, self.shapes, self.title)
         preview_window = TOutputPreviewWindow(self.master, parser_string)
         output_file_name = preview_window.result
@@ -733,6 +922,9 @@ class TApp(object):
             self.run_gprmax(filename = output_file_name)
     
     def change_model_size(self):
+        """
+        Change model maximal x and y coordinates.
+        """
         input_dialog = TModelSettingsWindow(self.master, TModel_Size.DOM_X, \
                                             TModel_Size.DOM_Y, TModel_Size.DX, \
                                             TModel_Size.DY)
@@ -745,35 +937,19 @@ class TApp(object):
                 TModel_Size.DY = result[3]
                 self.len_tot_x = result[0]
                 self.len_tot_y = result[1]
-                # if(TModel_Size.FIT):
-                #     TModel_Size.MIN_X = 0.0
-                #     TModel_Size.MIN_Y = 0.0
-                #     TModel_Size.MAX_X = TModel_Size.DOM_X
-                #     TModel_Size.MAX_Y = TModel_Size.DOM_Y
-                # else:
-                #     TModel_Size.MIN_X = 0.0
-                #     TModel_Size.MIN_Y = 0.0
-                #     TModel_Size.MAX_X = min(TModel_Size.DOM_X, TModel_Size.DOM_Y)
-                #     TModel_Size.MAX_Y = min(TModel_Size.DOM_X, TModel_Size.DOM_Y)
                 self.view_zoom_reset()
             except Exception as message:
                 messagebox.showerror("Error while changing model size!", message)
     
     def canvas_resize(self, event):
+        """
+        Handle a canvas dimensions alteration event.
+
+        :param event: canvas configure event object.
+        :param type: tkinter.Event.
+        """
         # Resize canvas, should the window resize occur
         try:
-            # if(not TModel_Size.FIT):
-            #     deltax = event.width - TWindow_Size.MAX_X
-            #     deltay = event.height - TWindow_Size.MAX_Y
-            #     deltax_mod = self.distwinmod(deltax)
-            #     deltay_mod = self.distwinmod(deltay)
-            #     TModel_Size.MAX_X += deltax_mod
-            #     TModel_Size.MAX_Y += deltay_mod
-                # self.coordsys.model_size_update()
-                # self.main_horizontal_scrollbar.set(TModel_Size.MIN_X/TModel_Size.DOM_X, \
-                #                                    TModel_Size.MIN_X/TModel_Size.DOM_X)
-                # self.main_vertical_scrollbar.set(TModel_Size.MIN_Y/TModel_Size.DOM_Y, \
-                #                                  TModel_Size.MIN_Y/TModel_Size.DOM_Y)
             TWindow_Size.MAX_X = event.width
             TWindow_Size.MAX_Y = event.height
             self.coordsys.window_size_update()
@@ -786,6 +962,9 @@ class TApp(object):
             messagebox.showerror("Error while changing canvas size!", message)
     
     def display_settings(self):
+        """
+        Show display settings dialog window.
+        """
         input_dialog = TDisplaySettingsWindow(self.master, TTicksSettings.INT_X, \
                                               TTicksSettings.INT_Y, \
                                               TTicksSettings.ROUND_DIGITS, \
@@ -798,10 +977,6 @@ class TApp(object):
                 TTicksSettings.INT_X = result[0]
                 TTicksSettings.INT_Y = result[1]
                 TTicksSettings.ROUND_DIGITS = result[2]
-                # TModel_Size.MIN_X = result[3]
-                # TModel_Size.MIN_Y = result[4]
-                # TModel_Size.MAX_X = result[5]
-                # TModel_Size.MAX_Y = result[6]
                 if(result[3] == "colour"):
                     TColours.FILL = True
                 elif(result[3] == "none"):
@@ -819,7 +994,12 @@ class TApp(object):
                 messagebox.showerror("Error while adjusting display settings!", message)
     
     def remove_polygon_vertex(self, event):
-        "Provisional version. Must be rewritten."
+        """
+        Remove polygon vertex.
+        
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if (shape_num > -1):
             if(self.shapes [shape_num].type == "Polygon"):
@@ -832,22 +1012,25 @@ class TApp(object):
                 self.shapes[shape_num].remove_vertex(i)
                 self.main_canvas.delete("all")
                 self.canvas_refresh()
+    
+    #---------------------------------------------------------------------------
 
     def canvas_interrupt(self, event = None):
+        """
+        Cease pending mouse operation (draw, move, resize).
+
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         self.first_click = False
         self.second_click = False
         self.resize = False
         self.move = False
         self.double_click = False
-        self.move_points = []
         self.polygon_points = []
-        self.resize_const_points = []
-        self.resize_shape_num = -1
         self.manipulated_shape_num = -1
-        self.resize_moving_point = -1
         self.main_canvas.delete("all")
         self.copy_pos = None
-        # self.canvas_refresh()
         if(self.mouse_mode == "move" or self.mouse_mode == "resize"):
             if(self.shape_buffer is not None):
                 self.shapes.append(self.shape_buffer)
@@ -856,6 +1039,9 @@ class TApp(object):
         self.canvas_refresh()
 
     def create_rectangle(self):
+        """
+        Create a rectangle from keyboard input.
+        """
         input_str = simpledialog.askstring("Input coordinates", "Give rectangle's coordinates")
         try:
             tokens = input_str.split()
@@ -873,6 +1059,9 @@ class TApp(object):
                                               num = len(self.shapes) - 1))
 
     def create_cylin(self):
+        """
+        Create a cylinder from keyboard input.
+        """
         input_str = simpledialog.askstring("Input coordinates", "Give cylinder's centre coordinates and radius")
         try:
             tokens = input_str.split()
@@ -889,6 +1078,9 @@ class TApp(object):
                                               num = len(self.shapes) - 1))
 
     def create_cylin_sector(self):
+        """
+        Create a cylinder sector from keyboard input.
+        """
         input_str = simpledialog.askstring ("Input coordinates", "Give cylinder \
                                              sector's centre coordinates,\nradius, \
                                              start and extent angles")
@@ -911,7 +1103,11 @@ class TApp(object):
                                               num = len(self.shapes) - 1))
 
     def create_polygon(self):
-        input_str = simpledialog.askstring("Input coordinates", "Give polygon's coordinates")
+        """
+        Create a cpolygon from keyboard input.
+        """
+        input_str = simpledialog.askstring("Input coordinates", \
+                                           "Give polygon's coordinates")
         try:
             tokens = input_str.split()
             xs = [float(x) for x in tokens[0::2] ]
@@ -929,11 +1125,17 @@ class TApp(object):
                                               num = len(self.shapes) - 1))
         
     def edit_title(self):
+        """
+        Edit model title.
+        """
         self.title = simpledialog.askstring("Title", "Give model's title")
         if(self.title):
             self.master.title("gprMax Designer: " + self.title)
 
     def recolour_randomly(self):
+        """
+        Assign random colours from AVAILABLE_COLOURS list to all shapes.
+        """
         num_of_colours = len(self.AVAILABLE_COLOURS)
         for single_shape in self.shapes:
             random_index = randrange(0, num_of_colours)
@@ -942,6 +1144,12 @@ class TApp(object):
         self.canvas_refresh()
 
     def select_shape(self, event):
+        """
+        Select a single shape.
+
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if (shape_num > -1):
             try:
@@ -955,12 +1163,21 @@ class TApp(object):
                 messagebox.showerror("Error!", message)
     
     def select_shape_on_list(self, shape_num):
+        """
+        Distinguish the selected shape on the list in the shapes frame.
+
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         self.shapes_frame.material_box.set(str(self.shapes[shape_num].material))
         self.shapes_frame.shapes_list.select_clear(0, END)
         self.shapes_frame.shapes_list.selection_set(shape_num)
         self.shapes_frame.shapes_list.activate(shape_num)
 
     def survey_settings(self):
+        """
+        Show survey settings dialog window and change their values.
+        """
         input_dialog = TSurveySettingsWindow(self.master, self)
         result = input_dialog.result
         if(result):
@@ -993,6 +1210,12 @@ class TApp(object):
                 TSurveySettings.RX_STEP_Y = result[20]
     
     def edit_shape(self, event):
+        """
+        Change shape dimensions from keyboard input.
+
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
             self.select_shape(event)
@@ -1008,6 +1231,12 @@ class TApp(object):
                 self.edit_polygon(shape_num)
     
     def edit_rectangle(self, shape_num):
+        """
+        Change rectangle dimensions from keyboard input.
+
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         initialvalue = str(self.shapes[shape_num].point1_mod.x) + " " + str(self.shapes[shape_num].point1_mod.y) + " " + \
                        str(self.shapes[shape_num].point2_mod.x) + " " + str(self.shapes[shape_num].point2_mod.y)
         input_str = simpledialog.askstring("Input coordinates", "Give rectangles's coordinates", initialvalue = initialvalue)
@@ -1026,6 +1255,12 @@ class TApp(object):
             messagebox.showerror("Error while editing rectangle!", message)
     
     def edit_cylin(self, shape_num):
+        """
+        Change cylinder dimensions from keyboard input.
+
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         initialvalue = str(self.shapes[shape_num].centre_mod.x) + " " + str(self.shapes[shape_num].centre_mod.y) + " " + \
                        str(self.shapes[shape_num].radius_mod)
         fill = self.shapes[shape_num].fill
@@ -1043,6 +1278,12 @@ class TApp(object):
             messagebox.showerror("Error while editing cylinder!", message)
     
     def edit_cylin_sector(self, shape_num):
+        """
+        Change cylinder sector dimensions from keyboard input.
+
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         initialvalue = str(self.shapes[shape_num].centre_mod.x) + " " + str(self.shapes[shape_num].centre_mod.y) + " " + \
                        str(self.shapes[shape_num].radius_mod) + " " + str(self.shapes[shape_num].start) + " " + \
                        str(self.shapes[shape_num].extent)
@@ -1052,8 +1293,8 @@ class TApp(object):
             point1_mod_x, point1_mod_y, radius_mod, start, extent =  [float(x) for x in input_str.split ()]
             del self.shapes[shape_num]
             self.shapes.insert(shape_num, TCylinSector(centre_mod = TPoint(point1_mod_x, point1_mod_y), \
-                                                       radius_mod = radius_mod, start = start, extent = extent, \
-                                                       colour = self.shapes_colour, width = self.shapes_width + 1, fill = fill))
+                                                    radius_mod = radius_mod, start = start, extent = extent, \
+                                                    colour = self.shapes_colour, width = self.shapes_width + 1, fill = fill))
             self.main_canvas.delete("all")
             self.canvas_refresh()
             self.select_shape_on_list(shape_num)
@@ -1061,28 +1302,25 @@ class TApp(object):
             messagebox.showerror("Error while editing cylinder sector!", message)
 
     def edit_polygon(self, shape_num):
-        "Displays polygon vertices coordinates and enables to change them manually"
+        """
+        Display polygon vertices coordinates and enable to change them manually.
+
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         vertices_dialog = TPolygonWindow(self.master, self, self.shapes[shape_num])
-        self.select_shape_on_list(shape_num) 
-        # initialvalue = " ".join([str(pt.x) + " " + str(pt.y) for pt in self.shapes[shape_num].points_mod])
-        # fill = self.shapes[shape_num].fill
-        # input_str = simpledialog.askstring("Input coordinates", "Give polygon coordinates", initialvalue = initialvalue)
-        # try:
-        #     tokens = input_str.split()
-        #     points_mod = [TPoint(float(x), float(y)) for x, y in zip(tokens[::2], tokens[1::2])]
-        #     del self.shapes[shape_num]
-        #     self.shapes.insert(shape_num, \
-        #                        TPolygon(points_mod = points_mod, \
-        #                                 colour = self.shapes_colour, \
-        #                                 width = self.shapes_width + 1, \
-        #                                 fill = fill))
-        #     self.main_canvas.delete("all")
-        #     self.canvas_refresh()
-        #     self.select_shape_on_list(shape_num)
-        # except Exception as message:
-        #     messagebox.showerror("Error while editing polygon!", message)
+        self.select_shape_on_list(shape_num)
+        del vertices_dialog
     
     def change_shape_colour(self, event = None, shape_num = None):
+        """
+        Change selected shape colour using tkInter colorchooser dialog.
+
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        :param shape_num: selected shape list index.
+        :param type: integer.
+        """
         if(shape_num is None):
             shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
@@ -1096,8 +1334,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def edit_polygon_vertex(self, event):
-        """Ask for new coordinates of a selected polygon vertex
-        Provisional version. Must be rewritten."""
+        """
+        Ask for new coordinates of a selected polygon vertex.
+        
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         shape_num = self.mouse_overlaps_shape (event.x, event.y, self.radius)
         if(shape_num > -1):
             self.select_shape(event)
@@ -1120,7 +1362,12 @@ class TApp(object):
                 self.select_shape_on_list(shape_num)
     
     def add_vertex_to_polygon(self, event):
-        "Add signle vertex to polygon based on current mouse position"
+        """
+        Add signle vertex to polygon based on current mouse position.
+        
+        :param event: canvas RMB click event object.
+        :param type: tkinter.Event.
+        """
         try:
             shape_num = self.shapes_frame.shapes_list.curselection()[0]
         except:
@@ -1136,7 +1383,20 @@ class TApp(object):
     # --------------------------------------------------------------------------
     
     def overlap_coord(self, shape, x, y, radius):
-        "Return coordinates of shapes's characteristic point or vertex overlaped by mouse"
+        """
+        Return coordinates of a shape characteristic point or a vertex overlapped by the mouse.
+        
+        :param shape: examined shape object.
+        :param type: TRect, TCylin, TCylinSector, TPolygon.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: TPoint.
+        """
         if(shape.type == "Rectangle"):
             return self.rectangle_overlap_coord(shape, x, y, radius)
         elif(shape.type == "Cylinder"):
@@ -1150,7 +1410,20 @@ class TApp(object):
             return self.polygon_overlap_coord(shape, x, y, radius)
     
     def rectangle_overlap_coord(self, shape, x, y, radius):
-        "Return coordinates of rectangle's vertex overlaped by mouse"
+        """
+        Return coordinates of a rectangle vertex overlapped by the mouse.
+        
+        :param shape: examined rectangle object.
+        :param type: TRect.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.point1.x - radius and x <= shape.point1.x + radius \
            and y >= shape.point1.y - radius and y <= shape.point1.y + radius):
             return deepcopy(shape.point1)
@@ -1165,7 +1438,20 @@ class TApp(object):
             return deepcopy(shape.point4)
 
     def cylinder_overlap_coord(self, shape, x, y, radius):
-        "Return coordinates of cylinder's characteristic point overlaped by mouse"
+        """
+        Return coordinates of a cylinder characteristic point overlapped by the mouse.
+        
+        :param shape: examined cylinder object.
+        :param type: TCylin.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
             return deepcopy(shape.centre)
@@ -1186,10 +1472,23 @@ class TApp(object):
              y <= shape.centre.y - shape.radius + radius):
              return TPoint(shape.centre.x, shape.centre.y - shape.radius)
         else:
-            raise Exception("Can't stick to circle's edge")
+            raise Exception("Can't stick to circle's edge.")
     
     def cylin_sector_overlap_coord(self, shape, x, y, radius):
-        "Return coordinates of cylinder sector's characteristic point overlaped by mouse"
+        """"
+        Return coordinates of a cylinder sector characteristic point overlapped by the mouse.
+        
+        :param shape: examined cylinder sector object.
+        :param type: TCylinSector.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
             return deepcopy(shape.centre)
@@ -1201,14 +1500,40 @@ class TApp(object):
             return deepcopy(shape.boundary_pt2)
     
     def polygon_overlap_coord(self, shape, x, y, radius):
-        "Return coordinates of polygon's vertex overlaped by mouse"
+        """
+        Return coordinates of a polygon vertex overlapped by the mouse.
+        
+        :param shape: examined polygon object.
+        :param type: TPolygon.
+        :param x: mouse pointer position x coordinate in pixels.
+        :param type: integer.
+        :param y: mouse pointer position y coordinate in pixels.
+        :param type: integer.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: integer.
+
+        :rtype: TPoint.
+        """
         for pt in shape.points:
             if(x >= pt.x - radius and x <= pt.x + radius \
                and y >= pt.y - radius and y <= pt.y + radius):
                 return deepcopy(pt)
         
     def overlap_coord_mod(self, shape, x, y, radius):
-        "Return coordinates of shapes's characteristic point or vertex overlaped by mouse"
+        """
+        Return model coordinates of a shape characteristic point or a vertex overlapped by the mouse.
+        
+        :param shape: examined shape object.
+        :param type: TRect, TCylin, TCylinSector, TPolygon.
+        :param x: mouse pointer position x coordinate in metres.
+        :param type: float.
+        :param y: mouse pointer position y coordinate in metres.
+        :param type: float.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: float.
+
+        :rtype: TPoint.
+        """
         if(shape.type == "Rectangle"):
             return self.rectangle_overlap_coord_mod(shape, x, y, radius)
         elif(shape.type == "Cylinder"):
@@ -1222,7 +1547,20 @@ class TApp(object):
             return self.polygon_overlap_coord_mod(shape, x, y, radius)
     
     def rectangle_overlap_coord_mod(self, shape, x, y, radius):
-        "Return coordinates of rectangle's vertex overlaped by mouse"
+        """
+        Return model coordinates of a rectangle vertex overlapped by the mouse.
+        
+        :param shape: examined rectangle object.
+        :param type: TRect.
+        :param x: mouse pointer position x coordinate in metres.
+        :param type: float.
+        :param y: mouse pointer position y coordinate in metres.
+        :param type: float.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: float.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.point1.x - radius and x <= shape.point1.x + radius \
            and y >= shape.point1.y - radius and y <= shape.point1.y + radius):
             return deepcopy(shape.point1_mod)
@@ -1237,7 +1575,20 @@ class TApp(object):
             return deepcopy(shape.point4_mod)
 
     def cylinder_overlap_coord_mod(self, shape, x, y, radius):
-        "Return coordinates of cylinder's characteristic point overlaped by mouse"
+        """
+        Return model coordinates of a cylinder characteristic point overlapped by the mouse.
+        
+        :param shape: examined cylinder object.
+        :param type: TCylin.
+        :param x: mouse pointer position x coordinate in metres.
+        :param type: float.
+        :param y: mouse pointer position y coordinate in metres.
+        :param type: float.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: float.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
             return deepcopy(shape.centre_mod)
@@ -1261,7 +1612,20 @@ class TApp(object):
             raise Exception("Can't stick to circle's edge")
     
     def cylin_sector_overlap_coord_mod(self, shape, x, y, radius):
-        "Return coordinates of cylinder sector's characteristic point overlaped by mouse"
+        """
+        Return model coordinates of a cylinder sector characteristic point overlapped by the mouse.
+        
+        :param shape: examined cylinder sector object.
+        :param type: TCylinSector.
+        :param x: mouse pointer position x coordinate in metres.
+        :param type: float.
+        :param y: mouse pointer position y coordinate in metres.
+        :param type: float.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: float.
+
+        :rtype: TPoint.
+        """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
             return deepcopy(shape.centre_mod)
@@ -1273,7 +1637,20 @@ class TApp(object):
             return deepcopy(shape.boundary_pt2_mod)
     
     def polygon_overlap_coord_mod(self, shape, x, y, radius):
-        "Return coordinates of polygon's vertex overlaped by mouse"
+        """
+        Return model coordinates of a polygon vertex overlapped by the mouse.
+        
+        :param shape: examined cylinder sector object.
+        :param type: TCylinSector.
+        :param x: mouse pointer position x coordinate in metres.
+        :param type: float.
+        :param y: mouse pointer position y coordinate in metres.
+        :param type: float.
+        :param radius: radius of the area around a point, trigerring an overlap.
+        :param type: float.
+
+        :rtype: TPoint.
+        """
         for i, pt in enumerate(shape.points):
             if(x >= pt.x - radius and x <= pt.x + radius \
                and y >= pt.y - radius and y <= pt.y + radius):
@@ -1282,7 +1659,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def draw_click(self, event):
-        "Click event while active mouse working mode is set to 'draw'"
+        """
+        Handle a click event while the active mouse working mode is set to 'draw'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(self.mode == "Rectangle"):
             self.rectangle_click_draw(event, overlap_num)
@@ -1296,7 +1678,15 @@ class TApp(object):
             raise NotImplementedError("Invalid shape type")
     
     def rectangle_click_draw(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'Rectangle'"
+        """
+        Handle a click event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Rectangle'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(not self.first_click):
             if(overlap_num > -1):
                 click_pt = self.overlap_coord(self.shapes[overlap_num], \
@@ -1324,7 +1714,15 @@ class TApp(object):
             self.canvas_refresh()
     
     def cylinder_click_draw(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'Cylinder'"
+        """
+        Handle a click event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Cylinder'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(not self.first_click):
             if(overlap_num > -1):
                 click_pt = self.overlap_coord(self.shapes[overlap_num], \
@@ -1351,7 +1749,15 @@ class TApp(object):
             self.canvas_refresh()
     
     def cylin_sector_click_draw(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'CylinSector'"
+        """
+        Handle a click event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'CylinSector'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(not self.first_click and not self.second_click):
             if(overlap_num > -1):
                 click_pt = self.overlap_coord(self.shapes[overlap_num], \
@@ -1372,21 +1778,19 @@ class TApp(object):
             self.second_click = True
         elif(not self.first_click and self.second_click):
             self.main_canvas.delete("all")
-            radius = ((self.second_click_pos.x - self.first_click_pos.x)**2 + \
-                      (self.second_click_pos.y - self.first_click_pos.y)**2)**0.5
             if(overlap_num > -1):
-                bpt2 = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
+                bpt2_mon = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
             else:
-                bpt2 = TPoint(event.x, event.y)
+                bpt2_mon = TPoint(event.x, event.y)
             centre_mon = self.modwin(self.first_click_pos)
-            bpt1 = self.modwin(self.second_click_pos)
-            radius_mon = self.distmodwin(radius)
+            bpt1_mon = self.modwin(self.second_click_pos)
+            radius_mon = ((bpt1_mon.x - centre_mon.x)**2 + (bpt1_mon.y - centre_mon.y)**2)**(0.5)
             self.shapes.append(TCylinSector(centre = centre_mon, \
                                             radius = radius_mon, \
                                             colour = self.shapes_colour, \
                                             width = self.shapes_width, \
-                                            boundary_pt1 = bpt1, \
-                                            boundary_pt2 = bpt2))
+                                            boundary_pt1 = bpt1_mon, \
+                                            boundary_pt2 = bpt2_mon))
             self.operations.append(TOperation("draw", shape = deepcopy(self.shapes[-1]), \
                                               num = len(self.shapes)-1))
             self.first_click = False
@@ -1396,7 +1800,15 @@ class TApp(object):
             self.canvas_refresh()
     
     def polygon_click_draw(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'draw' and shape mode is set to 'Polygon'"
+        """
+        Handle a click event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Polygon'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -1419,13 +1831,20 @@ class TApp(object):
         self.canvas_refresh()
 
     def polygon_double_click_draw(self, event):
-        "Double click event while active mouse working mode is set to 'draw' and shape mode is set to 'Polygon'"
+        """
+        Handle a double click event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Polygon'.
+        
+        :param event: canvas LMB double click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(overlap_num > -1 and self.shapes[overlap_num].type == "Polygon"):
             pt_mon = self.modwin(self.polygon_points[0])
             if(overlap_num == self.mouse_overlaps_shape(pt_mon.x, pt_mon.y, \
                                                         self.radius)):
-                # Move to separate function
                 self.adjacent_polygon(event, overlap_num)
         try:
             self.shapes.append(TPolygon(points_mod = self.polygon_points, \
@@ -1443,7 +1862,14 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def adjacent_polygon(self, event, overlap_num = -1):
-        "Completes one polygon using points from adjacent one"
+        """
+        Complete a single polygon using points from an adjacent one.
+        
+        :param event: canvas LMB double click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         pt_beg_mon = self.modwin(self.polygon_points[0])
         pt_beg = self.overlap_coord(self.shapes[overlap_num], pt_beg_mon.x, \
                                     pt_beg_mon.y, self.radius)
@@ -1452,7 +1878,7 @@ class TApp(object):
         i_beg, i_end, reverse = self.detect_shared_points_begin_end(self.shapes[overlap_num], pt_beg, pt_end)
         if(not(i_beg + 1 == i_end)):
             if(not reverse):
-                # TODO: Calculating areas to one veratile and easy to read function
+                # TODO: Calculating areas to one versatile and easy to read function
                 area1 = TG.polygon_area(self.polygon_points + \
                                         self.shapes[overlap_num].points_mod[i_end:i_beg:-1])  
                 area2 = TG.polygon_area(self.polygon_points + \
@@ -1476,7 +1902,16 @@ class TApp(object):
                     self.polygon_points += self.shapes[overlap_num].points_mod[i_beg+1:i_end]
 
     def detect_shared_points_begin_end(self, polygon = None, pt_beg = None, pt_end = None):
-        "Detects first and last of vertices shared by 2 polygons"
+        """
+        Detect first and last of the vertices shared by two polygons.
+        
+        :param polygon: examined polygon object.
+        :param type: TPolygon.
+        :param pt_beg: point from which to start the search.
+        :param type: TPoint.
+        :param pt_end: point on which to end the search.
+        :param type: TPoint.
+        """
         try:
             reverse = False
             for i, pt in enumerate(polygon.points):
@@ -1494,7 +1929,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def draw_mouse_move(self, event):
-        "Mouse move event while active mouse working mode is set to 'draw'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'.
+        
+        :param event: canvas mouse move event object.
+        :param type: tkinter.Event.
+        """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(self.mode == "Rectangle"):
             self.rectangle_mouse_move_draw(event, overlap_num)
@@ -1508,7 +1948,15 @@ class TApp(object):
             raise NotImplementedError("Invalid shape type")
     
     def rectangle_mouse_move_draw(self, event, overlap_num = -1):
-        "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'Rectangle'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Rectangle'.
+        
+        :param event: canvas mouse move event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(self.first_click == True):
             self.main_canvas.delete("all")
             self.canvas_refresh()
@@ -1528,7 +1976,15 @@ class TApp(object):
                                                   width = self.shapes_width)
     
     def cylinder_mouse_move_draw(self, event, overlap_num = -1):
-        "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'Cylinder'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Cylinder'.
+        
+        :param event: canvas mouse move event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if (self.first_click == True):
             self.main_canvas.delete("all")
             self.canvas_refresh()
@@ -1546,7 +2002,15 @@ class TApp(object):
                                          width = self.shapes_width)
 
     def cylin_sector_mouse_move_draw(self, event, overlap_num = -1):
-        "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'CylindSector'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'CylindSector'.
+        
+        :param event: canvas mouse move event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         self.canvas_refresh()
         if (self.first_click):
@@ -1565,8 +2029,7 @@ class TApp(object):
                 pt = TPoint(event.x, event.y)
             first_click_mon = self.modwin(self.first_click_pos)
             second_click_mon = self.modwin(self.second_click_pos)
-            radius = ((self.second_click_pos.x - self.first_click_pos.x)**2 + (self.second_click_pos.y - self.first_click_pos.y)**2)**0.5
-            radius_mon = self.distmodwin(radius)
+            radius_mon = ((second_click_mon.x - first_click_mon.x)**2 + (second_click_mon.y - first_click_mon.y)**2)**(0.5)
             start, extent = self.calculate_cylin_sector_start_extent(first_click_mon, \
                                                                      second_click_mon, \
                                                                      pt, radius_mon)
@@ -1580,7 +2043,15 @@ class TApp(object):
                                         extent = extent)
 
     def polygon_mouse_move_draw(self, event, overlap_num = -1):
-        "Mouse move event while active mouse working mode is set to 'draw' and shape mode is set to 'Polygon'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'
+        and shape mode is set to 'Polygon'.
+        
+        :param event: canvas mouse move event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(self.polygon_points):
             self.main_canvas.delete("all")
             self.canvas_refresh()
@@ -1603,7 +2074,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def move_click(self, event):
-        "Mouse move event while active mouse working mode is set to 'move'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'move'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(not self.move):
             if(overlap_num > -1):
@@ -1626,7 +2102,14 @@ class TApp(object):
                 raise NotImplementedError("Invalid shape type")
     
     def click_move_shape_select(self, event, overlap_num = -1):
-        "Copies shape to be moved"
+        """
+        Make a copy of the shape to be moved.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.shape_buffer = deepcopy(self.shapes[overlap_num]) 
         if(overlap_num > -1):
             self.operations.append(TOperation("move", shape = deepcopy(self.shapes[overlap_num]), \
@@ -1644,7 +2127,15 @@ class TApp(object):
                                                            self.radius)
     
     def rectangle_click_move_insert(self, event, overlap_num = -1):
-        "Click event while active mouse working mode is set to 'move', there is a shape being moved and shape mode is set to 'Rectangle'"
+        """
+        Handle a click event while the active mouse working mode is set to 'move',
+        there is a shape being moved and shape mode is set to 'Rectangle'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
@@ -1670,8 +2161,15 @@ class TApp(object):
         self.move = False
         self.canvas_refresh()
 
-    def cylinder_click_move_insert(self, event, overlap_num):
-        "Click event while active mouse working mode is set to 'move', there is a shape being moved and shape mode is set to 'Cylinder'"
+    def cylinder_click_move_insert(self, event, overlap_num = -1):
+        """Handle a click event while the active mouse working mode is set to 'move',
+        there is a shape being moved and shape mode is set to 'Cylinder'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -1690,8 +2188,16 @@ class TApp(object):
         self.move = False
         self.canvas_refresh()
 
-    def cylin_sector_click_move_insert(self, event, overlap_num):
-        "Click event while active mouse working mode is set to 'move', there is a shape being moved and shape mode is set to 'CylinSector'"
+    def cylin_sector_click_move_insert(self, event, overlap_num = -1):
+        """
+        Handle a click event while the active mouse working mode is set to 'move',
+        there is a shape being moved and shape mode is set to 'CylinSector'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -1718,8 +2224,16 @@ class TApp(object):
         self.move = False
         self.canvas_refresh()
     
-    def polygon_click_move_insert(self, event, overlap_num):
-        "Click event while active mouse working mode is set to 'move', there is a shape being moved and shape mode is set to 'Polygon'"
+    def polygon_click_move_insert(self, event, overlap_num = -1):
+        """
+        Handle a click event while the active mouse working mode is set to 'move',
+        there is a shape being moved and shape mode is set to 'Polygon'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -1731,7 +2245,6 @@ class TApp(object):
         for pt in self.shape_buffer.points_mod:
             pt.x += offset_x
             pt.y += offset_y
-        # self.shape_buffer.update_model_positions()
         self.shape_buffer.update_window_positions()
         self.shapes.insert(self.manipulated_shape_num, self.shape_buffer)
         self.shape_buffer = None
@@ -1743,7 +2256,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def move_mouse_move(self, event):
-        "Mouse move event while active mouse working mode is set to 'draw'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'draw'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.dd
+        """
         if(self.move):
             overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
             if(self.shape_buffer.type == "Rectangle"):
@@ -1758,8 +2276,16 @@ class TApp(object):
             else:
                 raise NotImplementedError("Invalid shape type")
 
-    def rectangle_mouse_move_move(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Rectangle'"
+    def rectangle_mouse_move_move(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'move'
+        and moved shape type is 'Rectangle'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
@@ -1780,8 +2306,16 @@ class TApp(object):
                                           outline = self.shape_buffer.colour, \
                                           width = self.shape_buffer.width)
     
-    def cylinder_mouse_move_move(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Cylinder'"
+    def cylinder_mouse_move_move(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'move'
+        and moved shape type is 'Cylinder'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
                                     self.radius)
@@ -1806,8 +2340,16 @@ class TApp(object):
                                      radius_win, \
                                      outline = self.shape_buffer.colour, width = self.shape_buffer.width)
     
-    def cylin_sector_mouse_move_move(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'CylinSector'"
+    def cylin_sector_mouse_move_move(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'move'
+        and moved shape type is 'CylinSector'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
@@ -1828,8 +2370,16 @@ class TApp(object):
                                     start = self.shape_buffer.start, extent = self.shape_buffer.extent, \
                                     outline = self.shape_buffer.colour, width = self.shape_buffer.width)
 
-    def polygon_mouse_move_move(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'move' and moved shape type is 'Polygon'"
+    def polygon_mouse_move_move(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'move'
+        and moved shape type is 'Polygon'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
@@ -1850,7 +2400,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def resize_click(self, event):
-        "Click event while active mouse working mode is set to 'resize'"
+        """
+        Handle a click event while the active mouse working mode is set to 'resize'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(not self.resize):
             if(overlap_num > -1):
@@ -1872,8 +2427,15 @@ class TApp(object):
             else:
                 raise NotImplementedError("Invalid shape type")
     
-    def click_resize_shape_select(self, event, overlap_num):
-        "Copies shape to be resized"
+    def click_resize_shape_select(self, event, overlap_num = -1):
+        """
+        Make a copy of the shape to be resized.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         self.shape_buffer = deepcopy(self.shapes[overlap_num])
         if(overlap_num > -1):
             self.operations.append(TOperation("resize", shape = deepcopy(self.shapes[overlap_num]), \
@@ -1892,8 +2454,13 @@ class TApp(object):
 
     def rectangle_click_resize_insert(self, event, overlap_num = -1):
         """
-        Click event while active mouse working mode is set to 'resize', there 
-        is a shape being moved and shape mode is set to 'Rectangle'
+        Handle a click event while the active mouse working mode is set to 'resize',
+        there is a shape being moved and shape mode is set to 'Rectangle'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -1945,8 +2512,13 @@ class TApp(object):
 
     def cylinder_click_resize_insert(self, event, overlap_num = -1):
         """
-        Click event while active mouse working mode is set to 'resize', there 
-        is a shape being moved and shape mode is set to 'Cylinder'
+        Hande a click event while the active mouse working mode is set to 'resize',
+        there is a shape being moved and shape mode is set to 'Cylinder'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -1969,8 +2541,13 @@ class TApp(object):
 
     def cylin_sector_click_resize_insert(self, event, overlap_num = -1):
         """
-        Click event while active mouse working mode is set to 'resize', there is 
-        a shape being moved and shape mode is set to 'CylinSector'"
+        Handle a click event while the active mouse working mode is set to 'resize',
+        there is a shape being moved and shape mode is set to 'CylinSector'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2002,9 +2579,7 @@ class TApp(object):
             self.shape_buffer.boundary_pt2_mod = self.winmod(bp2)
         elif(self.resized_point.x == self.shape_buffer.boundary_pt2_mod.x and \
              self.resized_point.y == self.shape_buffer.boundary_pt2_mod.y):
-            radius = ((self.shape_buffer.boundary_pt1_mod.x - self.shape_buffer.centre_mod.x)**2 + \
-                      (self.shape_buffer.boundary_pt1_mod.y - self.shape_buffer.centre_mod.y)**2)**(0.5)
-            radius_mon = self.distmodwin(radius)
+            radius_mon = ((bpt1_mon.x - centre_mon.x)**2 + (bpt1_mon.y - centre_mon.y)**2)**(0.5)
             start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
                                                                      bpt1_mon, pt_mon, \
                                                                      radius_mon)
@@ -2032,8 +2607,13 @@ class TApp(object):
 
     def polygon_click_resize_insert(self, event, overlap_num = -1):
         """
-        Click event while active mouse working mode is set to 'resize', there is
-        a shape being moved and shape mode is set to 'Polygon'
+        Handle a click event while the  active mouse working mode is set to 'resize',
+        there is a shape being moved and shape mode is set to 'Polygon'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2060,7 +2640,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def resize_mouse_move(self, event):
-        "Mouse move event while active mouse working mode is set to 'resize'"
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'resize'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        """
         if(self.resize):
             overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
             if(self.shape_buffer.type == "Rectangle"):
@@ -2074,8 +2659,16 @@ class TApp(object):
             else:
                 raise NotImplementedError("Invalid shape type")
     
-    def rectangle_mouse_move_resize(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'Rectangle'"
+    def rectangle_mouse_move_resize(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'resize'
+        and resized shape type is 'Rectangle'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
@@ -2117,8 +2710,16 @@ class TApp(object):
                                           outline = self.shape_buffer.colour, \
                                           width = self.shape_buffer.width)
 
-    def cylinder_mouse_move_resize(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'Cylinder'"
+    def cylinder_mouse_move_resize(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'resize'
+        and resized shape type is 'Cylinder'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
@@ -2138,30 +2739,36 @@ class TApp(object):
                                      centre_mon.y - radius_mon, \
                                      outline = self.shape_buffer.colour, width = self.shape_buffer.width)
 
-    def cylin_sector_mouse_move_resize(self, event, overlap_num):
-        "Mouse move event while active mouse working mode is set to 'resize' and resized shape type is 'CylinSector'"
+    def cylin_sector_mouse_move_resize(self, event, overlap_num = -1):
+        """
+        Handle a mouse move event while the active mouse working mode is set to 'resize'
+        and resized shape type is 'CylinSector'.
+        
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
+        """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
             pt = TPoint(event.x, event.y)
         pt_mon = deepcopy(pt)
         pt = self.winmod(pt)
-        radius = ((pt.x - self.shape_buffer.centre_mod.x)**2 + \
-                  (pt.y - self.shape_buffer.centre_mod.y)**2)**0.5
-        radius_mon = self.distmodwin(radius)
         centre_mon = self.modwin(self.shape_buffer.centre_mod)
         bpt1_mon = self.modwin(self.shape_buffer.boundary_pt1_mod)
         bpt2_mon = self.modwin(self.shape_buffer.boundary_pt2_mod)
         if(self.resized_point.x == self.shape_buffer.boundary_pt1_mod.x and \
            self.resized_point.y == self.shape_buffer.boundary_pt1_mod.y):
+            radius_mon = ((pt_mon.x - centre_mon.x)**2 + \
+                          (pt_mon.y - centre_mon.y)**2)**(0.5)
             start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
                                                                      pt_mon, bpt2_mon, \
                                                                      radius_mon)
         elif(self.resized_point.x == self.shape_buffer.boundary_pt2_mod.x and \
              self.resized_point.y == self.shape_buffer.boundary_pt2_mod.y):
-            radius = ((self.shape_buffer.boundary_pt1_mod.x - self.shape_buffer.centre_mod.x)**2 + \
-                      (self.shape_buffer.boundary_pt1_mod.y - self.shape_buffer.centre_mod.y)**2)**(0.5)
-            radius_mon = self.distmodwin(radius)
+            radius_mon = ((bpt1_mon.x - centre_mon.x)**2 + \
+                          (bpt1_mon.y - centre_mon.y)**2)**(0.5)
             start, extent = self.calculate_cylin_sector_start_extent(centre_mon, \
                                                                      bpt1_mon, pt_mon, 
                                                                      radius_mon)
@@ -2178,20 +2785,23 @@ class TApp(object):
                                     outline = self.shape_buffer.colour, \
                                     width = self.shape_buffer.width)
 
-    def polygon_mouse_move_resize(self, event, overlap_num):
+    def polygon_mouse_move_resize(self, event, overlap_num = -1):
         """
-        Mouse move event while active mouse working mode is set to 'resize' and 
-        moved shape type is 'Polygon'
+        Handle a mouse move event while the active mouse working mode is set to 'resize'
+        and moved shape type is 'Polygon'.
+
+        :param event: canvas LMB click event object.
+        :param type: tkinter.Event.
+        :param overlap_num: list index of a shape overlapped by the mouse.
+        :param type: integer.
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
         else:
             pt = TPoint(event.x, event.y)
-        # pt_mon = deepcopy(pt)
         pt = self.winmod(pt)
         offset_x = pt.x - self.resized_point.x
         offset_y = pt.y - self.resized_point.y
-        # points_unwrapped = [xs for pt in self.shape_buffer.points_mod for xs in (pt.x, pt.y)]
         pts_mod = deepcopy(self.shape_buffer.points_mod)
         pts_mon = []
         for pt in pts_mod:
@@ -2209,8 +2819,21 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def calculate_cylin_sector_start_extent(self, centre, bp1, bp2, radius):
-        """Auxiliary method used to calculate cylinder sector's start and extent 
-           angles given 3 points constituing it"""
+        """
+        Calculate the cylinder sector start and extent angles given 3 points
+        constituing it.
+
+        :param centre: cylinder sector centre coordinates.
+        :param type: TPoint.
+        :param bp1: first boundary point, establishing radius starting the slice.
+        :param type: TPoint.
+        :param bp2: second boundary point, establishing radius ending the slice.
+        :param type: TPoint.
+        :param radius: cylinder sector radius.
+        :param type: float.
+
+        :rtype: float, float.
+        """
         if(bp1.x >= centre.x):
             start = degrees(asin((centre.y - bp1.y)/radius))
         else:
@@ -2221,18 +2844,43 @@ class TApp(object):
         b2 = ((bp2.x - centre.x)**2 + (bp2.y - centre.y)**2)**(0.5)
         # Check wether boundry points and centre are colinear
         try:
-            extent = degrees(acos(-((b1**2 - b2**2 - radius**2)/(2*b2*radius))))
+            factor = -((b1**2 - b2**2 - radius**2)/(2*b2*radius))
         except ValueError:
             extent = 180
+        else:
+            try:
+                extent = degrees(acos(factor))
+            except ValueError:
+                extent = 180
         # Check wether second boundary point is located to the right of the centre -- first boundary point line
-        if(((bp2.x - centre.x)*sin(radians(start)) + (bp2.y - centre.y)*cos(radians(start))) > 0 and extent != 180):
+        if(((bp2.x - centre.x)*sin(radians(start)) + \
+            (bp2.y - centre.y)*cos(radians(start))) > 0 and extent != 180):
             extent = 360 - extent
+        # Round extent to 90, 180 or 270 degree if it differs no more than 0.5 degree from those values
+        tresh = 0.5
+        if(abs(extent - 90) <= tresh):
+            extent = 90
+        elif(abs(extent - 180) <= tresh):
+            extent = 180
+        elif(abs(extent - 270) <= tresh):
+            extent = 270
         return start, extent
     
     def calculate_cylin_sector_boundary_pts_window(self, centre, radius, start, extent):
         """
-        Auxiliary method used to calculate cylinder sector's boundary points in window's 
-        coordinates system given its centre, radius, start and extent angles
+        Calculate the cylinder sector boundary points given its centre, radius,
+        start and extent angles.
+
+        :param centre: cylinder sector centre coordinates.
+        :param type: TPoint.
+        :param radius: cylinder sector radius.
+        :param type: float.
+        :param start: angle (in degrees) between positive OX halfaxis and centre-bp1 radius.
+        :param type: float.
+        :param extent: angle (in degrees) between centre-bp1 radius and centree-bp2 radius.
+        :param type: float.
+
+        :rtype: TPoint, TPoint.
         """
         bp1 = TPoint(int(centre.x + cos(radians(start))*radius), \
                      int(centre.y - sin(radians(start))*radius))
@@ -2243,7 +2891,12 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def move_cursor_up(self, event):
-        "Manually move mouse cursor one pixel up with keystroke"
+        """
+        Manually move the mouse cursor one pixel up with a keystroke.
+        
+        :param event: window up arrow press event object.
+        :param type: tkinter.Event.
+        """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
         abs_coord_x = x - self.master.winfo_rootx()
@@ -2251,7 +2904,12 @@ class TApp(object):
         self.master.event_generate('<Motion>', warp = True, x = abs_coord_x, y = abs_coord_y - 1)
     
     def move_cursor_down(self, event):
-        "Manually move mouse cursor one pixel down with keystroke"
+        """
+        Manually move the mouse cursor one pixel down with a keystroke.
+        
+        :param event: window down arrow press event object.
+        :param type: tkinter.Event.
+        """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
         abs_coord_x = x - self.master.winfo_rootx()
@@ -2259,15 +2917,25 @@ class TApp(object):
         self.master.event_generate('<Motion>', warp = True, x = abs_coord_x, y = abs_coord_y + 1)
 
     def move_cursor_left(self, event):
-            "Manually move mouse cursor one pixel left with keystroke"
-            x = self.master.winfo_pointerx()
-            y = self.master.winfo_pointery()
-            abs_coord_x = x - self.master.winfo_rootx()
-            abs_coord_y = y - self.master.winfo_rooty()
-            self.master.event_generate('<Motion>', warp = True, x = abs_coord_x - 1, y = abs_coord_y)
+        """
+        Manually move the mouse cursor one pixel left with a keystroke.
+        
+        :param event: window left arrow press event object.
+        :param type: tkinter.Event.
+        """
+        x = self.master.winfo_pointerx()
+        y = self.master.winfo_pointery()
+        abs_coord_x = x - self.master.winfo_rootx()
+        abs_coord_y = y - self.master.winfo_rooty()
+        self.master.event_generate('<Motion>', warp = True, x = abs_coord_x - 1, y = abs_coord_y)
 
     def move_cursor_right(self, event):
-        "Manually move mouse cursor one pixel right with keystroke"
+        """
+        Manually move the mouse cursor one pixel right with a keystroke.
+        
+        :param event: window right arrow press event object.
+        :param type: tkinter.Event.
+        """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
         abs_coord_x = x - self.master.winfo_rootx()
@@ -2277,7 +2945,14 @@ class TApp(object):
     # --------------------------------------------------------------------------
 
     def undo_operation(self, event = None):
-        "Undo last operation"
+        """
+        Undo last operation.
+        
+
+        :param event: object of the event evoking this method (keyboard shortcut,
+                      mouse menu position).
+        :param type: tkinter.Event.
+        """
         try:
             operation = self.operations.pop()
         except IndexError:
@@ -2307,10 +2982,13 @@ class TApp(object):
             self.main_canvas.delete("all")
             self.canvas_refresh()
     
-    def run_gprmax_terminal(self):
-        self.run_gprmax()
-    
     def run_gprmax(self, filename = None):
+        """
+        Run gprMax on specified input file.
+
+        :param filename: input file name.
+        :param type: string.        
+        """
         if(filename is None):
             filename = filedialog.askopenfilename()
         if(filename is None):
@@ -2326,8 +3004,16 @@ class TApp(object):
             command = "start cmd /K run_gprmax.bat compute " + "\"" + filename + "\"" + \
                       " -n " + str(n_iter) + " --geometry-fixed"
             sts = subprocess.call(command, shell = True)
+            del sts
     
     def view_zoom_in(self, event = None):
+        """
+        Zoom in the model view.
+
+        :param event: object of the event evoking this method (keyboard shortcut, 
+                      mouse menu position, toolbar button).
+        :param type: tkinter.Event.
+        """
         if(TModel_Size.FIT):
             TModel_Size.FIT = False
             TModel_Size.MIN_X = 0.0
@@ -2391,6 +3077,13 @@ class TApp(object):
         self.canvas_mouse_move(event)
 
     def view_zoom_out(self, event = None):
+        """
+        Zoom out the model view.
+
+        :param event: object of the event evoking this method (keyboard shortcut, 
+                      mouse menu position, toolbar button).
+        :param type: tkinter.Event.
+        """
         self.scale /= 2
         if(self.scale > 100.0):
             x_lenght = TModel_Size.MAX_X - TModel_Size.MIN_X
@@ -2455,6 +3148,9 @@ class TApp(object):
         self.canvas_mouse_move(event)
     
     def view_zoom_reset(self):
+        """
+        Restore default model view.
+        """
         TModel_Size.FIT = True
         TModel_Size.MIN_X = 0.0
         TModel_Size.MAX_X = self.len_tot_x
@@ -2481,6 +3177,9 @@ class TApp(object):
         self.canvas_mouse_move(event)
     
     def scrollbars_zoom_in(self):
+        """
+        Scale scrollbars after zooming in the model view.
+        """
         if(self.scale > 100.0):
             hsbar_pos = self.main_horizontal_scrollbar.get()
             hsbar_len = hsbar_pos[1] - hsbar_pos[0]
@@ -2519,6 +3218,9 @@ class TApp(object):
                     self.main_vertical_scrollbar.set(0, 1)
     
     def scrollbars_zoom_out(self):
+        """
+        Scale scrollbars after zooming out the model view.
+        """
         if(self.scale > 100.0):
             hsbar_pos = self.main_horizontal_scrollbar.get()
             hsbar_len = hsbar_pos[1] - hsbar_pos[0]
@@ -2557,11 +3259,19 @@ class TApp(object):
                     self.main_vertical_scrollbar.set(0, 1)
     
     def model_horizontal_scroll(self, action, number, units = ""):
-        "Handle visible model area move in x direction"
+        """
+        Handle the visible model area move in the x direction.
+        
+        :param action: type of action performed on the scrollbar.
+        :param type: string.
+        :param number: displacement of the scrollbar.
+        :param type: float.
+        :param units: units of the displacement.
+        :param type: string.
+        """
         hbar_pos = self.main_horizontal_scrollbar.get()
         hbar_pos = (Decimal(str(hbar_pos[0])), Decimal(str(hbar_pos[1])))
         hbar_len = Decimal(str(1/(self.scale/100)))
-        scale_dec = Decimal(str(self.scale))/Decimal('100.0')
         x_y_ratio = Decimal(str(min(self.len_tot_x, self.len_tot_y)/ \
                                     max(self.len_tot_x, self.len_tot_y)))
         len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
@@ -2587,21 +3297,6 @@ class TApp(object):
                 dx = (1 - hbar_pos[1])
             new_pos_lower = hbar_pos[0] + dx
             new_pos_upper = hbar_pos[1] + dx
-        # if(new_pos_lower < 0):
-        #     self.main_horizontal_scrollbar.set(0, hbar_len)
-        #     new_min_x = Decimal('0.0')
-        #     new_max_x = Decimal(str(self.len_tot_x))/scale_dec
-        #     if(not TModel_Size.FIT):
-        #         new_max_x *= x_y_ratio*Decimal(str(len_x_mon/len_y_mon))
-        # elif(new_pos_upper > 1):
-        #     self.main_horizontal_scrollbar.set(1 - hbar_len, 1)
-        #     factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
-        #     new_min_x = Decimal(str(self.len_tot_x))*factor
-        #     new_max_x = Decimal(str(self.len_tot_x))
-        #     if(not TModel_Size.FIT):
-        #         new_min_x = (Decimal('1.0') - x_y_ratio*Decimal(str(len_x_mon/len_y_mon))/scale_dec)*\
-        #                     Decimal(str(self.len_tot_x))
-        # else:
         self.main_horizontal_scrollbar.set(new_pos_lower, new_pos_upper)
         new_min_x = (new_pos_lower)*Decimal(str(self.len_tot_x))
         new_max_x = (new_pos_upper)*Decimal(str(self.len_tot_x))
@@ -2617,13 +3312,21 @@ class TApp(object):
         self.canvas_refresh()
 
     def model_vertical_scroll(self, action, number, units = ""):
-        "Handle visible model area move in y direction"
+        """
+        Handle the visible model area move in the y direction.
+        
+        :param action: type of action performed on the scrollbar.
+        :param type: string.
+        :param number: displacement of the scrollbar.
+        :param type: float.
+        :param units: units of the displacement.
+        :param type: string.
+        """
         # Convert used quantities to decimal in order to obtain higher
         # floating point accuracy
         vbar_pos = self.main_vertical_scrollbar.get()
         vbar_pos = (Decimal(str(vbar_pos[0])), Decimal(str(vbar_pos[1])))
         vbar_len = Decimal(str(1/(self.scale/100)))
-        scale_dec = Decimal(str(self.scale))/Decimal('100.0')
         x_y_ratio = Decimal(str(min(self.len_tot_x, self.len_tot_y)/ \
                                     max(self.len_tot_x, self.len_tot_y)))
         len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
@@ -2648,21 +3351,6 @@ class TApp(object):
                 dy = (1 - vbar_pos[1])
             new_pos_lower = vbar_pos[0] + dy
             new_pos_upper = vbar_pos[1] + dy
-        # if(new_pos_lower < 0):
-        #     self.main_vertical_scrollbar.set(0, vbar_len)
-        #     factor = Decimal('1.0') - scale_dec**(Decimal('-1.0')) 
-        #     new_min_y = Decimal(str(self.len_tot_y))*factor
-        #     new_max_y = Decimal(str(self.len_tot_y))
-        #     if(not TModel_Size.FIT):
-        #         new_min_y = Decimal(str(self.len_tot_y))*(Decimal('1.0') - x_y_ratio*\
-        #                             Decimal(str(len_y_mon/len_x_mon)))*scale_dec
-        # elif(new_pos_upper > 1):
-        #     self.main_vertical_scrollbar.set(1 - vbar_len, 1)
-        #     new_min_y = Decimal('0.0')
-        #     new_max_y = Decimal(str(self.len_tot_y))/scale_dec
-        #     if(not TModel_Size.FIT):
-        #         new_max_y *= (x_y_ratio*Decimal(str(len_y_mon/len_x_mon)))
-        # else:
         self.main_vertical_scrollbar.set(new_pos_lower, new_pos_upper)
         new_min_y = (Decimal('1.0') - new_pos_upper)*Decimal(str(self.len_tot_y))
         new_max_y = (Decimal('1.0') - new_pos_lower)*Decimal(str(self.len_tot_y))
@@ -2676,9 +3364,13 @@ class TApp(object):
         self.coordsys.display_settings_update()
         self.main_canvas.delete("all")
         self.canvas_refresh()
-    
+
+    # --------------------------------------------------------------------------
+
     def read_model_file(self):
-        "Reads and loads a GprMax compliant input file"
+        """
+        Read and load a GprMax compliant input file.
+        """
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax input files", "*.in"), ("All files", "*.*")])
         
@@ -2691,12 +3383,16 @@ class TApp(object):
                     self.handle_input_command(line, line_num)
                 line_num += 1
             self.view_zoom_reset()
-            # self.materials_frame.update_list(self.materials)
-            # self.shapes_frame.update_list(self.shapes)
-            # self.canvas_refresh()
 
     def handle_input_command(self, line, line_num):
-        "Recognises and handles a command given in a line"
+        """
+        Recognise and handle a command given in a line.
+        
+        :param line: line to be parsed.
+        :param type: string.
+        :param line_num: parsed line number.
+        :param type: integer.
+        """
         tokens = line.split()
         command = (tokens[0])[1:-1]
         if(command == "title"):
@@ -2787,7 +3483,9 @@ class TApp(object):
                                    "Invalid input {} in line {}.".format(line, line_num))
 
     def export_hdf5_to_ascii(self):
-        "Export a gprMax output file in HDF5 format to ASCII"
+        """
+        Export a gprMax output file in HDF5 format to ASCII.
+        """
         filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         h5file = h5py.File(filename)
@@ -2852,6 +3550,16 @@ class TApp(object):
                 self.write_array_to_file(hzfile, hzdata, dims)
         
     def write_array_to_file(self, fileh, array, dims = 2):
+        """
+        Write a two-dimensional array into a ASCII file row by row.
+
+        :param fileh: file handler.
+        :param type: _io.TextIOWrapper.
+        :param array: array to be saved.
+        :param type: list.
+        :param dims: number of dimensions.
+        :param type: integer.
+        """
         length = len(array)
         if(dims > 1):
             for i, row in enumerate(array):
@@ -2866,7 +3574,9 @@ class TApp(object):
             fileh.write(str(array[-1]))
     
     def merge_traces(self):
-        "Invoke gprMax tools to merge output files containing traces"
+        """
+        Invoke a gprMax tool to merge output files containing traces.
+        """
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         basename = (filename.split("."))[0]
@@ -2876,8 +3586,12 @@ class TApp(object):
             if(remove_files == True):
                 command += " --remove-files"
             sts = subprocess.call(command, shell = True)
+            del sts
     
     def display_trace(self):
+        """
+        Invoke a gprMax tool to display a single trace.
+        """
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         if(filename != ""):
@@ -2886,8 +3600,12 @@ class TApp(object):
             command = "start cmd /K run_gprmax.bat ascan " + "\"" + filename + "\"" + \
                       " " + components
             sts = subprocess.call(command, shell = True)
+            del sts
     
     def display_echogram(self):
+        """
+        Invoke a gprMax tool to display an entire echogram.
+        """
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
         if(filename != ""):
@@ -2896,31 +3614,50 @@ class TApp(object):
             command = "start cmd /K run_gprmax.bat bscan " + "\"" + filename + "\"" + \
                       " " + component
             sts = subprocess.call(command, shell = True)
+            del sts
     
     def copy_shape(self, event = None, *, shape_num = -1):
-        "Copies shape overlaped by mouse pointer to buffer or specified by given number"
+        """
+        Make a copy of a shape overlapped by the mouse pointer or specified by
+        given number.
+        
+        :param event: object of the event evoking this method (keyboard shortcut, 
+                      mouse menu position).
+        :param type: tkinter.Event.
+        :param shape_num: list index of the shape being copied.
+        :param type: integer.
+        """
         self.canvas_interrupt()
         if(shape_num == -1 and event is not None):
             shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
             if(event is not None):
-                self.move_const_point = TPoint(event.x, event.y)
+                self.move_const_point = self.winmod(TPoint(event.x, event.y))
             else:
                 if(self.shapes[shape_num].type == "Rectangle"):
-                    self.move_const_point = self.shapes[shape_num].point1
+                    self.move_const_point = self.shapes[shape_num].point1_mod
                 elif(self.shapes[shape_num].type == "Cylinder" or \
                      self.shapes[shape_num].type == "CylinSector"):
-                    self.move_const_point = self.shapes[shape_num].centre
+                    self.move_const_point = self.shapes[shape_num].centre_mod
                 elif(self.shapes[shape_num].type == "Polygon"):
-                    self.move_const_point = self.shapes[shape_num].points[0]
+                    self.move_const_point = self.shapes[shape_num].points_mod[0]
                 else:
                     raise NotImplementedError("Invalid shape type")
-            # self.manipulated_shape_num = len(self.shapes)
             self.shape_buffer = deepcopy(self.shapes[shape_num])
             self.shape_buffer.width = 1
     
     def paste_shape(self, event = None, deltax = 15, deltay = 15):
-        "Paste shape into model"
+        """
+        Paste shape into model.
+        
+        :param event: object of the event evoking this method (keyboard shortcut, 
+                      mouse menu position).
+        :param type: tkinter.Event.
+        :param deltax: offset of the pasted shape in the x direction in pixels.
+        :param type: integer.
+        :param deltay: offset of the pasted shape in the y direction in pixels.
+        :param type: integer.
+        """
         self.manipulated_shape_num = len(self.shapes)
         if(event is not None):
             shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -2935,10 +3672,16 @@ class TApp(object):
                 self.polygon_click_move_insert(event, shape_num)
             else:
                 raise NotImplementedError("Invalid shape type")
-            self.operations.append(TOperation("paste", num = self.move_shape_num))
+            # self.operations.append(TOperation("paste", num = self.move_shape_num))
+            self.operations.append(TOperation("paste", num = self.manipulated_shape_num))
     
     def copy_ctrl_c(self, event):
-        "ctrl+c keystroke event"
+        """
+        Handle a ctrl+c keystroke event.
+        
+        :param event: ctrl+c keystroke event object.
+        :param type: tkinter.Event.
+        """
         try:
             shape_num = (self.shapes_frame.shapes_list.curselection())[0]
         except IndexError:
@@ -2946,21 +3689,33 @@ class TApp(object):
         self.copy_shape(shape_num = shape_num)
 
     def paste_ctrl_v(self, event, *, deltax = 15, deltay = 15):
-        "ctrl+v keystroke event"
+        """
+        Handle a ctrl+v keystroke event
+        
+        :param event: ctrl+v keystroke event object.
+        :param type: tkinter.Event.
+        """
         event.x = self.move_const_point.x + deltax
         event.y = self.move_const_point.y + deltay
         self.paste_shape(event)
     
     def mouse_wheel(self, event):
-        "Mouse wheel event"
-         # respond to Linux or Windows wheel event
+        """
+        Handle a mouse wheel rotation event.
+
+        :param event: window mouse wheel rotation event object.
+        :param type: tkinter.Event.
+        """
+        # Respond to Linux or Windows wheel event accordingly
         if event.num == 5 or event.delta == -120:
             self.view_zoom_out()
         if event.num == 4 or event.delta == 120:
             self.view_zoom_in()
     
     def export_canvas_to_image(self):
-        "Exports model to an image"
+        """
+        Export the model to a PNG image.
+        """
         white = (255, 255, 255)
         width = int(TModel_Size.DOM_X/TModel_Size.DX)
         height = int(TModel_Size.DOM_Y/TModel_Size.DY)
@@ -2993,9 +3748,18 @@ class TApp(object):
             model_image.save(filename)
 
     def init_model_move(self, event):
+        """
+        Save the initial mouse position while holding its wheel down.
+        """
         self.prev_mouse_pos = TPoint(event.x, event.y)
 
     def move_visible_model(self, event):
+        """
+        Handle a mouse move while its wheel is pressed move event.
+
+        :param : canvas mouse move while wheel is down event object.
+        :param type: tkinter.Event.
+        """
         dr = TPoint(self.prev_mouse_pos.x - event.x, \
                     event.y - self.prev_mouse_pos.y)
         len_x_mon = TWindow_Size.MAX_X - TWindow_Size.MIN_X - \
@@ -3018,7 +3782,6 @@ class TApp(object):
         TModel_Size.MIN_Y += dr.y
         TModel_Size.MAX_X += dr.x
         TModel_Size.MAX_Y += dr.y
-        # print(TModel_Size.MIN_X, TModel_Size.MIN_Y, TModel_Size.MAX_X, TModel_Size.MAX_Y)
         self.coordsys.model_size_update()
         self.coordsys.window_size_update()
         for single_shape in self.shapes:
@@ -3034,9 +3797,20 @@ class TApp(object):
         self.prev_mouse_pos = TPoint(event.x, event.y)
 
     def dispatch_model_move(self, event):
+        """
+        Set the initial mouse position while holding its wheel down to None.
+        """
         self.prev_mouse_pos = None
     
     def modwin(self, pt):
+        """
+        Convert a point in model coordinates to window coordinates.
+
+        :param pt: point to be converted.
+        :param type: TPoint.
+
+        :rtype: TPoint.
+        """
         return TG.model_to_window(pt, \
                                   TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
                                   TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y), \
@@ -3046,6 +3820,14 @@ class TApp(object):
                                          TWindow_Size.BOX_MAX_Y))
     
     def winmod(self, pt):
+        """
+        Convert a point in window coordinates to model coordinates.
+
+        :param pt: point to be converted.
+        :param type: TPoint.
+
+        :rtype: TPoint.
+        """
         return TG.window_to_model(pt, \
                                   TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
                                   TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y), \
@@ -3056,6 +3838,14 @@ class TApp(object):
                                   TModel_Size.DX, TModel_Size.DY)
     
     def distmodwin(self, dist):
+        """
+        Convert a distance in model coordinates to window coordinates.
+
+        :param pt: distance to be converted.
+        :param type: float.
+
+        :rtype: integer.
+        """
         return TG.dist_model_to_window(dist,  \
                                        TPoint(TModel_Size.MIN_X, \
                                               TModel_Size.MIN_Y), \
@@ -3067,6 +3857,14 @@ class TApp(object):
                                               TWindow_Size.BOX_MAX_Y))
     
     def distwinmod(self, dist):
+        """
+        Convert a distance in window coordinates to model coordinates.
+
+        :param pt: distance to be converted.
+        :param type: integer.
+
+        :rtype: float.
+        """
         return TG.dist_window_to_model(dist,  \
                                        TPoint(TModel_Size.MIN_X, \
                                               TModel_Size.MIN_Y), \
@@ -3080,6 +3878,12 @@ class TApp(object):
 
 
 def centre_window(window):
+    """
+    Put the main application window in the middle of the screen.
+
+    :param window: main windows object.
+    :param type: tkinter.Tk.
+    """
     # Gets the requested values of the height and widht.
     window.update_idletasks()
     windowWidth = window.winfo_width()
@@ -3092,12 +3896,15 @@ def centre_window(window):
 
 
 def main():
+    """
+    Initialise and start the application.
+    """
     root = Tk()
     myApp = TApp(root)
     centre_window(root)
-    # root.eval ('tk::PlaceWindow %s center' % root.winfo_toplevel() )
     # Mainloop
     root.mainloop()
+    del myApp
 
 
 if __name__ == "__main__":

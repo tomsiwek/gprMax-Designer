@@ -1,20 +1,37 @@
 from tkinter import simpledialog, scrolledtext, INSERT, Button, Frame, LEFT, messagebox, filedialog, END
 
-class TOutputPreviewWindow (simpledialog.Dialog):
+class TOutputPreviewWindow(simpledialog.Dialog):
     """
     Class represents output file contents preview window.
+
+    :param master: master window object.
+    :param type: tkinter.Tk.
+    :param out_string: contents of the gprMAx input file.
+    :param type: string.
     """
-    def __init__ (self, master, output_string):
+    def __init__(self, master, output_string):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         self.output_string = output_string
         super().__init__(master)
 
     def body(self, master):
+        """
+        Initialise widgets.
+
+        :param master: master window object.
+        :param type: tkinter.Tk.
+        """
         self.output_preview = scrolledtext.ScrolledText(self)
         self.output_preview.pack()
         self.output_preview.insert(INSERT, self.output_string)
         return self.output_preview
     
     def apply(self):
+        """
+        Return requested inputs.
+        """
         filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
                                                 filetypes = [("All files", "*.*")])
         try:
@@ -37,9 +54,16 @@ class TOutputPreviewWindow (simpledialog.Dialog):
         self.destroy()
 
     def cancel(self):
+        """
+        Destroy window upon clicking Cancel button.
+        """
         self.destroy()
 
     def buttonbox(self):
+        """
+        Redefine default Ok/Cancel buttons in the bottom of the window with
+        Save/Cancel.
+        """
         self.bbox = Frame(self)
         self.save_button = Button(self.bbox, text = "Save", width = 10, command = self.apply)
         self.save_button.pack(side = LEFT, padx = 5, pady = 5)

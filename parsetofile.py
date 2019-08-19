@@ -5,24 +5,28 @@ from settings import TModel_Size, TSurveySettings
 from triangulate import make_monotone, split_polygons, triangulate_monotone_polygon, Polygon
 
 
-class TParser (object):
+class TParser(object):
     """
-    Class contains statics methods designed for parsing in-program objects into gprMax commands.
+    Class contains statics methods designed for parsing in-program objects into
+    gprMax commands.
     """
 
-    FRONT_2D = 0.0
-    THICKNESS_2D = 0.0
-    SOURCE_NAME = "mysource"
-    PARSE_STRING = ""
+    FRONT_2D = 0.0              #: minimal z coordinate.
+    THICKNESS_2D = 0.0          #: maximal z coordinate, set to lower value from (dx, dy).
+    SOURCE_NAME = "mysource"    #: name of the em wave source.
+    PARSE_STRING = ""           #: string containing lines of the output file.
 
     @staticmethod
     def parse_shapes (materials, shapes, title):
         """
         Parses given model to a gprMax compliant file.
 
-        Arguments:
-        materials -- list of materials (TMaterial),
-        shapes -- list of shapes (TShape subclasses: TRect, TCylin, TCylinSector, TTriangle, TPolygon)
+        :param materials: list of materials.
+        :param type: TMaterial.
+        :param shapes: list of shapes.
+        :param type: TShape, TRect, TCylin, TCylinSector, TPolygon.
+
+        :rtype: string.
         """
         TParser.PARSE_STRING = ""
         TParser.THICKNESS_2D = min(TModel_Size.DX, TModel_Size.DY)
@@ -76,7 +80,6 @@ class TParser (object):
                                     " " + str(TSurveySettings.RX_STEP_Y) + " " + \
                                     str(TParser.FRONT_2D) + "\n"
         TParser.PARSE_STRING += "\n"
-        # try:
         # Materials
         for single_material in materials:
             TParser.PARSE_STRING += "#material: " + str(single_material.epsilon_r) + " " + \
@@ -117,36 +120,58 @@ class TParser (object):
                                     " " + str(TParser.THICKNESS_2D) + " " + \
                                     str(TSurveySettings.SNAP_TIME) + " " + \
                                     TSurveySettings.SNAP_FILE + " n\n"
-        # except Exception as message:
-            # messagebox.showerror ("Parser error!", message)
         return TParser.PARSE_STRING
 
     @staticmethod
     def parse_rectangle(rectangle):
-        TParser.PARSE_STRING += "#box: " + str(rectangle.point1_mod.x) + " " + str(rectangle.point1_mod.y) + " " + str(TParser.FRONT_2D) + \
-            " " + str(rectangle.point2_mod.x) + " " + str(rectangle.point2_mod.y) + " " + str(TParser.THICKNESS_2D) + " " + rectangle.material + "\n"
+        """
+        Introduce a rectangle into the input file.
+
+        :param rectangle: examined rectangle object.
+        :param type: TRect.
+        """
+        TParser.PARSE_STRING += "#box: " + str(rectangle.point1_mod.x) + " " + \
+                                str(rectangle.point1_mod.y) + " " + str(TParser.FRONT_2D) + \
+                                " " + str(rectangle.point2_mod.x) + " " + str(rectangle.point2_mod.y) + \
+                                " " + str(TParser.THICKNESS_2D) + " " + rectangle.material + "\n"
 
     @staticmethod
     def parse_cylinder(cylinder):
-        TParser.PARSE_STRING += "#cylinder: " + str(cylinder.centre_mod.x) + " " + str(cylinder.centre_mod.y) + " " + \
-            str(TParser.FRONT_2D) + " " + str(cylinder.centre_mod.x) + " " + str(cylinder.centre_mod.y) + " " + \
-            str(TParser.THICKNESS_2D) + " " + str(cylinder.radius_mod) + " " + str(cylinder.material) + "\n"
+        """
+        Introduce a cylinder into the input file.
+
+        :param cylinder: examined cylinder object.
+        :param type: TCylin.
+        """
+        TParser.PARSE_STRING += "#cylinder: " + str(cylinder.centre_mod.x) + " " + \
+                                str(cylinder.centre_mod.y) + " " + str(TParser.FRONT_2D) + \
+                                " " + str(cylinder.centre_mod.x) + " " + str(cylinder.centre_mod.y) + \
+                                " " + str(TParser.THICKNESS_2D) + " " + str(cylinder.radius_mod) + \
+                                " " + str(cylinder.material) + "\n"
     
     @staticmethod
     def parse_cylinSector(cylinSector):
-        TParser.PARSE_STRING += "#cylindrical_sector: z " + str(cylinSector.centre_mod.x) + " " + str(cylinSector.centre_mod.y) + " " +\
-            str(TParser.FRONT_2D) + " " + str(TParser.THICKNESS_2D) + " " + str(cylinSector.radius_mod) + " " + \
-            str(cylinSector.start) + " " + str(cylinSector.extent) + " " + str(cylinSector.material) + "\n"
+        """
+        Introduce a cylinder sector into the input file.
 
-    # @staticmethod
-    # def parse_triangle (triangle):
-    #     TParser.PARSE_STRING += "#triangle: " + str(triangle.point1_mod.x) + " " + str(triangle.point1_mod.y) + " " +\
-    #         str(TParser.FRONT_2D) + " " + str(triangle.point2_mod.x) + " " + str(triangle.point2_mod.y) + " " +\
-    #         str(TParser.FRONT_2D) + " " + str(triangle.point3_mod.x) + " " + str(triangle.point3_mod.y) + " " +\
-    #         str(TParser.FRONT_2D) + str(TParser.THICKNESS_2D - TParser.FRONT_2D) + " " + str(triangle.material) + "\n"
+        :param cylinsector: examined cylinder sector object.
+        :param type: TCylinSector.
+        """
+        TParser.PARSE_STRING += "#cylindrical_sector: z " + str(cylinSector.centre_mod.x) + \
+                                " " + str(cylinSector.centre_mod.y) + " " + str(TParser.FRONT_2D) + \
+                                " " + str(TParser.THICKNESS_2D) + " " + str(cylinSector.radius_mod) + " " + \
+                                str(cylinSector.start) + " " + str(cylinSector.extent) + \
+                                " " + str(cylinSector.material) + "\n"
     
     @staticmethod
     def parse_polygon(polygon):
+        """
+        Introduce a polygon into the input file as a series of triangles.
+
+        :param polygon: examined polygon object.
+        :param type: TPolygon.
+        """
+        # Triangulate the polygon
         tt = TParser.triangulate(polygon)
         for tr in tt:
             TParser.PARSE_STRING += "#triangle: " + str(tr[0].x) + " " + \
@@ -159,6 +184,14 @@ class TParser (object):
     
     @staticmethod
     def triangulate(polygon):
+        """
+        Divide an input polygon into triangles using triangulate module.
+
+        :param polygon: examined polygon object.
+        :param type: TPolygon.
+
+        :rtype: list.
+        """
         debug = False
         if(debug):
             from timeit import default_timer as timer
@@ -172,7 +205,6 @@ class TParser (object):
             for poly in monotone_polygons:
                 edges_triangles = triangulate_monotone_polygon(poly)
                 triangles += split_polygons(poly, edges_triangles)
-        # triangles = split_polygons(polygon_obj, edges_monotone + edges_triangles)
         except Exception as message:
             messagebox.showerror("Error while triangulating polygon!", message)
         if(debug):

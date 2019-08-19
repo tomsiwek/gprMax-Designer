@@ -6,15 +6,30 @@ from point import TPoint
 
 class TPolygonWindow(simpledialog.Dialog):
     """
-    Class represents polygon vertices edit window
-    """
+    Class represents a polygon vertices edit window.
 
+    :param master: master window object.
+    :param type: tkinter.Tk.
+    :param app: main app object.
+    :param type: TApp.
+    :param polygon: edited polygon object.
+    :param type: TPolygon.
+    """
     def __init__(self, master, app, polygon):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         self._app = app
         self._polygon = polygon
         super().__init__(master)
     
     def body(self, master):
+        """
+        Initialise widgets.
+
+        :param master: master window object.
+        :param type: tkinter.Tk.
+        """
         # Frame for widgets
         self.main_frame = Frame(self)
         # Listbox
@@ -33,6 +48,10 @@ class TPolygonWindow(simpledialog.Dialog):
         self.update_vertices_list()
     
     def buttonbox(self):
+        """
+        Redefine default Ok/Cancel buttons in the bottom of the window with
+        Apply/Add/Delete.
+        """
         self.bbox = Frame(self)
         self.apply_button = Button(self.bbox, text = "Apply", width = 10, \
                                    command = self.apply)
@@ -46,6 +65,11 @@ class TPolygonWindow(simpledialog.Dialog):
         self.bbox.pack()
 
     def get_current_selection(self):
+        """
+        Retrieve the selected vertex index. 
+
+        :rtype: integer.
+        """
         try:
             cursel = self.vertices_list.curselection()[0]
         except:
@@ -53,6 +77,12 @@ class TPolygonWindow(simpledialog.Dialog):
         return cursel
 
     def vertices_list_selected_item(self, event):
+        """
+        Display and edit selected vertex parameters.
+
+        :param event: listbox LMB click event.
+        :param type: tkinter.Event.
+        """
         try:
             vertex_num = (self.vertices_list.curselection())[0]
         except IndexError:
@@ -68,7 +98,8 @@ class TPolygonWindow(simpledialog.Dialog):
                 messagebox.showerror("Materials list error", message)
                 return
         initialvalue = str(vertex.x) + " " + str(vertex.y)
-        input_str = simpledialog.askstring("Input coordinates", "Give vertex coordinates", initialvalue = initialvalue)
+        input_str = simpledialog.askstring("Input coordinates", "Give vertex coordinates", \
+                                           initialvalue = initialvalue)
         try:
             new_x, new_y = input_str.split()
         except AttributeError:
@@ -89,6 +120,9 @@ class TPolygonWindow(simpledialog.Dialog):
             self.vertices_list.focus_set()
 
     def update_vertices_list(self):
+        """
+        Update entries in the vertices listbox.
+        """
         cursel = self.get_current_selection()
         self.vertices_list.delete(0, END)
         for i, v in enumerate(self._polygon.points_mod):
@@ -104,6 +138,9 @@ class TPolygonWindow(simpledialog.Dialog):
 
     
     def add_vertex(self):
+        """
+        Add a vertex to the polygon.
+        """
         cursel = self.get_current_selection()
         input_str = simpledialog.askstring("Input coordinates", "Give vertex coordinates")
         try:
@@ -124,6 +161,9 @@ class TPolygonWindow(simpledialog.Dialog):
             self.vertices_list.focus_set()
 
     def delete_vertex(self):
+        """
+        Delete a vertex from the polygon.
+        """
         cursel = self.get_current_selection()
         self._polygon.remove_vertex(cursel)
         self._app.main_canvas.delete("all")
@@ -135,4 +175,7 @@ class TPolygonWindow(simpledialog.Dialog):
         self.vertices_list.focus_set()
     
     def apply(self):
+        """
+        Destroy window upon clicking Apply button.
+        """
         self.destroy()

@@ -1,10 +1,19 @@
 from tkinter import simpledialog, Label, Entry
 
-class TModelSizeWindow (simpledialog.Dialog):
+class TModelSizeWindow(simpledialog.Dialog):
     """
-    Class representing popup window for entering model size (domain)
+    Class represents popup window for entering model size (domain).
+
+    :param master: master window object.
+    :param type: tkinter.Tk.
     """
-    def body (self, master):
+    def body(self, master):
+        """
+        Initialise widgets.
+
+        :param master: master window object.
+        :param type: tkinter.Tk.
+        """
         Label(master, text="x:").grid(row=0)
         Label(master, text="y:").grid(row=1)
 
@@ -14,7 +23,10 @@ class TModelSizeWindow (simpledialog.Dialog):
         self.e1.grid(row=0, column=1)
         self.e2.grid(row=1, column=1)
 
-    def apply (self):
+    def apply(self):
+        """
+        Return requested inputs.
+        """
         first = self.e1.get ()
         second = self.e2.get ()
         self.result = first, second

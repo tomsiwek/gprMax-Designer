@@ -4,9 +4,12 @@ from materials import TMaterial
 
 class TMaterialsWindow(Frame):
     """
-    Class representing auxiliary window containg materials database.
+    Class represents auxiliary window containg materials database.
     """
     def __init__(self, master, TApp, TShapesWindow):
+        """
+        Call the parent class constructor and initialise object variables.
+        """
         super().__init__()
         self.TApp = TApp
         self.TShapesWindow = TShapesWindow
@@ -16,9 +19,12 @@ class TMaterialsWindow(Frame):
         self.TApp.file_menu.entryconfig("Open materials", command = self.open_file)
         self.TApp.file_menu.entryconfig("Save materials", command = self.save_file)
         
-    def init_widgets (self):
+    def init_widgets(self):
+        """
+        Initialise widgets.
+        """
         # Set weights for columns and rows
-        for i in range (6):
+        for i in range(6):
             self.grid_columnconfigure (i, weight = 1, uniform = "material_cols", minsize = 50)
         self.grid_rowconfigure (1, weight = 1)
         # self.grid_rowconfigure (2, weight = 1)
@@ -68,6 +74,9 @@ class TMaterialsWindow(Frame):
         self.add_material_button.grid(row = 7, column = 4, columnspan = 2, sticky = NSEW, padx = 5, pady = 5)
 
     def open_file(self):
+        """
+        Read an ASCII file containing materials data.
+        """
         filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
                     filetypes = [("All files", "*.*")])
         
@@ -129,6 +138,9 @@ class TMaterialsWindow(Frame):
         self.update_list(self.TApp.materials)
     
     def save_file(self):
+        """
+        Save current materials database to an ASCII file.
+        """
         filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
                                                 filetypes = [("All files", "*.*")])
 
@@ -161,6 +173,12 @@ class TMaterialsWindow(Frame):
         
     
     def update_list(self, materials):
+        """
+        Update shapes list.
+
+        :param materials: new materials database.
+        :param type: list.
+        """
         self.materials_list.delete(0, self.materials_list.size())
         i = 0
         info_string = ""
@@ -177,10 +195,15 @@ class TMaterialsWindow(Frame):
                 return None
             i += 1
             info_string = ""
-        # Update shapes' window combobox
+        # Update shapes window combobox
         self.TShapesWindow.material_box.config(values = materials_names_str)
 
     def get_selected_item_num(self):
+        """
+        Retrieve a index of a selected material on the list.
+
+        :rtype: integer.
+        """
         try:
             selection = self.materials_list.curselection()
             return selection[0]
@@ -190,6 +213,12 @@ class TMaterialsWindow(Frame):
             return -1
 
     def material_list_selected_item(self, event):
+        """
+        Display selected material parameters in the text fields.
+
+        :param event: listbox LMB click event.
+        :param type: tkinter.Event.
+        """
         item_num = self.get_selected_item_num()
         if(item_num < 0):
             return None
@@ -214,6 +243,9 @@ class TMaterialsWindow(Frame):
         self.materials_list.activate(item_num)
     
     def store_material_parameters(self):
+        """
+        Update material parameters from values entered in the text fields.
+        """
         item_num = self.get_selected_item_num()
         if(item_num < 0):
             return None
@@ -230,6 +262,9 @@ class TMaterialsWindow(Frame):
                 messagebox.showerror("Materials' list error", message)
 
     def delete_material(self):
+        """
+        Delete a material from the database.
+        """
         item_num = self.get_selected_item_num()
         if (item_num < 0):
             return None
@@ -245,6 +280,9 @@ class TMaterialsWindow(Frame):
                 messagebox.showerror("Materials' list error", message)
 
     def add_material(self):
+        """
+        Add a material to the database.
+        """
         try:
             if(str(self.name_entry.get()) == ""):
                 raise Exception("Material can't have name that's an empty string!")
@@ -259,7 +297,9 @@ class TMaterialsWindow(Frame):
         self.materials_list.select_set(END)
 
     def is_binary(self, filename):
-        # Checks wether given file is binary (that is non-text)
+        """
+        Check wether given file is binary (that is non-text).
+        """
         try:
             with open(filename, 'tr') as check_file:    # try open file in text mode
                 check_file.read()
