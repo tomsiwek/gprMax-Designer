@@ -75,5 +75,5 @@ master_doc = 'index'
 from sphinx.apidoc import main
 import re
 sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-#exit = main(['sphinx-apidoc', '-f', '-o', './docs', './lib'])
+exit = main(['sphinx-apidoc', '-f', '-o', './docs', './lib'])
 #self.run_command('build_sphinx')
