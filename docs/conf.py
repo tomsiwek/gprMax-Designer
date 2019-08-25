@@ -18,8 +18,8 @@ sys.path.insert(0, '..')
 # -- Project information -----------------------------------------------------
 
 project = 'gprMax Designer'
-copyright = '2019, Author'
-author = 'Author'
+copyright = '2019'
+author = 'Tomasz Siwek'
 
 
 # -- General configuration ---------------------------------------------------
@@ -71,3 +71,12 @@ todo_include_todos = True
 
 # Read the Docs fix
 master_doc = 'index'
+
+# Source suffixes, including .pyw files
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'restructuredtext',
+    '.md': 'markdown',
+    '.py': 'python',
+    '.pyw': 'pythonw',
+}
