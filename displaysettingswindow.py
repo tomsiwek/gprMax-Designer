@@ -9,25 +9,25 @@ class TDisplaySettingsWindow(simpledialog.Dialog):
     Class represents pop up window used to tweak display options.
 
     :param master: master window object.
-    :param type: tkinter.Tk.
+    :type master: tkinter.Tk.
     :param tickintx: x axis tick interval in m.
-    :param type: float.
+    :type tickintx: float.
     :param tickinty: y axis tick interval in m.
-    :param type: float.
+    :type tickinty: float.
     :param round_digits: axis label rounding precision.
-    :param type: integer.
+    :type round_digits: integer.
     :param min_model_x: visible model area lower left x coorfinate.
-    :param type: float.
+    :type min_model_x: float.
     :param min_model_y: visible model area lower left y coordinate.
-    :param type: float.
+    :type min_model_y: float.
     :param max_model_x: visible model area upper right x coordinate.
-    :param type: float.
+    :type max_model_x: float.
     :param max_model_y: visible model area upper right y coordinate.
-    :param type: float.
+    :type max_model_y: float.
     :param fit_to_model: toogle fitting visible model area to the window.
-    :param type: float.
+    :type fit_to_model: float.
     :param label_int: axes label interval in m.
-    :param type: float.
+    :type label_int: float.
     """
     def __init__(self, master, tickintx = 1.0, tickinty = 1.0, round_digits = 2, \
                  min_model_x = 0.0, min_model_y = 0.0, max_model_x = 10.0, \
@@ -51,7 +51,7 @@ class TDisplaySettingsWindow(simpledialog.Dialog):
         Initialise widgets.
 
         :param master: master window object.
-        :param type: tkinter.Tk.
+        :type master: tkinter.Tk.
         """
         self.body_frame = Frame(self)
 
