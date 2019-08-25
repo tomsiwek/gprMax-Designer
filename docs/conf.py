@@ -73,6 +73,7 @@ todo_include_todos = True
 master_doc = 'index'
 
 from sphinx.apidoc import main
+import re
 """Run command."""
 sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
 exit = main(['sphinx-apidoc', '-f', '-o', './docs', './lib'])
