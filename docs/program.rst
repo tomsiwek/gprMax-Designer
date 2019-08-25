@@ -28,6 +28,14 @@ geometry module
    :undoc-members:
    :show-inheritance:
 
+main module
+------------------------
+
+.. automodule:: main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 materials module
 ------------------------
 
