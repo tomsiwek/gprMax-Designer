@@ -1,8 +1,10 @@
-﻿# Configuration file for the Sphinx documentation builder.
+# Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
+
+PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
 
 # -- Path setup --------------------------------------------------------------
 
@@ -71,6 +73,3 @@ todo_include_todos = True
 
 # Read the Docs fix
 master_doc = 'index'
-
-PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
-import main
