@@ -77,6 +77,6 @@ source_suffix = {
     '.rst': 'restructuredtext',
     '.txt': 'restructuredtext',
     '.md': 'markdown',
-    '.py': 'python',
-    '.pyw': 'pythonw',
+    '.py': 'restructuredtext',
+    '.pyw': 'restructuredtext',
 }
