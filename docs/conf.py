@@ -72,11 +72,8 @@ todo_include_todos = True
 # Read the Docs fix
 master_doc = 'index'
 
-# Source suffixes, including .pyw files
-source_suffix = {
-    '.rst': 'restructuredtext',
-    '.txt': 'restructuredtext',
-    '.md': 'markdown',
-    '.py': 'restructuredtext',
-    '.pyw': 'restructuredtext',
-}
+from sphinx.apidoc import main
+    """Run command."""
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    exit = main(['sphinx-apidoc', '-f', '-o', './docs', './lib'])
+    self.run_command('build_sphinx')
