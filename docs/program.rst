@@ -4,153 +4,154 @@ program package
 Submodules
 ----------
 
-displaysettingswindow module
+program.displaysettingswindow module
 ------------------------------------
 
-.. automodule:: displaysettingswindow
+.. automodule:: program.displaysettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-echogramwindow module
+program.echogramwindow module
 -----------------------------
 
-.. automodule:: echogramwindow
+.. automodule:: program.echogramwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-geometry module
+program.geometry module
 -----------------------
 
-.. automodule:: geometry
+.. automodule:: program.geometry
    :members:
    :undoc-members:
    :show-inheritance:
 
-main module
+program.main module
+-------------------
+
+.. automodule:: program.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+program.materials module
 ------------------------
 
-.. automodule:: main
+.. automodule:: program.materials
    :members:
    :undoc-members:
    :show-inheritance:
 
-materials module
-------------------------
-
-.. automodule:: materials
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-materialswindow module
+program.materialswindow module
 ------------------------------
 
-.. automodule:: materialswindow
+.. automodule:: program.materialswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-modelsettingswindow module
+program.modelsettingswindow module
 ----------------------------------
 
-.. automodule:: modelsettingswindow
+.. automodule:: program.modelsettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-modelsizewindow module
+program.modelsizewindow module
 ------------------------------
 
-.. automodule:: modelsizewindow
+.. automodule:: program.modelsizewindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-operation module
+program.operation module
 ------------------------
 
-.. automodule:: operation
+.. automodule:: program.operation
    :members:
    :undoc-members:
    :show-inheritance:
 
-outputpreviewwindow module
+program.outputpreviewwindow module
 ----------------------------------
 
-.. automodule:: outputpreviewwindow
+.. automodule:: program.outputpreviewwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-parsetofile module
+program.parsetofile module
 --------------------------
 
-.. automodule:: parsetofile
+.. automodule:: program.parsetofile
    :members:
    :undoc-members:
    :show-inheritance:
 
-point module
+program.point module
 --------------------
 
-.. automodule:: point
+.. automodule:: program.point
    :members:
    :undoc-members:
    :show-inheritance:
 
-polygonwindow module
+program.polygonwindow module
 ----------------------------
 
-.. automodule:: polygonwindow
+.. automodule:: program.polygonwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-settings module
+program.settings module
 -----------------------
 
-.. automodule:: settings
+.. automodule:: program.settings
    :members:
    :undoc-members:
    :show-inheritance:
 
-shapes module
+program.shapes module
 ---------------------
 
-.. automodule:: shapes
+.. automodule:: program.shapes
    :members:
    :undoc-members:
    :show-inheritance:
 
-shapeswindow module
+program.shapeswindow module
 ---------------------------
 
-.. automodule:: shapeswindow
+.. automodule:: program.shapeswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-surveysettingswindow module
+program.surveysettingswindow module
 -----------------------------------
 
-.. automodule:: surveysettingswindow
+.. automodule:: program.surveysettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-tracewindow module
+program.tracewindow module
 --------------------------
 
-.. automodule:: tracewindow
+.. automodule:: program.tracewindow
    :members:
    :undoc-members:
    :show-inheritance:
-triangulate module
+
+program.triangulate module
 --------------------------
 
-.. automodule:: triangulate
+.. automodule:: program.triangulate
    :members:
    :undoc-members:
    :show-inheritance:
