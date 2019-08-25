@@ -1,7 +1,7 @@
 :: @chcp 852>NUL
 @echo off
 set conda_dir=C:\ProgramData\Miniconda3
-set gprmax_dir="C:\Users\ùapy precz!\Desktop\Praca magisterska\gprmax\gprMax"
+set gprmax_dir="path to gprMax"
 call %conda_dir%\Scripts\activate.bat %conda_dir%
 cd %gprmax_dir%
 if "%1"=="compute" (activate gprMax & python -m gprMax %2 %3 %4 %5 & conda deactivate & pause & exit)
