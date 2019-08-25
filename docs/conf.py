@@ -73,3 +73,4 @@ todo_include_todos = True
 master_doc = 'index'
 
 PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
+import main
