@@ -4,7 +4,7 @@
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
+#PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
 
 # -- Path setup --------------------------------------------------------------
 
