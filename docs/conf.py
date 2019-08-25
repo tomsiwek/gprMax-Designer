@@ -72,4 +72,4 @@ todo_include_todos = True
 # Read the Docs fix
 master_doc = 'index'
 
- Y_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
+PY_SUFFIXES = set(['.py', '.pyx', '.pyd', '.pyw'])
