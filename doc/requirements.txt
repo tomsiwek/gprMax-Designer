@@ -1,2 +1,2 @@
 sortedcontainers
-PIL
+pillow
