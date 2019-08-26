@@ -1,4 +1,3 @@
 sortedcontainers
 pillow
 h5py
-tkinter
