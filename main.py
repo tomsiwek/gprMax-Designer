@@ -10,7 +10,7 @@ from decimal import Decimal
 import h5py
 from math import asin, acos, atan, degrees, sin, cos, radians, log10, log2, ceil
 import os
-#from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw
 from random import randrange
 import subprocess
 import sys
