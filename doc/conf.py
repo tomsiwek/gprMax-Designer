@@ -61,7 +61,7 @@ master_doc = 'index'
 import shutil
 for fn in os.listdir(os.path.abspath('..')):
     fn2 = fn
-    print(fn)
     if fn.lower().endswith('.pyw'):
         fn2 = fn[:-1]
+        print(os.path.join(os.path.abspath('..'), os.path.basename(fn2)))
         shutil.copy2(fn, os.path.join(os.path.abspath('..'), os.path.basename(fn2)))
