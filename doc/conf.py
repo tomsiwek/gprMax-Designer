@@ -56,3 +56,10 @@ html_static_path = ['_static']
 
 # Read the docs fix
 master_doc = 'index' 
+
+#copy, rename .pyw files to .py so sphinx will pick them up
+for fn in files:
+    fn2 = fn
+    if fn.lower().endswith('.pyw'):
+        fn2 = fn[:-1]
+    shutil.copy2(fn, os.path.join('pyfiles', os.path.basename(fn2)))
