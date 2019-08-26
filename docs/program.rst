@@ -1,9 +1,3 @@
-program package
-===============
-
-Submodules
-----------
-
 displaysettingswindow module
 ------------------------------------
 
