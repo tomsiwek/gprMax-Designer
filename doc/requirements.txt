@@ -1,3 +1,11 @@
 sortedcontainers
 pillow
 h5py
+copy
+decimal
+math
+os
+random
+subprocess
+sys
+tkinter
