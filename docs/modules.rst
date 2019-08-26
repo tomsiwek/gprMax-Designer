@@ -4,4 +4,22 @@ program
 .. toctree::
    :maxdepth: 4
 
-   program
+   displaysettingswindow
+   echogramwindow
+   geometry
+   main
+   materials
+   materialswindow
+   modelsettingswindow
+   modelsizewindow
+   operation
+   outputpreviewwindow
+   parsetofile
+   point
+   polygonwindow
+   settings
+   shapes
+   shapeswindow
+   surveysettingswindow
+   tracewindow
+   triangulate
