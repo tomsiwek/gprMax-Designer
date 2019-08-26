@@ -56,3 +56,5 @@ html_static_path = ['_static']
 
 # Read the docs fix
 master_doc = 'index' 
+
+PY_SUFFIXES.append('.pyw')
