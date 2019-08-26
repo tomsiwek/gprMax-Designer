@@ -4,154 +4,154 @@ program package
 Submodules
 ----------
 
-program.displaysettingswindow module
+displaysettingswindow module
 ------------------------------------
 
-.. automodule:: program.displaysettingswindow
+.. automodule:: displaysettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.echogramwindow module
+echogramwindow module
 -----------------------------
 
-.. automodule:: program.echogramwindow
+.. automodule:: echogramwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.geometry module
+geometry module
 -----------------------
 
-.. automodule:: program.geometry
+.. automodule:: geometry
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.main module
+main module
 -------------------
 
-.. automodule:: program.main
+.. automodule:: main
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.materials module
+materials module
 ------------------------
 
-.. automodule:: program.materials
+.. automodule:: materials
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.materialswindow module
+materialswindow module
 ------------------------------
 
-.. automodule:: program.materialswindow
+.. automodule:: materialswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.modelsettingswindow module
+modelsettingswindow module
 ----------------------------------
 
-.. automodule:: program.modelsettingswindow
+.. automodule:: modelsettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.modelsizewindow module
+modelsizewindow module
 ------------------------------
 
-.. automodule:: program.modelsizewindow
+.. automodule:: modelsizewindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.operation module
+operation module
 ------------------------
 
-.. automodule:: program.operation
+.. automodule:: operation
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.outputpreviewwindow module
+outputpreviewwindow module
 ----------------------------------
 
-.. automodule:: program.outputpreviewwindow
+.. automodule:: poutputpreviewwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.parsetofile module
+parsetofile module
 --------------------------
 
-.. automodule:: program.parsetofile
+.. automodule:: parsetofile
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.point module
+point module
 --------------------
 
-.. automodule:: program.point
+.. automodule:: point
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.polygonwindow module
+polygonwindow module
 ----------------------------
 
-.. automodule:: program.polygonwindow
+.. automodule:: polygonwindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.settings module
+settings module
 -----------------------
 
-.. automodule:: program.settings
+.. automodule:: settings
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.shapes module
+shapes module
 ---------------------
 
-.. automodule:: program.shapes
+.. automodule:: shapes
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.shapeswindow module
+shapeswindow module
 ---------------------------
 
-.. automodule:: program.shapeswindow
+.. automodule:: shapeswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.surveysettingswindow module
+surveysettingswindow module
 -----------------------------------
 
-.. automodule:: program.surveysettingswindow
+.. automodule:: surveysettingswindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.tracewindow module
+tracewindow module
 --------------------------
 
-.. automodule:: program.tracewindow
+.. automodule:: tracewindow
    :members:
    :undoc-members:
    :show-inheritance:
 
-program.triangulate module
+triangulate module
 --------------------------
 
-.. automodule:: program.triangulate
+.. automodule:: triangulate
    :members:
    :undoc-members:
    :show-inheritance:
