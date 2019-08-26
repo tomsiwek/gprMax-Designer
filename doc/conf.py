@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -58,7 +58,7 @@ html_static_path = ['_static']
 master_doc = 'index' 
 
 #copy, rename .pyw files to .py so sphinx will pick them up
-for fn in files:
+for fn in os.listdir(os.path.abspath('..')):
     fn2 = fn
     if fn.lower().endswith('.pyw'):
         fn2 = fn[:-1]
