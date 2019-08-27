@@ -10,6 +10,8 @@ Welcome to gprMax Designer's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   
+   modules
 
 
 Indices and tables
