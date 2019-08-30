@@ -11,7 +11,7 @@ class TParser(object):
     """
 
     FRONT_2D = 0.0              #: minimal z coordinate.
-    THICKNESS_2D = 0.0          #: maximal z coordinate, set to lower value from (dx, dy).
+    THICKNESS_2D = 0.0          #: maximal z coordinate, set to lesser value from (dx, dy).
     SOURCE_NAME = "mysource"    #: name of the em wave source.
     PARSE_STRING = ""           #: string containing lines of the output file.
 
@@ -93,8 +93,6 @@ class TParser(object):
                 TParser.parse_cylinder(single_shape)
             elif(single_shape.type == "CylinSector"):
                 TParser.parse_cylinSector(single_shape)
-            # elif (single_shape.type == "Triangle"):
-            #     TParser.parse_triangle(single_shape)
             elif(single_shape.type == "Polygon"):
                 TParser.parse_polygon(single_shape)
             else:

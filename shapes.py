@@ -1,3 +1,16 @@
+"""
+.. module:: shapes module.
+:synopsis: Module contains classes that represent shapes available in the 
+           application, ie. rectangles, cylinders, cylinder sectors, and
+           polygons; it also contains the TCoordSys class, representing model
+           coordinate system box. 
+           All classes contained in this module are descendants of an abstarct
+           class TShape.
+
+.. moduleauthor:: Tomasz Siwek <tsiwek@g.pl>
+"""
+
+
 from copy import copy, deepcopy
 from math import asin, acos, atan, degrees, sin, cos, radians, ceil, floor, pi
 from PIL import Image, ImageDraw

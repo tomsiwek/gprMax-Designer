@@ -1,3 +1,12 @@
+"""
+.. module:: triangulate module.
+:synopsis: Module contains functions and classes used to triangulate a
+           discretionary polygon which employ the algorithm described in de Berg's
+           'Computational Geometry', chapter 3.
+
+.. moduleauthor:: Tomasz Siwek <tsiwek@g.pl>
+"""
+
 from bisect import bisect_left
 from copy import copy, deepcopy
 import cProfile
@@ -1156,38 +1165,3 @@ def triangulate_monotone_polygon(polygon):
     if(debug):
         plot_diags(polygon.get_vertices(), d, u[-1])
     return d
-
-
-# if(__name__ == "__main__"):
-#     with open('test_poly_1000.txt', 'r') as f:
-#         content = f.readlines()
-#     polygon_dupl = []
-#     for line in content:
-#         x, y = line.split('\t')
-#         polygon_dupl.append(Vertex(float(x), float(y)))
-#     polygon = []
-#     for pt in polygon_dupl:
-#         if(pt not in polygon):
-#             polygon.append(pt)
-
-#     from timeit import default_timer as timer
-#     polygon_obj = Polygon(polygon)
-#     start = timer()
-#     edges = make_monotone(polygon_obj)
-#     monotone_polygons = split_polygons(polygon_obj, edges)
-#     edges2 = []
-#     for poly in monotone_polygons:
-#         if(poly != []):
-#             edges2 += triangulate_monotone_polygon(poly)
-#     # tt = split_polygons(polygon_obj, edges)
-#     end = timer()
-#     print("n vertices:", len(polygon))
-#     print("elapsed time:", end - start)
-#     for i, pt in enumerate(polygon):
-#         plt.plot([pt.x, polygon[(i+1)%len(polygon)].x], [pt.y, polygon[(i+1)%len(polygon)].y], c = 'b')
-#     for e in edges:
-#         plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'r')
-#     for i, e in enumerate(edges2):
-#         plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'g', linewidth = 0.75)
-#     plt.grid()
-#     plt.show()

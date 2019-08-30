@@ -1,3 +1,14 @@
+"""
+.. module:: settings module.
+:synopsis: Module contains a few classes that encapsulate various application
+           settings, eg. window and model size, label ticks settings etc...
+           The settings are organised into following classes: TWindow_Size,
+           TModel_Size, TTicksSettings, TSurveySettings, and TColours.
+
+.. moduleauthor:: Tomasz Siwek <tsiwek@g.pl>
+"""
+
+
 class TWindow_Size():
     """
     Class contains main window parameters.
