@@ -3,6 +3,8 @@ A GUI front-end for gprMax 3 - a simulation program used in the GPR method creat
 
 This program is being developed as a master's thesis on AGH University of Science and Technology in Kraków, Faculty of Geology, Geophysics and Environmental Protection.
 
+The code documentation is available at Read The Docs (https://gprmax-designer.readthedocs.io/en/latest/).
+
 Author: Tomasz Siwek (tsiwek@g.pl)
 
 Supervisor: dr inż. (Ph. D.) Jerzy Karczewski, Department of Geophysics
