@@ -183,7 +183,7 @@ class Polygon(object):
     """
     Class represents a polygon with its vertices and edges.
 
-    :param vertices: list of polygons vertices.
+    :param vertices: list of polygon vertices.
     :type vertices: list of Vertex
     """
 
