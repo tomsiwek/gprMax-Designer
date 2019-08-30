@@ -3,27 +3,58 @@ from copy import copy, deepcopy
 import cProfile
 #from itertools import islice
 from math import asin, atan2, pi
+import matplotlib.pyplot as plt
 from sortedcontainers import SortedDict
 import sys
 
 
 class Vertex(object):
     """
-    2D vertex
+    Class represents a polygon vertex on a 2D plane.
+
+    :param x: vertex x coordinate.
+    :type x: float
+    :param y: vertex y coordinate.
+    :type y: float
+    :param v_type: vertex type.
+    :type v_type: string
     """
 
     def __init__(self, x, y, v_type = None):
+        """
+        Initialise object variables.
+        """
         self.x = x
         self.y = y
         self.v_type = v_type
 
     def __eq__(self, other):
+        """
+        "==" operator overload.
+
+        :param other: vertex to be compared againts.
+        :type other: Vertex
+
+        :returns: True if corresponding coordinates of both vertices are equal,
+                  False otherwise.
+        :rtype: boolean
+        """
         if(self.x == other.x and self.y == other.y):
             return True
         else:
             return False
     
     def __lt__(self, other):
+        """
+        "<" operator overload.
+
+        :param other: vertex to be compared againts.
+        :type other: Vertex
+
+        :returns: True if self.y is greater than other.y or both are equal
+                  and self.x is lesser than other.x, False otherwise.
+        :rtype: boolean
+        """
         if(self.y > other.y):
             return True
         elif(self.y == other.y and self.x < other.x):
@@ -32,22 +63,48 @@ class Vertex(object):
             return False
     
     def __le__(self, other):
+        """
+        "<=" operator overload.
+
+        :param other: vertex to be compared againts.
+        :type other: Vertex
+
+        :returns: True if self.__eq__(other) or self.__lt__(other),
+                  False otherwise.
+        :rtype: boolean
+        """
         if(self.__eq__(other) or self.__lt__(other)):
             return True
         else:
             return False
     
     def __str__(self):
+        """
+        Return string representation of a vertex.
+
+        :returns: string representing the vertex.
+        :rtype: string
+        """
         return "(" + str(self.x) + ", " + str(self.y) + ")"
 
 
 class Edge(object):
     """
-    2D edge
+    Class represents a polygon edge on a 2D plane.
+
+    :param start: edge first vertex.
+    :type start: Vertex
+    :param end: edge second vertex.
+    :type end: Vertex
+    :param helper: edge helper vertex.
+    :type helper: Vertex
     """
 
     def __init__(self, start = None, end = None, helper = None):
-        "Edge always begins in point of higher y value"
+        """
+        Initialise object variables.
+        The edge always begins in vertex of higher y coordinate.
+        """
         if(start.y > end.y):
             self.start = start
             self.end = end
@@ -57,33 +114,75 @@ class Edge(object):
         self.helper = helper
 
     def __eq__(self, other):
+        """
+        "==" operator overload.
+
+        :param other: edge to be compared againts.
+        :type other: Edge
+
+        :returns: True if edges begin and end in the same points, False otherwise.
+        :rtype: boolean
+        """
         if(self.start == other.start and self.end == other.end):
             return True
         else:
             return False
     
     def __lt__(self, other):
+        """
+        "<" operator overload.
+
+        :param other: edge to be compared againts.
+        :type other: Edge
+
+        :returns: True if self.start is lesser than other.start
+                  (see Vertex.__le__()), False otherwise.
+        :rtype: boolean
+        """
         if(self.start < other.start):
             return True
         else:
             return False
     
     def __le__(self, other):
+        """
+        "<=" operator overload.
+
+        :param other: edge to be compared againts.
+        :type other: Edge
+
+        :returns: True if self.start is lesser or equal to other.start
+                  (see Vertex.__le__() and Vertex.__eq__()), False otherwise.
+        :rtype: boolean
+        """
         if(self.__eq__(other) or self.__lt__(other)):
             return True
         else:
             return False
     
     def __str__(self):
+        """
+        Return string representation of an edge.
+
+        :returns: string representing the edge.
+        :rtype: string
+        """
         return str(self.start) + ":" + str(self.end)
 
 
 class Polygon(object):
     """
-    Polygon with its vertices and edges
+    Class represents a polygon with its vertices and edges.
+
+    :param vertices: list of polygons vertices.
+    :type vertices: list of Vertex
     """
 
     def __init__(self, vertices):
+        """
+        Initialise object variables.
+        Vertices must be stored in clockwise order.
+        """
         if(not self._counterclockwise(vertices)):
             vertices.reverse()
         self._vertices = vertices[:]
@@ -99,32 +198,103 @@ class Polygon(object):
             self._edge_indices_dict[(e.start.x, e.start.y, e.end.x, e.end.y)] = i
     
     def __getitem__(self, index):
+        """
+        "[]" operator overload.
+
+        :param index: index of a desired vertex in the list.
+        :type index: integer
+
+        :returns: vertex designated by the given index.
+        :rtype: Vertex
+        """
         return self._vertices[index]
 
     def vertex_index(self, v):
+        """
+        Get an index of a given vertex.
+
+        :param v: examined vertex.
+        :type v: Vertex
+
+        :returns: index of a given vertex.
+        :rtype: integer
+        """
         i = self._vertex_indices_dict[(v.x, v.y)]
         return i
     
     def edge_index(self, e):
+        """
+        Get an index of a given vertex.
+
+        :param v: examined vertex.
+        :type v: Vertex
+
+        :returns: index of a given vertex.
+        :rtype: integer
+        """
         i = self._edge_indices_dict[(e.start.x, e.start.y, e.end.x, e.end.y)]
         return i
 
     def previous_vertex(self, v):
+        """
+        Get a vertex preceding the given one in the vertices list.
+
+        :param v: examined vertex.
+        :type v: Vertex
+
+        :returns: vertex preceding the given one.
+        :rtype: Vertex
+        """
         i_prev = self.vertex_index(v) - 1
         return self._vertices[i_prev]
     
     def next_vertex(self, v):
+        """
+        Get a vertex following the given one in the vertices list.
+
+        :param v: examined vertex.
+        :type v: Vertex
+
+        :returns: vertex following the given one.
+        :rtype: Vertex
+        """
         i_nex = (self.vertex_index(v)  + 1)%self._num_of_vertices
         return self._vertices[i_nex]
 
     def get_vertices(self):
+        """
+        Get a list of polygon vertices.
+
+        :returns: list of polygon vertices.
+        :rtype: list of Vertex
+        """
         return self._vertices
     
     def get_edge(self, v):
+        """
+        Get a polygon edge begining in a given vertex.
+
+        :param v: examined vertex.
+        :type v: Vertex
+
+        :return: an edge that begins in a given vertex.
+        :rtype: Edge
+        """
         i = self.vertex_index(v)
         return self._edges[i]
     
     def previous_edge(self, v = None, edge = None):
+        """
+        Get an edge preceding the given one, or a given vertex, in the edges list.
+
+        :param v: examined vertex.
+        :type v: Vertex
+        :param edge: examined edge
+        :type edge: Edge
+
+        :returns: edge preceding the given one, or a given vertex.
+        :rtype: Edge
+        """
         if(edge is None):
             i_pre = self.vertex_index(self.previous_vertex(v))
         else:
@@ -132,6 +302,17 @@ class Polygon(object):
         return self._edges[i_pre]
     
     def next_edge(self, v = None, edge = None):
+        """
+        Get an edge following the given one, or a given vertex, in the edges list.
+
+        :param v: examined vertex.
+        :type v: Vertex
+        :param edge: examined edge
+        :type edge: Edge
+
+        :returns: edge following the given one, or a given vertex.
+        :rtype: Edge
+        """
         if(edge is None):
             i_nex = self.vertex_index(self.next_vertex(v))
         else:
@@ -139,6 +320,16 @@ class Polygon(object):
         return self._edges[i_nex]
 
     def signed_area(self, vertices = None):
+        """
+        Calculate a signed polygon area (ie. positive or negative).
+
+        :param vertices: list of vertices constituing a polygon. If none is given,
+                         method computes area of self.
+        :type vertices: list of Vertex
+
+        :returns: signed polygon area.
+        :rtype: float
+        """
         darea = 0.0
         if(vertices is not None):
             for v1, v2 in zip(vertices, vertices[1:] + vertices[:1]):
@@ -150,13 +341,28 @@ class Polygon(object):
         return darea/2
 
     def _counterclockwise(self, vertices):
+        """
+        Check wether given vertices in a list are in counterclockwise order.
+
+        :param vertices: list of vertices to be examined.
+        :type vertices: list of Vertex
+
+        :returns: True if vertices are in counterclockwise order, False otherwise.
+        :rtype: boolean
+        """
         area = self.signed_area(vertices)
         if(area >= 0):
             return False
         else:
             return True
     
-    def centeroid(self):
+    def centroid(self):
+        """
+        Calculate polygons centeroid (geometric centre).
+
+        :return: polygon centroid.
+        :rtype: Vertex
+        """
         area = self.signed_area()
         sum_x = 0.0
         sum_y = 0.0
@@ -167,17 +373,43 @@ class Polygon(object):
         return Vertex(sum_x/(6*area), sum_y/(6*area))
     
     def num_of_vertices(self):
+        """
+        Get number of polygon vertices.
+
+        :return: number of polygon vertices.
+        :rtype: integer
+        """
         return self._num_of_vertices
 
     def get_first_vertex(self):
+        """
+        Get first vertex of the polygon.
+
+        :return: first vertex of the polygon.
+        :rtype: Vertex
+        """
         return self._vertices[0]
     
     def get_first_edge(self):
+        """
+        Get first edge of the polygon.
+
+        :return: first edge of the polygon.
+        :rtype: Edge
+        """
         return self._edges[0]
     
     def point_in_polygon(self, v):
         """
+        Check wether given point lies within the polygon.
+        Source:
         http://idav.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
+
+        :param v: examined point.
+        :type v: Vertex
+
+        :return: True of v lies within the polygon area, False otherwise.
+        :rtype: boolean  
         """
         intersetion_count = 0
         x_min = min([vertex.x for vertex in self._vertices]) - 0.1
@@ -201,6 +433,8 @@ class Polygon(object):
 def angle(v1, v2, v3):
     """
     Calculate an angle between points v1, v2 and v3.
+    Source:
+    https://stackoverflow.com/questions/1211212/how-to-calculate-an-angle-from-three-points
     
     :param v1: angle first point.
     :type v1: Vertex
@@ -224,17 +458,45 @@ def angle(v1, v2, v3):
 
 def vector_between_two_other(v1, v2, v3):
     """
+    Check wether a vector lies between two other.
+    Source:
     https://stackoverflow.com/questions/693806/how-to-determine-whether-v3-is-between-v1-and-v2-when-we-go-from-v1-to-v2-counter/693969#693969
+
+    :param v1: first vector limiting the area.
+    :type v1: Vertex
+    :param v2: second vector limiting the area.
+    :type v2: Vertex
+    :param v3: vector to be examined.
+    :type v3: Vertex
     """
     crossProds = [v1.x*v2.y - v1.y*v2.x, \
                   v1.x*v3.y - v1.y*v3.x, \
                   v3.x*v2.y - v3.y*v2.x]
     def matlab_all(lst):
+        """
+        Check wether all elements in a list are non-zero.
+
+        :param lst: list to be examined.
+        :type lst: list of float
+
+        :return: True if none of the list elements equals 0, False otherwise.
+        :rtype: boolean
+        """
         for i in lst:
             if(i == 0):
                 return False
         return True
     def ge_zero(lst):
+        """
+        Get a list containg 1 if a corresponging input list element is equal 
+        or greater than 0 or 0 otherwise.
+
+        :param lst: list to be examined.
+        :type lst: list of float
+
+        :return: list of 1s and 0s.
+        :rtype: list of integer
+        """
         result = []
         for i in lst:
             if(i >= 0):
@@ -243,6 +505,16 @@ def vector_between_two_other(v1, v2, v3):
                 result.append(0)
         return result
     def lt_zero(lst):
+        """
+        Get a list containg 1 if a corresponging input list element is lesser 
+        than 0 or 0 otherwise.
+
+        :param lst: list to be examined.
+        :type lst: list of float
+
+        :return: list of 1s and 0s.
+        :rtype: list of integer
+        """
         result = []
         for i in lst:
             if(i < 0):
@@ -259,7 +531,21 @@ def vector_between_two_other(v1, v2, v3):
 
 def intersect(v1, v2, v3, v4):
     """
+    Calculate a intersection point of two line segments.
+    Source:
     https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+
+    :param v1: original point of the first line segment.
+    :type v1: Vertex
+    :param v2: final point of the first line segment.
+    :type v2: Vertex
+    :param v3: original point of the second line segment.
+    :type v3: Vertex
+    :param v4: final point of the second line segment.
+    :type v4: Vertex
+
+    :return: None if line segments do not intersect, a intersection point otherwise.
+    :rtype: Vertex
     """
     s1 = Vertex(v2.x - v1.x, v2.y - v1.y)
     s2 = Vertex(v4.x - v3.x, v4.y - v3.y)
@@ -278,7 +564,21 @@ def intersect(v1, v2, v3, v4):
 
 def overlapping(v1, v2, v3, v4):
     """
+    Check wether two line segments overlap each other.
+    Source:
     https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+
+    :param v1: original point of the first line segment.
+    :type v1: Vertex
+    :param v2: final point of the first line segment.
+    :type v2: Vertex
+    :param v3: original point of the second line segment.
+    :type v3: Vertex
+    :param v4: final point of the second line segment.
+    :type v4: Vertex
+
+    :return: True if line segment overlap each other, False otherwise.
+    :rtype: boolean
     """
     s1 = Vertex(v2.x - v1.x, v2.y - v1.y)
     s2 = Vertex(v4.x - v3.x, v4.y - v3.y)
@@ -295,6 +595,15 @@ def overlapping(v1, v2, v3, v4):
     return False
 
 def create_edges(p):
+    """
+    Create edges list from a given vertices list.
+
+    :param p:
+    :type p: list of Vertex
+
+    :return:
+    :rtype: list of Edge
+    """
     d = []
     for i, _ in enumerate(p):
         e = Edge(p[i], p[(i+1)%len(p)])
@@ -303,11 +612,22 @@ def create_edges(p):
 
 
 def plot_diags(polygon, diags, point = None, point2 = None, title = None):
+    """
+    Plot polygon diagonals.
+
+    :param diags: list of diagonals to be ploted.
+    :type diags: list of Edge
+    :param point: point to be ploted againts the polygon with diagonals.
+    :type point: Vertex
+    :param point2: second point to be ploted againts the polygon with diagonals.
+    :type point2: Vertex
+    :param title: plot title.
+    :type title: string
+    """
     for i, pt in enumerate(polygon):
         plt.plot([pt.x, polygon[(i+1)%len(polygon)].x], [pt.y, polygon[(i+1)%len(polygon)].y], c = 'b')
     for d in diags:
         plt.plot([d.start.x, d.end.x], [d.start.y, d.end.y], c = 'r')
-        # plt.pause(0.5)
     if(point is not None):
         x_min = min([pt.x for pt in polygon]) - 0.1
         x_max = max([pt.x for pt in polygon]) + 0.1
@@ -323,27 +643,78 @@ def plot_diags(polygon, diags, point = None, point2 = None, title = None):
 
 def make_monotone(polygon):
     """
-    Derived from: 
+    Divide a polygon into y-monotone pieces.
+    Source: 
     de Berg, van Kreveld, Overmars, Schwrzkopf 'Computational geometry'
     Section 3.2
+
+    :param polygon: polygon to be divided.
+    :type polygon: Polygon
+
+    :return: list of diagonals dividing the polygon into y-monotone pieces.
+    :rtype: list of Edge
     """
 
     def create_vertices_queue(vertices_list):
+        """
+        Create vertices queue sorted in descending order by y coordinate, then
+        ascending by x coordinate.
+
+        :param vertices_list: list of vertices to form the queue of.
+        :type vertices_list: list of Vertex
+
+        :return: vertices queue.
+        :rtype: list of Vertex
+        """
         q = vertices_list[:]
         q.sort(key = lambda pt: (pt.y, -pt.x))
         return q
 
     def vertex_type(v, polygon):
-        "Determine type of a vertex"
+        """
+        Determine type of a vertex.
+        
+        :param v: examined vertex.
+        :type v: Vertex
+        :param polygon: the polygon to which the vertex belongs.
+        :type polygon: Polygon 
+
+        :return: type of the vertex (start, split, end, merge, regular_up, regular_down)
+        :rtype: string
+        """
         v_pre = polygon.previous_vertex(v)
         v_nex = polygon.next_vertex(v)
         alpha = angle(v_pre, v, v_nex)
         def lower(p, q):
+            """
+            Check wether point p is lower than q, according to de Berg et al.
+
+            :param p: vertex to be compared.
+            :type p: Vertex
+            :param q: vertex to be compared againts.
+            :type q: Vertex
+
+            :return: True if p is lower than q, ie. its y coordinate is lesser than q or
+                     they are equal and p.x is greater than q.x, False otherwise.
+            :rtype: boolean
+            """
             if(p.y < q.y or (p.y == q.y and p.x > q.x)):
                 return True
             else:
                 return False
         def upper(p, q):
+            """
+            Check wether point p is above q, according to de Berg et al.
+
+            :param p: vertex to be compared.
+            :type p: Vertex
+            :param q: vertex to be compared againts.
+            :type q: Vertex
+
+            :return: True if p is above q, ie. its y coordinate is greater than q or
+                     they are equal and p.x is lesser than q.x, False otherwise.
+            :rtype: boolean
+            """
             if(p.y > q.y or (p.y == q.y and p.x < q.x)):
                 return True
             else:
@@ -367,6 +738,11 @@ def make_monotone(polygon):
     def insert(dictionary, e):
         """
         Insert edge to a dictionary.
+
+        :param dictionary: dictionary into which an edge is to be inserted.
+        :type dictionary: sortedcontainers.SortedDict
+        :param e: edge to be inserted.
+        :type e: Edge
         """
         key = min(e.start.x, e.end.x)
         dk = 1.0e-10
@@ -377,6 +753,11 @@ def make_monotone(polygon):
     def delete(dictionary, e):
         """
         Delete edge from a dictionary.
+
+        :param dictionary: dictionary from which an edge is to be deleted.
+        :type dictionary: sortedcontainers.SortedDict
+        :param e: edge to be deleted.
+        :type e: Edge
         """
         key = min(e.start.x, e.end.x)
         dk = 1.0e-10
@@ -386,8 +767,17 @@ def make_monotone(polygon):
 
     def find_left(dictionary, v):
         """
-        Find nearest edge located to the left of given vertex in dictionary.
+        Find nearest edge located to the left of a given vertex in the dictionary.
+        Source:
         https://stackoverflow.com/questions/7934547/python-find-closest-key-in-a-dictionary-from-the-given-input-key
+
+        :param dictionary: dictionary in which the edge is to be found.
+        :type dictionary: sortedcontainers.SortedDict
+        :param v: vertex which x coordinate is to be used as a search key.
+        :type v: Vertex
+
+        :return: nearest edge located to the left of a given vertex.
+        :rtype:Edge
         """
         key = v.x
         if(len(dictionary) == 1):
@@ -413,12 +803,24 @@ def make_monotone(polygon):
         return dictionary[found_key]
             
     def handle_start_vertex(v):
+        """
+        Handle encountered start vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal t, polygon
         e = polygon.get_edge(v)
         e.helper = v
         insert(t, e)
     
     def handle_end_vertex(v):
+        """
+        Handle encountered end vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal t, d, polygon
         e_prev = polygon.previous_edge(v)
         helper = e_prev.helper
@@ -427,6 +829,12 @@ def make_monotone(polygon):
         delete(t, e_prev)
     
     def handle_split_vertex(v):
+        """
+        Handle encountered split vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal t, d, polygon, left_count
         e = polygon.get_edge(v)
         left = find_left(t, v)
@@ -440,6 +848,12 @@ def make_monotone(polygon):
         insert(t, e)
     
     def handle_merge_vertex(v):
+        """
+        Handle encountered merge vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal t, d, polygon, left_count
         e_prev = polygon.previous_edge(v)
         if(e_prev.helper is not None and e_prev.helper.v_type == "merge"):
@@ -455,6 +869,12 @@ def make_monotone(polygon):
         left.helper = v
     
     def handle_regular_down_vertex(v):
+        """
+        Handle encountered regular_down vertex vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal t, d, polygon
         e_prev = polygon.previous_edge(v) 
         if(e_prev.helper is not None and e_prev.helper.v_type == "merge"):
@@ -465,6 +885,12 @@ def make_monotone(polygon):
         insert(t, e)
     
     def handle_regular_up_vertex(v):
+        """
+        Handle encountered regular_up vertex.
+
+        :param v: examined vertex.
+        :type v: Veretx
+        """
         nonlocal left_count
         left = find_left(t, v)
         if(debug):
@@ -504,7 +930,20 @@ def make_monotone(polygon):
 
 def inner_diagonal(v1, v2, polygon):
     """
+    Check wether given line segment constitutes a inner diagonal of the polygon.
+    Source:
     https://stackoverflow.com/questions/693837/how-to-determine-a-diagonal-is-in-or-out-of-a-concave-polygon
+
+    :param v1: first diagonal point.
+    :type v1: Vertex
+    :param v2: second diagonal point.
+    :type v2: Vertex
+    :param polygon: examined polygon.
+    :type polygon: Polygon
+
+    :return: True if a line segment contitutes an inner polygon diagonal,
+             False otherwise.
+    :rtype: boolean
     """
     debug = False
     if(debug):
@@ -517,7 +956,7 @@ def inner_diagonal(v1, v2, polygon):
     if(v1_pos > v2_pos):
         v2, v1 = v1, v2
     if(polygon.next_vertex(v1) == v2):
-        # If v1 and v2 are consecutive they can't be diagonal
+        # If v1 and v2 are consecutive they can't constitute a diagonal
         return False
     for vj in polygon.get_vertices():
         # Check instersections with every edge in polygon
@@ -540,7 +979,14 @@ def inner_diagonal(v1, v2, polygon):
 
 def split_polygons(polygon, diagolnals):
     """
+    Split a polygon into separate shapes along given diagonals. 
+    Source
     https://stackoverflow.com/questions/9455875/how-to-split-a-polygon-along-n-given-diagonals
+
+    :param polygon: polygon to be split.
+    :type polygon: Polygon.
+    :param diagonals: diagonals along which the polygon is to be split.
+    :type: diagonal: list of Edge
     """
     vert = deepcopy(polygon.get_vertices())
     polygons = []
@@ -608,12 +1054,29 @@ def split_polygons(polygon, diagolnals):
 
 def triangulate_monotone_polygon(polygon):
     """
-    Derived from: 
+    Triangulate an y-monotone polygon.
+    Source: 
     de Berg, van Kreveld, Overmars, Schwrzkopf 'Computational geometry'
     Section 3.3
+
+    :param polygon: y-monotone polygon to be triangulated.
+    :type polygon: Polygon
     """
 
     def same_chain(v1, v2, polygon):
+        """
+        Check wether two vertices lie on the same polygon edges chain, observing
+        from the topmost one.
+
+        :param v1:
+        :type v1: Vertex
+        :param v2:
+        :type v2: Vertex
+
+        :return: True if given vertices lie on the same polygon edges chain,
+                 False otherwise.
+        :rtype: boolean
+        """
         summit = u[0]
         bottom = u[-1]
         v1_found = False
@@ -649,6 +1112,16 @@ def triangulate_monotone_polygon(polygon):
         return False
 
     def create_vertices_sequence(polygon):
+        """
+        Create vertices sequence sorted in descending order by y coordinate, then
+        ascending by x coordinate.
+
+        :param polygon: polygon from which vertices the sequence is to be created.
+        :type polygn: Polygon
+
+        :return: vertices sequence.
+        :rtype: list of Vertex
+        """
         vert = polygon[:]
         vert.sort(key = lambda pt: (pt.y, -pt.x))
         vert.reverse()
