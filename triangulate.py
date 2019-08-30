@@ -601,7 +601,7 @@ def create_edges(p):
     :param p:
     :type p: list of Vertex
 
-    :return:
+    :return: list of created edges.
     :rtype: list of Edge
     """
     d = []
