@@ -7,7 +7,7 @@ class TEchogramWindow(simpledialog.Dialog):
     Class represents popup used to choose echogram component.
 
     :param master: master window object.
-    :param type: tkinter.Tk
+    :type master: tkinter.Tk
     """
 
     def body(self, master):
@@ -15,7 +15,7 @@ class TEchogramWindow(simpledialog.Dialog):
         Initialise widgets.
 
         :param master: master window object.
-        :param type: tkinter.Tk
+        :type master: tkinter.Tk
         """
         Label(self, text = "Choose component to plot:").pack()
         components = ["Ex", "Ey", "Ez", "Hx", "Hy", "Hz", "Ix", "Iy", "Iz"]

@@ -687,7 +687,7 @@ class TApp(object):
             return True
         return False
     
-    # Check wether mouse overlaps cylinder sector
+    # Check whether mouse overlaps cylinder sector
     def mouse_overlaps_cylinder_sector(self, shape, x, y, radius):
         """
         Check whether the mouse pointer overlaps a cylinder sector.
@@ -713,7 +713,7 @@ class TApp(object):
             return True
         return False
     
-    # Check wether mouse overlaps polygon
+    # Check whether mouse overlaps polygon
     def mouse_overlaps_polygon(self, shape, x, y, radius):
         """
         Check whether the mouse pointer overlaps a polygib.
@@ -2844,7 +2844,7 @@ class TApp(object):
             start += 360
         b1 = ((bp1.x - bp2.x)**2 + (bp1.y - bp2.y)**2)**(0.5)
         b2 = ((bp2.x - centre.x)**2 + (bp2.y - centre.y)**2)**(0.5)
-        # Check wether boundry points and centre are colinear
+        # Check whether boundry points and centre are colinear
         try:
             factor = -((b1**2 - b2**2 - radius**2)/(2*b2*radius))
         except ValueError:
@@ -2854,7 +2854,7 @@ class TApp(object):
                 extent = degrees(acos(factor))
             except ValueError:
                 extent = 180
-        # Check wether second boundary point is located to the right of the centre -- first boundary point line
+        # Check whether second boundary point is located to the right of the centre -- first boundary point line
         if(((bp2.x - centre.x)*sin(radians(start)) + \
             (bp2.y - centre.y)*cos(radians(start))) > 0 and extent != 180):
             extent = 360 - extent

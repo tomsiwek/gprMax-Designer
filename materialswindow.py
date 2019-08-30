@@ -130,7 +130,7 @@ class TMaterialsWindow(Frame):
         finally:
             file.close()
 
-        # Check wether any materials were read
+        # Check whether any materials were read
         if(len(self.TApp.materials) == 0):
             messagebox.showwarning("Empty file", "File does not contain any materials' information.")
 
@@ -298,7 +298,7 @@ class TMaterialsWindow(Frame):
 
     def is_binary(self, filename):
         """
-        Check wether given file is binary (that is non-text).
+        Check whether given file is binary (that is non-text).
         """
         try:
             with open(filename, 'tr') as check_file:    # try open file in text mode

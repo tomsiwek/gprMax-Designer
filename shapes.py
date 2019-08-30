@@ -69,7 +69,7 @@ class TShape(ABC):
     @abstractmethod
     def visible(self, min_model, max_model):
         """
-        Determine wether the shape lies within the visible model area.
+        Determine whether the shape lies within the visible model area.
 
         :param min_model: lower left visible model corner.
         :type min_model: TPoint
@@ -232,7 +232,7 @@ class TRect(TShape):
     
     def visible(self, min_model, max_model):
         """
-        Determine wether the rectangle lies within the visible model area.
+        Determine whether the rectangle lies within the visible model area.
 
         :param min_model: lower left visible model corner.
         :type min_model: TPoint
@@ -450,7 +450,7 @@ class TCylin(TShape):
 
     def visible(self, min_model, max_model):
         """
-        Determine wether the cylinder lies within the visible model area.
+        Determine whether the cylinder lies within the visible model area.
 
         :param min_model: lower left visible model corner.
         :type min_model: TPoint
@@ -581,12 +581,12 @@ class TCylinSector(TShape):
             elif(extent == None and boundary_pt2 is not None):
                 b1 = ((self.boundary_pt1.x-self.boundary_pt2.x)**2 + (self.boundary_pt1.y-self.boundary_pt2.y)**2)**(0.5)
                 b2 = ((self.boundary_pt2.x-self.centre.x)**2 + (self.boundary_pt2.y-self.centre.y)**2)**(0.5)
-                # Check wether boundry points and centre are colinear
+                # Check whether boundry points and centre are colinear
                 try:
                     self.extent = degrees(acos(-((b1**2 -b2**2-self.radius**2)/(2*b2*self.radius))))
                 except ValueError:
                     self.extent = 180
-                # Check wether second boundary point is located to the right of the centre -- first boundary point line
+                # Check whether second boundary point is located to the right of the centre -- first boundary point line
                 if(((self.boundary_pt2.x-self.centre.x)*sin (radians(self.start)) + (self.boundary_pt2.y-self.centre.y)*cos(radians(self.start))) > 0):
                     self.extent = (360 - self.extent)
             if(self.extent > 360):
@@ -663,7 +663,7 @@ class TCylinSector(TShape):
     
     def visible(self, min_model, max_model):
         """
-        Determine wether the cylinder sector lies within the visible model area.
+        Determine whether the cylinder sector lies within the visible model area.
 
         :param min_model: lower left visible model corner.
         :type min_model: TPoint
@@ -927,7 +927,7 @@ class TPolygon(TShape):
     
     def visible(self, min_model, max_model):
         """
-        Determine wether the polygon lies within the visible model area.
+        Determine whether the polygon lies within the visible model area.
 
         :param min_model: lower left visible model corner.
         :type min_model: TPoint

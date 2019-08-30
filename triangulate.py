@@ -342,7 +342,7 @@ class Polygon(object):
 
     def _counterclockwise(self, vertices):
         """
-        Check wether given vertices in a list are in counterclockwise order.
+        Check whether given vertices in a list are in counterclockwise order.
 
         :param vertices: list of vertices to be examined.
         :type vertices: list of Vertex
@@ -401,7 +401,7 @@ class Polygon(object):
     
     def point_in_polygon(self, v):
         """
-        Check wether given point lies within the polygon.
+        Check whether given point lies within the polygon.
         Source:
         http://idav.ucdavis.edu/~okreylos/TAship/Spring2000/PointInPolygon.html
 
@@ -458,7 +458,7 @@ def angle(v1, v2, v3):
 
 def vector_between_two_other(v1, v2, v3):
     """
-    Check wether a vector lies between two other.
+    Check whether a vector lies between two other.
     Source:
     https://stackoverflow.com/questions/693806/how-to-determine-whether-v3-is-between-v1-and-v2-when-we-go-from-v1-to-v2-counter/693969#693969
 
@@ -474,7 +474,7 @@ def vector_between_two_other(v1, v2, v3):
                   v3.x*v2.y - v3.y*v2.x]
     def matlab_all(lst):
         """
-        Check wether all elements in a list are non-zero.
+        Check whether all elements in a list are non-zero.
 
         :param lst: list to be examined.
         :type lst: list of float
@@ -564,7 +564,7 @@ def intersect(v1, v2, v3, v4):
 
 def overlapping(v1, v2, v3, v4):
     """
-    Check wether two line segments overlap each other.
+    Check whether two line segments overlap each other.
     Source:
     https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
 
@@ -687,7 +687,7 @@ def make_monotone(polygon):
         alpha = angle(v_pre, v, v_nex)
         def lower(p, q):
             """
-            Check wether point p is lower than q, according to de Berg et al.
+            Check whether point p is lower than q, according to de Berg et al.
 
             :param p: vertex to be compared.
             :type p: Vertex
@@ -704,7 +704,7 @@ def make_monotone(polygon):
                 return False
         def upper(p, q):
             """
-            Check wether point p is above q, according to de Berg et al.
+            Check whether point p is above q, according to de Berg et al.
 
             :param p: vertex to be compared.
             :type p: Vertex
@@ -930,7 +930,7 @@ def make_monotone(polygon):
 
 def inner_diagonal(v1, v2, polygon):
     """
-    Check wether given line segment constitutes a inner diagonal of the polygon.
+    Check whether given line segment constitutes a inner diagonal of the polygon.
     Source:
     https://stackoverflow.com/questions/693837/how-to-determine-a-diagonal-is-in-or-out-of-a-concave-polygon
 
@@ -1065,7 +1065,7 @@ def triangulate_monotone_polygon(polygon):
 
     def same_chain(v1, v2, polygon):
         """
-        Check wether two vertices lie on the same polygon edges chain, observing
+        Check whether two vertices lie on the same polygon edges chain, observing
         from the topmost one.
 
         :param v1:
