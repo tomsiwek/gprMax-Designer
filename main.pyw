@@ -1,6 +1,6 @@
 """
-.. module:: main program module.
-:synopsis: module contains main class TApp, responsible for handling events.
+.. module:: Main program module.
+:synopsis: Module contains main class TApp, responsible for handling events.
 
 .. moduleauthor:: Tomasz Siwek <tsiwek@g.pl>
 """
@@ -33,7 +33,7 @@ from parsetofile import TParser
 from point import TPoint
 from polygonwindow import TPolygonWindow
 from settings import TWindow_Size, TModel_Size, TTicksSettings, TSurveySettings, \
-                     TColours
+                    TColours
 from shapes import TRect, TCylin, TCylinSector, TPolygon, TCoordSys
 from shapeswindow import TShapesWindow
 from surveysettingswindow import TSurveySettingsWindow
@@ -45,7 +45,7 @@ class TApp(object):
     Class represents application as a whole. It handles events.
 
     :param master: tk root object.
-    :param type: Tk() object.
+    :type master: Tk()
     """
 
     # Make this a Frame
@@ -57,25 +57,11 @@ class TApp(object):
     second_click = False        #: second LMB click flag.
     second_click_pos = None     #: position of second click in pixels.
     resize = False              #: shape resize mouse mode flag.
-    # resize_const_pos = None     #: 
-    # resize_const_pos2 = None    #:
-    # resize_shape_num = -1       #:
-    # resize_start = 0.0          #:
-    # resize_extent = 0.0         #:
     move = False                #: shape move mouse mode flag.
     move_const_point = None     #: reference point dor calculating move offset.
-    # move_shape_num = -1         #:
-    # move_points = []            #:
-    # move_const_radius = 0.0     #:
     manipulated_shape_num = -1  #: list index of the manipulated (moved/resized) shape.
-    # move_start = 0              #:
-    # move_extent = 0             #:
     polygon_points = []         #: buffor containing vertices of polygon being drawn.
     double_click = False        #: double LMB click flag.
-    # resize_const_points = []    #:
-    # resize_moving_point = -1    #:
-    # sector_point_type = ""      #:
-    # resize_const_radius = 0.0   #:
     shape_buffer = None         #: buffor containing shape being manipulated (/moved/resized).
     resized_point = None        #: coordinates of manipulated shape point/vertex.
     AVAILABLE_COLOURS = ("red", "blue", "yellow", "green", "orange", "purple", \
@@ -142,7 +128,8 @@ class TApp(object):
         self.title = ""
 
         # Create coordinate system
-        self.coordsys = TCoordSys(self.shapes_colour, self.shapes_width, grid_colour = self.grid_colour)
+        self.coordsys = TCoordSys(self.shapes_colour, self.shapes_width, \
+                                  grid_colour = self.grid_colour)
 
         # Shapes frame
         self.shapes_frame = TShapesWindow(self.master, self)
@@ -432,8 +419,8 @@ class TApp(object):
         """
         Redraw all shapes on canvas.
 
-        :param swap: ???.
-        :param type: boolean.
+        :param swap: shapes list selection swap toggle.
+        :type swap: boolean
         """
         if(self.coordsys.grid):
             self.coordsys.draw_ticks(self.main_canvas, grid = True)
@@ -444,14 +431,13 @@ class TApp(object):
         self.coordsys.obscure_protruding_edges(self.main_canvas)
         self.coordsys.draw_ticks(self.main_canvas)
         self.coordsys.draw(self.main_canvas)
-        # self.coordsys.write_axis_labels(self.main_canvas)
                          
     def canvas_click(self, event):
         """
         Handle a left mouse click event.
         
         :param event: tk mouse click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.main_canvas.focus_force()
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -473,7 +459,7 @@ class TApp(object):
         Handle a mouse move event.
         
         :param event: tk mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         if(self.mouse_mode == "draw"):
             self.draw_mouse_move(event)
@@ -491,7 +477,7 @@ class TApp(object):
         Display current mouse position in m on the status bar.
 
         :param event: tk mouse move event object.
-        :param type: Tk.Event.
+        :type event: Tk.Event
         """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
@@ -538,7 +524,7 @@ class TApp(object):
         Remove a shape if mouse overlapses it.
 
         :param event: event evoking this method (Del keystroke, RMB click)
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
@@ -568,7 +554,7 @@ class TApp(object):
         Increase width of all shapes in the list.
 
         :param event: tk up arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.shapes_width += 1
         for single_rectangle in self.shapes:
@@ -582,7 +568,7 @@ class TApp(object):
         Decrease width of all shapes in the list.
 
         :param event: tk up arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.shapes_width -= 1
         for single_rectangle in self.shapes:
@@ -596,6 +582,7 @@ class TApp(object):
         """
         Property for self.shapes_width.
 
+        :return: shape width.
         :rtype: integer.
         """
         return self.__rectangles_width
@@ -606,7 +593,7 @@ class TApp(object):
         Setter for self.rectangles_width.
 
         :param shapes_width: new shapes line width in pixels.
-        :param type: integer.
+        :type shapes: integer
         """
         if(shapes_width <= 5 and shapes_width >= 1):
             self.__rectangles_width = shapes_width
@@ -619,13 +606,14 @@ class TApp(object):
         otherwise return -1.
 
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :typex: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: integer.
+        :return: overlapped shape list index.
+        :rtype: integer
         """
         shape_num = -1
         for single_shape in self.shapes:
@@ -653,15 +641,16 @@ class TApp(object):
         Check whether the mouse pointer overlaps a rectangle.
 
         :param shape: examined shape object.
-        :param type: TRect.
+        :type shape: TRect
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: boolean.
+        :return: overlapped rectangle list index.
+        :rtype: boolean
         """
         if((x >= shape.point1.x - radius and x <= shape.point1.x + radius \
             and y >= shape.point1.y - radius and y <= shape.point1.y + radius) or \
@@ -680,15 +669,16 @@ class TApp(object):
         Check whether the mouse pointer overlaps a cylinder.
 
         :param shape: examined shape object.
-        :param type: TCylin.
+        :type shape: TCylin
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: boolean.
+        :return: overlapped cylinder list index.
+        :rtype: boolean
         """
         if(((x - shape.centre.x)**2 + (y - shape.centre.y)**2 >= (shape.radius - radius)**2 and \
             (x - shape.centre.x)**2 + (y - shape.centre.y)**2 <= (shape.radius + radius)**2  ) or\
@@ -703,15 +693,16 @@ class TApp(object):
         Check whether the mouse pointer overlaps a cylinder sector.
 
         :param shape: examined shape object.
-        :param type: TCylinSector.
+        :type shape: TCylinSector
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: boolean.
+        :return: overlapped cylinder sector list index.
+        :rtype: boolean
         """
         if((x <= shape.centre.x + radius and x >= shape.centre.x - radius \
             and y <= shape.centre.y + radius and y >= shape.centre.y - radius) or\
@@ -728,15 +719,16 @@ class TApp(object):
         Check whether the mouse pointer overlaps a polygib.
 
         :param shape: examined shape object.
-        :param type: TPolygon.
+        :type shape: TPolygon
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: boolean.
+        :return: overlapped polygon list index.
+        :rtype: boolean
         """
         for pt in shape.points:
             if (x <= pt.x + radius and x >= pt.x - radius \
@@ -749,7 +741,7 @@ class TApp(object):
         Display right mouse button popup (context) menu.
 
         :param event: RMB press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.canvas_interrupt()
         try:
@@ -780,18 +772,16 @@ class TApp(object):
         Set drawn shape to a rectangle.
         
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mode = "Rectangle"
         self.mode_rectangle.set(True)
         self.mode_cylinder.set(False)
         self.mode_cylin_sector.set(False)
-        # self.mode_triangle.set (False)
         self.mode_polygon.set(False)
         self.rectangleButton.config(relief = SUNKEN)
         self.cylinderButton.config(relief = FLAT)
         self.cylinSectorButton.config(relief = FLAT)
-        # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config(relief = FLAT)
     
     def set_mode_cylinder(self, event = None):
@@ -799,18 +789,16 @@ class TApp(object):
         Set drawn shape to a cylinder.
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mode = "Cylinder"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(True)
         self.mode_cylin_sector.set(False)
-        # self.mode_triangle.set (False)
         self.mode_polygon.set(False)
         self.rectangleButton.config(relief = FLAT)
         self.cylinderButton.config(relief = SUNKEN)
         self.cylinSectorButton.config(relief = FLAT)
-        # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config(relief = FLAT)
 
     def set_mode_cylin_sector(self, event = None):
@@ -818,18 +806,16 @@ class TApp(object):
         Set drawn shape to a cylinder sector.
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mode = "CylinSector"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(False)
         self.mode_cylin_sector.set(True)
-        # self.mode_triangle.set (False)
         self.mode_polygon.set(False)
         self.rectangleButton.config(relief = FLAT)
         self.cylinderButton.config(relief = FLAT)
         self.cylinSectorButton.config(relief = SUNKEN)
-        # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config (relief = FLAT)
 
     def set_mode_polygon(self, event = None):
@@ -837,18 +823,16 @@ class TApp(object):
         Set drawn shape to a polygon.
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mode = "Polygon"
         self.mode_rectangle.set(False)
         self.mode_cylinder.set(False)
         self.mode_cylin_sector.set(False)
-        # self.mode_triangle.set (False)
         self.mode_polygon.set(True)
         self.rectangleButton.config(relief = FLAT)
         self.cylinderButton.config(relief = FLAT)
         self.cylinSectorButton.config(relief = FLAT)
-        # self.triangleButton.config (relief = FLAT)
         self.polygonButton.config(relief = SUNKEN)
 
     def set_mouse_mode_draw(self, event = None):
@@ -856,7 +840,7 @@ class TApp(object):
         Set mouse mode to "draw".
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mouse_mode = "draw"
         self.draw_button.config(relief = SUNKEN)
@@ -869,7 +853,7 @@ class TApp(object):
         Set mouse mode to "move".
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :param type: tkinter.Event
         """
         self.mouse_mode = "move"
         self.draw_button.config(relief = FLAT)
@@ -882,7 +866,7 @@ class TApp(object):
         Set mouse mode to "resize".
 
         :param event: button click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.mouse_mode = "resize"
         self.draw_button.config(relief = FLAT)
@@ -895,7 +879,7 @@ class TApp(object):
         Handle a canvas double click, which ends drawing a polygon.
 
         :param event: canvas double LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         if(self.mouse_mode == "draw" and self.mode == "Polygon"):
             self.polygon_double_click_draw(event)
@@ -905,11 +889,11 @@ class TApp(object):
         Assign material to a chosen shape.
 
         :param shape_num: shape list index.
-        :param type: integer.
+        :type shape_num: integer
         :param material: material name.
-        :param type: string.
+        :type material: string
         """
-        self.shapes [shape_num].material = str(material)
+        self.shapes[shape_num].material = str(material)
     
     def parse_to_gprmax(self):
         """
@@ -946,7 +930,7 @@ class TApp(object):
         Handle a canvas dimensions alteration event.
 
         :param event: canvas configure event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         # Resize canvas, should the window resize occur
         try:
@@ -998,7 +982,7 @@ class TApp(object):
         Remove polygon vertex.
         
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if (shape_num > -1):
@@ -1020,7 +1004,7 @@ class TApp(object):
         Cease pending mouse operation (draw, move, resize).
 
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.first_click = False
         self.second_click = False
@@ -1148,7 +1132,7 @@ class TApp(object):
         Select a single shape.
 
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if (shape_num > -1):
@@ -1167,7 +1151,7 @@ class TApp(object):
         Distinguish the selected shape on the list in the shapes frame.
 
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
         self.shapes_frame.material_box.set(str(self.shapes[shape_num].material))
         self.shapes_frame.shapes_list.select_clear(0, END)
@@ -1214,7 +1198,7 @@ class TApp(object):
         Change shape dimensions from keyboard input.
 
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(shape_num > -1):
@@ -1235,11 +1219,14 @@ class TApp(object):
         Change rectangle dimensions from keyboard input.
 
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
-        initialvalue = str(self.shapes[shape_num].point1_mod.x) + " " + str(self.shapes[shape_num].point1_mod.y) + " " + \
-                       str(self.shapes[shape_num].point2_mod.x) + " " + str(self.shapes[shape_num].point2_mod.y)
-        input_str = simpledialog.askstring("Input coordinates", "Give rectangles's coordinates", initialvalue = initialvalue)
+        initialvalue = str(self.shapes[shape_num].point1_mod.x) + " " + \
+                       str(self.shapes[shape_num].point1_mod.y) + " " + \
+                       str(self.shapes[shape_num].point2_mod.x) + " " + \
+                       str(self.shapes[shape_num].point2_mod.y)
+        input_str = simpledialog.askstring("Input coordinates", "Give rectangles's coordinates", \
+                                           initialvalue = initialvalue)
         fill = self.shapes[shape_num].fill
         try:
             point1_mod_x, point1_mod_y, point2_mod_x, point2_mod_y =  [float(x) for x in input_str.split ()]
@@ -1252,14 +1239,14 @@ class TApp(object):
             self.canvas_refresh()
             self.select_shape_on_list(shape_num)
         except Exception as message:
-            messagebox.showerror("Error while editing rectangle!", message)
+            messagebox.showerror("Error while editing a rectangle!", message)
     
     def edit_cylin(self, shape_num):
         """
         Change cylinder dimensions from keyboard input.
 
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
         initialvalue = str(self.shapes[shape_num].centre_mod.x) + " " + str(self.shapes[shape_num].centre_mod.y) + " " + \
                        str(self.shapes[shape_num].radius_mod)
@@ -1275,17 +1262,19 @@ class TApp(object):
             self.canvas_refresh()
             self.select_shape_on_list(shape_num)
         except Exception as message:
-            messagebox.showerror("Error while editing cylinder!", message)
+            messagebox.showerror("Error while editing a cylinder!", message)
     
     def edit_cylin_sector(self, shape_num):
         """
         Change cylinder sector dimensions from keyboard input.
 
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
-        initialvalue = str(self.shapes[shape_num].centre_mod.x) + " " + str(self.shapes[shape_num].centre_mod.y) + " " + \
-                       str(self.shapes[shape_num].radius_mod) + " " + str(self.shapes[shape_num].start) + " " + \
+        initialvalue = str(self.shapes[shape_num].centre_mod.x) + " " + \
+                       str(self.shapes[shape_num].centre_mod.y) + " " + \
+                       str(self.shapes[shape_num].radius_mod) + " " + \
+                       str(self.shapes[shape_num].start) + " " + \
                        str(self.shapes[shape_num].extent)
         fill = self.shapes[shape_num].fill
         input_str = simpledialog.askstring("Input coordinates", "Give cylinder sector's coordinates", initialvalue = initialvalue)
@@ -1299,14 +1288,14 @@ class TApp(object):
             self.canvas_refresh()
             self.select_shape_on_list(shape_num)
         except Exception as message:
-            messagebox.showerror("Error while editing cylinder sector!", message)
+            messagebox.showerror("Error while editing a cylinder sector!", message)
 
     def edit_polygon(self, shape_num):
         """
         Display polygon vertices coordinates and enable to change them manually.
 
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
         vertices_dialog = TPolygonWindow(self.master, self, self.shapes[shape_num])
         self.select_shape_on_list(shape_num)
@@ -1317,9 +1306,9 @@ class TApp(object):
         Change selected shape colour using tkInter colorchooser dialog.
 
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param shape_num: selected shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
         if(shape_num is None):
             shape_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -1338,7 +1327,7 @@ class TApp(object):
         Ask for new coordinates of a selected polygon vertex.
         
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         shape_num = self.mouse_overlaps_shape (event.x, event.y, self.radius)
         if(shape_num > -1):
@@ -1350,8 +1339,10 @@ class TApp(object):
                     if (event.x <= pt.x + self.radius and event.x >= pt.x - self.radius \
                         and event.y <= pt.y + self.radius and event.y >= pt.y - self.radius):
                         break
-                initialvalue = str(self.shapes[shape_num].points_mod[i].x) + " " + str(self.shapes[shape_num].points_mod[i].y)
-                input_str = simpledialog.askstring("Input coordinates", "Give polygons vertex's coordinates", initialvalue = initialvalue)
+                initialvalue = str(self.shapes[shape_num].points_mod[i].x) + " " + \
+                               str(self.shapes[shape_num].points_mod[i].y)
+                input_str = simpledialog.askstring("Input coordinates", "Give polygons vertex's coordinates", \
+                                                   initialvalue = initialvalue)
                 try:
                     x, y = [float(x) for x in input_str.split()]
                     self.shapes[shape_num].edit_vertex(vertex_num = i, x = x, y = y)
@@ -1366,7 +1357,7 @@ class TApp(object):
         Add signle vertex to polygon based on current mouse position.
         
         :param event: canvas RMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         try:
             shape_num = self.shapes_frame.shapes_list.curselection()[0]
@@ -1387,15 +1378,16 @@ class TApp(object):
         Return coordinates of a shape characteristic point or a vertex overlapped by the mouse.
         
         :param shape: examined shape object.
-        :param type: TRect, TCylin, TCylinSector, TPolygon.
+        :type shape: TRect, TCylin, TCylinSector, TPolygon
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: TPoint.
+        :return: overlapped point coordinates in pixels.
+        :rtype: TPoint
         """
         if(shape.type == "Rectangle"):
             return self.rectangle_overlap_coord(shape, x, y, radius)
@@ -1414,15 +1406,16 @@ class TApp(object):
         Return coordinates of a rectangle vertex overlapped by the mouse.
         
         :param shape: examined rectangle object.
-        :param type: TRect.
+        :type shape: TRect
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: TPoint.
+        :return: overlapped rectangle point coordinates in pixels.
+        :rtype: TPoint
         """
         if(x >= shape.point1.x - radius and x <= shape.point1.x + radius \
            and y >= shape.point1.y - radius and y <= shape.point1.y + radius):
@@ -1442,15 +1435,16 @@ class TApp(object):
         Return coordinates of a cylinder characteristic point overlapped by the mouse.
         
         :param shape: examined cylinder object.
-        :param type: TCylin.
+        :type shape: TCylin
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: TPoint.
+        :return: overlapped cylinder point coordinates in pixels.
+        :rtype: TPoint
         """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
@@ -1472,22 +1466,23 @@ class TApp(object):
              y <= shape.centre.y - shape.radius + radius):
              return TPoint(shape.centre.x, shape.centre.y - shape.radius)
         else:
-            raise Exception("Can't stick to circle's edge.")
+            raise Exception("Can't stick to cylinder edge.")
     
     def cylin_sector_overlap_coord(self, shape, x, y, radius):
         """"
         Return coordinates of a cylinder sector characteristic point overlapped by the mouse.
         
         :param shape: examined cylinder sector object.
-        :param type: TCylinSector.
+        :param type: TCylinSector
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :param type: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :param type: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :param type: integer
 
-        :rtype: TPoint.
+        :return: overlapped sylinder sector point coordinates in pixels.
+        :rtype: TPoint
         """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
@@ -1504,15 +1499,16 @@ class TApp(object):
         Return coordinates of a polygon vertex overlapped by the mouse.
         
         :param shape: examined polygon object.
-        :param type: TPolygon.
+        :type shape: TPolygon
         :param x: mouse pointer position x coordinate in pixels.
-        :param type: integer.
+        :type x: integer
         :param y: mouse pointer position y coordinate in pixels.
-        :param type: integer.
+        :type y: integer
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: integer.
+        :type radius: integer
 
-        :rtype: TPoint.
+        :return: overlapped polygon point coordinates in pixels.
+        :rtype: TPoint
         """
         for pt in shape.points:
             if(x >= pt.x - radius and x <= pt.x + radius \
@@ -1524,15 +1520,16 @@ class TApp(object):
         Return model coordinates of a shape characteristic point or a vertex overlapped by the mouse.
         
         :param shape: examined shape object.
-        :param type: TRect, TCylin, TCylinSector, TPolygon.
+        :type shape: TRect, TCylin, TCylinSector, TPolygon
         :param x: mouse pointer position x coordinate in metres.
-        :param type: float.
+        :type x: float
         :param y: mouse pointer position y coordinate in metres.
-        :param type: float.
+        :type y: float
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: float.
+        :type radius: float
 
-        :rtype: TPoint.
+        :return: overlapped point coordinates in metres.
+        :rtype: TPoint
         """
         if(shape.type == "Rectangle"):
             return self.rectangle_overlap_coord_mod(shape, x, y, radius)
@@ -1540,7 +1537,7 @@ class TApp(object):
             try:
                 return self.cylinder_overlap_coord_mod(shape, x, y, radius)
             except:
-                return TPoint(x, y)
+                return self.winmod(TPoint(x, y))
         elif(shape.type == "CylinSector"):
             return self.cylin_sector_overlap_coord_mod(shape, x, y, radius)
         elif(shape.type == "Polygon"):
@@ -1551,15 +1548,16 @@ class TApp(object):
         Return model coordinates of a rectangle vertex overlapped by the mouse.
         
         :param shape: examined rectangle object.
-        :param type: TRect.
+        :type shape: TRect
         :param x: mouse pointer position x coordinate in metres.
-        :param type: float.
+        :type x: float
         :param y: mouse pointer position y coordinate in metres.
-        :param type: float.
+        :type y: float
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: float.
+        :type radius: float
 
-        :rtype: TPoint.
+        :return: overlapped rectangle point coordinates in metres.
+        :rtype: TPoint
         """
         if(x >= shape.point1.x - radius and x <= shape.point1.x + radius \
            and y >= shape.point1.y - radius and y <= shape.point1.y + radius):
@@ -1579,15 +1577,16 @@ class TApp(object):
         Return model coordinates of a cylinder characteristic point overlapped by the mouse.
         
         :param shape: examined cylinder object.
-        :param type: TCylin.
+        :type shape: TCylin
         :param x: mouse pointer position x coordinate in metres.
-        :param type: float.
+        :type x: float
         :param y: mouse pointer position y coordinate in metres.
-        :param type: float.
+        :type y: float
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: float.
+        :type radius: float
 
-        :rtype: TPoint.
+        :return: overlapped cylinder point coordinates in metres.
+        :rtype: TPoint
         """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
@@ -1603,28 +1602,29 @@ class TApp(object):
         elif(x >= shape.centre.x - radius and x <= shape.centre.x  + radius and \
              y >= shape.centre.y + shape.radius - radius and \
              y <= shape.centre.y + shape.radius + radius):
-             return TPoint(shape.centre_mod.x, shape.centre_mod.y + shape.radius_mod)
+             return TPoint(shape.centre_mod.x, shape.centre_mod.y - shape.radius_mod)
         elif(x >= shape.centre.x - radius and x <= shape.centre.x  + radius and \
              y >= shape.centre.y - shape.radius - radius and \
              y <= shape.centre.y - shape.radius + radius):
-             return TPoint(shape.centre_mod.x, shape.centre_mod.y - shape.radius_mod)
+             return TPoint(shape.centre_mod.x, shape.centre_mod.y + shape.radius_mod)
         else:
-            raise Exception("Can't stick to circle's edge")
+            raise Exception("Can't stick to cylinder edge")
     
     def cylin_sector_overlap_coord_mod(self, shape, x, y, radius):
         """
         Return model coordinates of a cylinder sector characteristic point overlapped by the mouse.
         
         :param shape: examined cylinder sector object.
-        :param type: TCylinSector.
+        :type shape: TCylinSector
         :param x: mouse pointer position x coordinate in metres.
-        :param type: float.
+        :type x: float
         :param y: mouse pointer position y coordinate in metres.
-        :param type: float.
+        :type y: float
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: float.
+        :type radius: float
 
-        :rtype: TPoint.
+        :return: overlapped cylinder sector point coordinates in metres.
+        :rtype: TPoint
         """
         if(x >= shape.centre.x - radius and x <= shape.centre.x + radius \
            and y >= shape.centre.y - radius and y <= shape.centre.y + radius):
@@ -1641,15 +1641,16 @@ class TApp(object):
         Return model coordinates of a polygon vertex overlapped by the mouse.
         
         :param shape: examined cylinder sector object.
-        :param type: TCylinSector.
+        :type shape: TCylinSector
         :param x: mouse pointer position x coordinate in metres.
-        :param type: float.
+        :type x: float
         :param y: mouse pointer position y coordinate in metres.
-        :param type: float.
+        :type y: float
         :param radius: radius of the area around a point, trigerring an overlap.
-        :param type: float.
+        :type radius: float
 
-        :rtype: TPoint.
+        :return: overlapped polygon point coordinates in metres.
+        :rtype: TPoint
         """
         for i, pt in enumerate(shape.points):
             if(x >= pt.x - radius and x <= pt.x + radius \
@@ -1663,7 +1664,7 @@ class TApp(object):
         Handle a click event while the active mouse working mode is set to 'draw'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(self.mode == "Rectangle"):
@@ -1683,9 +1684,9 @@ class TApp(object):
         and shape mode is set to 'Rectangle'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(not self.first_click):
             if(overlap_num > -1):
@@ -1719,9 +1720,9 @@ class TApp(object):
         and shape mode is set to 'Cylinder'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(not self.first_click):
             if(overlap_num > -1):
@@ -1754,9 +1755,9 @@ class TApp(object):
         and shape mode is set to 'CylinSector'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(not self.first_click and not self.second_click):
             if(overlap_num > -1):
@@ -1805,9 +1806,9 @@ class TApp(object):
         and shape mode is set to 'Polygon'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -1836,9 +1837,9 @@ class TApp(object):
         and shape mode is set to 'Polygon'.
         
         :param event: canvas LMB double click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(overlap_num > -1 and self.shapes[overlap_num].type == "Polygon"):
@@ -1866,9 +1867,9 @@ class TApp(object):
         Complete a single polygon using points from an adjacent one.
         
         :param event: canvas LMB double click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         pt_beg_mon = self.modwin(self.polygon_points[0])
         pt_beg = self.overlap_coord(self.shapes[overlap_num], pt_beg_mon.x, \
@@ -1906,11 +1907,11 @@ class TApp(object):
         Detect first and last of the vertices shared by two polygons.
         
         :param polygon: examined polygon object.
-        :param type: TPolygon.
+        :type polygon: TPolygon
         :param pt_beg: point from which to start the search.
-        :param type: TPoint.
+        :type pt_beg: TPoint
         :param pt_end: point on which to end the search.
-        :param type: TPoint.
+        :type pt_end: TPoint
         """
         try:
             reverse = False
@@ -1933,7 +1934,7 @@ class TApp(object):
         Handle a mouse move event while the active mouse working mode is set to 'draw'.
         
         :param event: canvas mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(self.mode == "Rectangle"):
@@ -1953,9 +1954,9 @@ class TApp(object):
         and shape mode is set to 'Rectangle'.
         
         :param event: canvas mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(self.first_click == True):
             self.main_canvas.delete("all")
@@ -1981,9 +1982,9 @@ class TApp(object):
         and shape mode is set to 'Cylinder'.
         
         :param event: canvas mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if (self.first_click == True):
             self.main_canvas.delete("all")
@@ -2007,9 +2008,9 @@ class TApp(object):
         and shape mode is set to 'CylindSector'.
         
         :param event: canvas mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         self.canvas_refresh()
@@ -2048,9 +2049,9 @@ class TApp(object):
         and shape mode is set to 'Polygon'.
         
         :param event: canvas mouse move event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(self.polygon_points):
             self.main_canvas.delete("all")
@@ -2078,7 +2079,7 @@ class TApp(object):
         Handle a mouse move event while the active mouse working mode is set to 'move'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(not self.move):
@@ -2106,9 +2107,9 @@ class TApp(object):
         Make a copy of the shape to be moved.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.shape_buffer = deepcopy(self.shapes[overlap_num]) 
         if(overlap_num > -1):
@@ -2131,10 +2132,10 @@ class TApp(object):
         Handle a click event while the active mouse working mode is set to 'move',
         there is a shape being moved and shape mode is set to 'Rectangle'.
         
-        :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: canvas LMB click event object.
+        :param type: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2166,9 +2167,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'Cylinder'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2194,9 +2195,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'CylinSector'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2230,9 +2231,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'Polygon'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2260,7 +2261,7 @@ class TApp(object):
         Handle a mouse move event while the active mouse working mode is set to 'draw'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.dd
+        :type event: tkinter.Event
         """
         if(self.move):
             overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -2281,10 +2282,10 @@ class TApp(object):
         Handle a mouse move event while the active mouse working mode is set to 'move'
         and moved shape type is 'Rectangle'.
 
-        :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: canvas LMB click event object.
+        :param type: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2312,9 +2313,9 @@ class TApp(object):
         and moved shape type is 'Cylinder'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, \
@@ -2346,9 +2347,9 @@ class TApp(object):
         and moved shape type is 'CylinSector'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2376,9 +2377,9 @@ class TApp(object):
         and moved shape type is 'Polygon'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2404,7 +2405,7 @@ class TApp(object):
         Handle a click event while the active mouse working mode is set to 'resize'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
         if(not self.resize):
@@ -2432,9 +2433,9 @@ class TApp(object):
         Make a copy of the shape to be resized.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.shape_buffer = deepcopy(self.shapes[overlap_num])
         if(overlap_num > -1):
@@ -2458,9 +2459,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'Rectangle'.
 
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2516,9 +2517,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'Cylinder'.
 
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2545,9 +2546,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'CylinSector'.
 
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2611,9 +2612,9 @@ class TApp(object):
         there is a shape being moved and shape mode is set to 'Polygon'.
 
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         self.main_canvas.delete("all")
         if(overlap_num > -1):
@@ -2644,7 +2645,7 @@ class TApp(object):
         Handle a mouse move event while the active mouse working mode is set to 'resize'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event.
         """
         if(self.resize):
             overlap_num = self.mouse_overlaps_shape(event.x, event.y, self.radius)
@@ -2665,9 +2666,9 @@ class TApp(object):
         and resized shape type is 'Rectangle'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2716,9 +2717,9 @@ class TApp(object):
         and resized shape type is 'Cylinder'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2745,9 +2746,9 @@ class TApp(object):
         and resized shape type is 'CylinSector'.
         
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2791,9 +2792,9 @@ class TApp(object):
         and moved shape type is 'Polygon'.
 
         :param event: canvas LMB click event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param overlap_num: list index of a shape overlapped by the mouse.
-        :param type: integer.
+        :type overlap_num: integer
         """
         if(overlap_num > -1):
             pt = self.overlap_coord(self.shapes[overlap_num], event.x, event.y, self.radius)
@@ -2824,15 +2825,16 @@ class TApp(object):
         constituing it.
 
         :param centre: cylinder sector centre coordinates.
-        :param type: TPoint.
+        :type centre: TPoint
         :param bp1: first boundary point, establishing radius starting the slice.
-        :param type: TPoint.
+        :type bp1: TPoint
         :param bp2: second boundary point, establishing radius ending the slice.
-        :param type: TPoint.
+        :type bp2: TPoint
         :param radius: cylinder sector radius.
-        :param type: float.
+        :type radius: float
 
-        :rtype: float, float.
+        :return: cylinder sector start and extent angles in degrees.
+        :rtype: float, float
         """
         if(bp1.x >= centre.x):
             start = degrees(asin((centre.y - bp1.y)/radius))
@@ -2872,15 +2874,16 @@ class TApp(object):
         start and extent angles.
 
         :param centre: cylinder sector centre coordinates.
-        :param type: TPoint.
+        :type centre: TPoint
         :param radius: cylinder sector radius.
-        :param type: float.
+        :type radius: float
         :param start: angle (in degrees) between positive OX halfaxis and centre-bp1 radius.
-        :param type: float.
+        :type start: float
         :param extent: angle (in degrees) between centre-bp1 radius and centree-bp2 radius.
-        :param type: float.
+        :type extent: float
 
-        :rtype: TPoint, TPoint.
+        :return: cylinder sector boundary points.
+        :rtype: TPoint, TPoint
         """
         bp1 = TPoint(int(centre.x + cos(radians(start))*radius), \
                      int(centre.y - sin(radians(start))*radius))
@@ -2895,7 +2898,7 @@ class TApp(object):
         Manually move the mouse cursor one pixel up with a keystroke.
         
         :param event: window up arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
@@ -2908,7 +2911,7 @@ class TApp(object):
         Manually move the mouse cursor one pixel down with a keystroke.
         
         :param event: window down arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
@@ -2921,7 +2924,7 @@ class TApp(object):
         Manually move the mouse cursor one pixel left with a keystroke.
         
         :param event: window left arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
@@ -2934,7 +2937,7 @@ class TApp(object):
         Manually move the mouse cursor one pixel right with a keystroke.
         
         :param event: window right arrow press event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
@@ -2948,10 +2951,9 @@ class TApp(object):
         """
         Undo last operation.
         
-
         :param event: object of the event evoking this method (keyboard shortcut,
                       mouse menu position).
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         try:
             operation = self.operations.pop()
@@ -2987,7 +2989,7 @@ class TApp(object):
         Run gprMax on specified input file.
 
         :param filename: input file name.
-        :param type: string.        
+        :type filename: string
         """
         if(filename is None):
             filename = filedialog.askopenfilename()
@@ -3012,7 +3014,7 @@ class TApp(object):
 
         :param event: object of the event evoking this method (keyboard shortcut, 
                       mouse menu position, toolbar button).
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         if(TModel_Size.FIT):
             TModel_Size.FIT = False
@@ -3082,7 +3084,7 @@ class TApp(object):
 
         :param event: object of the event evoking this method (keyboard shortcut, 
                       mouse menu position, toolbar button).
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         self.scale /= 2
         if(self.scale > 100.0):
@@ -3263,11 +3265,11 @@ class TApp(object):
         Handle the visible model area move in the x direction.
         
         :param action: type of action performed on the scrollbar.
-        :param type: string.
+        :type action: string
         :param number: displacement of the scrollbar.
-        :param type: float.
+        :type number: float
         :param units: units of the displacement.
-        :param type: string.
+        :type units: string
         """
         hbar_pos = self.main_horizontal_scrollbar.get()
         hbar_pos = (Decimal(str(hbar_pos[0])), Decimal(str(hbar_pos[1])))
@@ -3316,11 +3318,11 @@ class TApp(object):
         Handle the visible model area move in the y direction.
         
         :param action: type of action performed on the scrollbar.
-        :param type: string.
+        :type action: string
         :param number: displacement of the scrollbar.
-        :param type: float.
+        :type number: float
         :param units: units of the displacement.
-        :param type: string.
+        :type units: string
         """
         # Convert used quantities to decimal in order to obtain higher
         # floating point accuracy
@@ -3389,9 +3391,9 @@ class TApp(object):
         Recognise and handle a command given in a line.
         
         :param line: line to be parsed.
-        :param type: string.
+        :type line: string
         :param line_num: parsed line number.
-        :param type: integer.
+        :type line_num: integer
         """
         tokens = line.split()
         command = (tokens[0])[1:-1]
@@ -3554,11 +3556,11 @@ class TApp(object):
         Write a two-dimensional array into a ASCII file row by row.
 
         :param fileh: file handler.
-        :param type: _io.TextIOWrapper.
+        :type fileh: _io.TextIOWrapper
         :param array: array to be saved.
-        :param type: list.
+        :type array: list
         :param dims: number of dimensions.
-        :param type: integer.
+        :type dims: integer
         """
         length = len(array)
         if(dims > 1):
@@ -3623,9 +3625,9 @@ class TApp(object):
         
         :param event: object of the event evoking this method (keyboard shortcut, 
                       mouse menu position).
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param shape_num: list index of the shape being copied.
-        :param type: integer.
+        :type shape_num: integer
         """
         self.canvas_interrupt()
         if(shape_num == -1 and event is not None):
@@ -3652,11 +3654,11 @@ class TApp(object):
         
         :param event: object of the event evoking this method (keyboard shortcut, 
                       mouse menu position).
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         :param deltax: offset of the pasted shape in the x direction in pixels.
-        :param type: integer.
+        :type deltax: integer
         :param deltay: offset of the pasted shape in the y direction in pixels.
-        :param type: integer.
+        :type deltay: integer
         """
         self.manipulated_shape_num = len(self.shapes)
         if(event is not None):
@@ -3680,7 +3682,7 @@ class TApp(object):
         Handle a ctrl+c keystroke event.
         
         :param event: ctrl+c keystroke event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         try:
             shape_num = (self.shapes_frame.shapes_list.curselection())[0]
@@ -3693,7 +3695,11 @@ class TApp(object):
         Handle a ctrl+v keystroke event
         
         :param event: ctrl+v keystroke event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
+        :param deltax: pasted shape offset in x direction in pixels.
+        :type deltax: integer
+        :param deltay: pasted shape offset in y direction in pixels.
+        :type deltay: integer
         """
         event.x = self.move_const_point.x + deltax
         event.y = self.move_const_point.y + deltay
@@ -3704,7 +3710,7 @@ class TApp(object):
         Handle a mouse wheel rotation event.
 
         :param event: window mouse wheel rotation event object.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         # Respond to Linux or Windows wheel event accordingly
         if event.num == 5 or event.delta == -120:
@@ -3757,8 +3763,8 @@ class TApp(object):
         """
         Handle a mouse move while its wheel is pressed move event.
 
-        :param : canvas mouse move while wheel is down event object.
-        :param type: tkinter.Event.
+        :param event: canvas mouse move while wheel is down event object.
+        :type event: tkinter.Event
         """
         dr = TPoint(self.prev_mouse_pos.x - event.x, \
                     event.y - self.prev_mouse_pos.y)
@@ -3807,9 +3813,10 @@ class TApp(object):
         Convert a point in model coordinates to window coordinates.
 
         :param pt: point to be converted.
-        :param type: TPoint.
+        :type pt: TPoint
 
-        :rtype: TPoint.
+        :return: point in window coordinates.
+        :rtype: TPoint
         """
         return TG.model_to_window(pt, \
                                   TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
@@ -3824,9 +3831,10 @@ class TApp(object):
         Convert a point in window coordinates to model coordinates.
 
         :param pt: point to be converted.
-        :param type: TPoint.
+        :type pt: TPoint
 
-        :rtype: TPoint.
+        :return: point in model coordinates.
+        :rtype: TPoint
         """
         return TG.window_to_model(pt, \
                                   TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y), \
@@ -3841,10 +3849,11 @@ class TApp(object):
         """
         Convert a distance in model coordinates to window coordinates.
 
-        :param pt: distance to be converted.
-        :param type: float.
+        :param dist: distance to be converted.
+        :type dist: float
 
-        :rtype: integer.
+        :return: distance in pixels.
+        :rtype: integer
         """
         return TG.dist_model_to_window(dist,  \
                                        TPoint(TModel_Size.MIN_X, \
@@ -3860,10 +3869,11 @@ class TApp(object):
         """
         Convert a distance in window coordinates to model coordinates.
 
-        :param pt: distance to be converted.
-        :param type: integer.
+        :param dist: distance to be converted.
+        :type dist: integer
 
-        :rtype: float.
+        :return: distance in metres.
+        :rtype: float
         """
         return TG.dist_window_to_model(dist,  \
                                        TPoint(TModel_Size.MIN_X, \
@@ -3882,7 +3892,7 @@ def centre_window(window):
     Put the main application window in the middle of the screen.
 
     :param window: main windows object.
-    :param type: tkinter.Tk.
+    :type window: tkinter.Tk
     """
     # Gets the requested values of the height and widht.
     window.update_idletasks()
@@ -3909,5 +3919,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# EOF

@@ -9,18 +9,28 @@ from settings import TTicksSettings
 
 class TShapesWindow(Frame):
     """
-    Class representing auxiliary window containg shapes information.
+    Class represents auxiliary window containg shapes information.
+
+    :param master: master window object.
+    :type master: tkinter.Tk
+    :param app: main app object.
+    :type app: TApp
     """
     def __init__(self, master, TApp):
+        """
+        Call the parent class constructor and initialise object variables.
+        """
         super().__init__()
         self.TApp = TApp
         self.round_digits = TTicksSettings.ROUND_DIGITS
         self.init_widgets()
 
     def init_widgets(self):
+        """
+        Init frame widgets.
+        """
         # Listbox
         self.shapes_list = Listbox(self, exportselection = False, selectmode = EXTENDED)
-        # self.shapes_list.config(exportselection = 0)
         self.grid_columnconfigure(0, weight = 1, minsize = 300)
         self.grid_rowconfigure(0, weight = 1)
         self.shapes_list.grid(row = 0, column = 0, sticky = NSEW, padx = (5, 25), pady = 5)
@@ -34,7 +44,6 @@ class TShapesWindow(Frame):
 
         # Drop down menu with materials
         self.material_box = Combobox(self, values = ["pec", "free_space"] )
-        # self.material_box.current (0)
         self.material_box.grid(row = 1, column = 0, sticky = EW, padx = 5, pady = 5)
         self.material_box.bind("<<ComboboxSelected>>", self.assign_material_to_shape)
 
@@ -46,6 +55,12 @@ class TShapesWindow(Frame):
         self.shapes_list.bind("<Delete>", self.remove_shape)
    
     def update_list(self, shapes, *, swap = False):
+        """
+        Update shapes list.
+
+        :param swap: shapes list selection swap toggle.
+        :type swap: boolean
+        """
         selection = self.shapes_list.curselection()
         try:
             shape_num = selection[0]
@@ -69,10 +84,6 @@ class TShapesWindow(Frame):
                                "), " + str(round(single_shape.radius_mod, self.round_digits)) + \
                                ", " + str(round(single_shape.start, self.round_digits)) + \
                                ", " + str(round(single_shape.extent, self.round_digits))
-            # elif(single_shape.type == "Triangle"):
-            #     coord_string = "(" + str (round (single_shape.point1_mod.x, self.round_digits) ) + ", " + str (round (single_shape.point1_mod.y, self.round_digits) ) + "), (" + \
-            #         str(round(single_shape.point2_mod.x, self.round_digits)) + ", " + str(round (single_shape.point2_mod.y, self.round_digits)) + "), (" + \
-            #         str(round(single_shape.point3_mod.x, self.round_digits)) + ", " + str(round (single_shape.point3_mod.y, self.round_digits)) + ")"
             elif(single_shape.type == "Polygon"):
                 coord_string = str(len(single_shape.points))
             self.shapes_list.insert(i, str(i + 1) + ". " + single_shape.type + ": " + coord_string)
@@ -88,6 +99,12 @@ class TShapesWindow(Frame):
                 self.shapes_list.activate(shape_num)
     
     def assign_material_to_shape(self, event):
+        """
+        Assign material to a shape.
+
+        :param event: event evoking this method (listbox select).
+        :type event: tkinter.Event
+        """
         material = self.material_box.get()
         try:
             shape_num = (self.shapes_list.curselection())[0]
@@ -104,7 +121,12 @@ class TShapesWindow(Frame):
                     return
 
     def shapes_list_selected_item(self, event):
-        "Handle listbox selection event"
+        """
+        Handle listbox selection event.
+
+        :param event: event evoking this method (listbox select).
+        :type event: tkinter.Event
+        """
         # Add multiple selection
         self.shapes_list.focus_force()
         try:
@@ -128,24 +150,18 @@ class TShapesWindow(Frame):
         for single_shape in self.TApp.shapes:
             single_shape.width = 1
         
-        # self.TApp.shapes[shape_num].width = 2
         for item in selection:
             self.TApp.shapes[item].width = 2
         self.TApp.main_canvas.delete("all")
-        # self.shapes_list.focus_force()
-        # # self.shapes_list.select_clear(0, END)
         for item in selection:
             self.shapes_list.selection_set(item)
         self.TApp.canvas_refresh()
-        # self.shapes_list.activate(shape_num)
-        # self.shapes_list.focus_set()
-        # if(shape_num > -1):
-            # self.shapes_list.yview_scroll(shape_num,"units")
-            # self.shapes_list.see(shape_num)
 
-    def init_popup_menu (self):
-        "Inits shapes pane pup-up menu"
-        self.popup_menu = Menu (self, tearoff = 0)
+    def init_popup_menu(self):
+        """
+        Init shapes pane pup-up menu.
+        """
+        self.popup_menu = Menu(self, tearoff = 0)
         self.popup_menu.add_command(label = "Edit shape", command = self.edit_shape)
         self.popup_menu.add_command(label = "Change shape colour", command = self.change_shape_colour)
         self.popup_menu.add_command(label = "Remove shape(s)", command = self.remove_shape)
@@ -161,12 +177,21 @@ class TShapesWindow(Frame):
         self.popup_menu.add_command(label = "Move to bottom", command = self.move_shape_bottom)
 
     def show_popoup_menu(self, event):
+        """
+        Show shapes list pop-up menu.
+
+        :param event: event evoking this method (RMB click).
+        :type event: tkinter.Event
+        """
         try:
             self.popup_menu.post(event.x_root, event.y_root)
         finally:
             self.popup_menu.grab_release()
     
     def move_shape_up(self):
+        """
+        Move a shape one place up the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -186,6 +211,9 @@ class TShapesWindow(Frame):
                 return
     
     def move_shape_down (self):
+        """
+        Move a shape one place down the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -200,12 +228,14 @@ class TShapesWindow(Frame):
                 self.TApp.canvas_refresh(swap = True)
                 self.shapes_list.selection_set(shape_num + 1)
                 self.shapes_list.activate(shape_num + 1)
-                # self.shapes_list.focus_set ()
             except Exception as message:
                 messagebox.showerror("Error while manipulating shapes list!", message)
                 return
     
     def move_shape_top(self):
+        """
+        Move a shape to the top of the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -226,6 +256,9 @@ class TShapesWindow(Frame):
                 return
 
     def move_shape_bottom(self):
+        """
+        Move a shape to the bottom of the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -245,6 +278,9 @@ class TShapesWindow(Frame):
                 return
 
     def edit_shape(self):
+        """
+        Edit selected shape on the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -265,6 +301,9 @@ class TShapesWindow(Frame):
                 self.TApp.edit_polygon(shape_num)
     
     def change_shape_colour(self):
+        """
+        Change selected shape on the shapes list colour.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -275,27 +314,20 @@ class TShapesWindow(Frame):
             self.TApp.change_shape_colour(shape_num = shape_num)
 
     def remove_shape(self, event = None):
+        """
+        Remove selected shape on the shapes list.
+        """
         try:
-            # shape_num = (self.shapes_list.curselection())[0]
             selection = self.shapes_list.curselection()
         except IndexError:
             return
-        # if (shape_num < 0):
-            # return
         if(len(selection) == 0):
             return
         else:
             try:
                 for item in reversed(selection):
                     del self.TApp.shapes[item]
-                # del self.TApp.shapes[shape_num]
                 self.update_list(self.TApp.shapes)
-                # if (shape_num == len(self.TApp.shapes)):
-                #     self.shapes_list.selection_set(shape_num - 1)
-                #     self.shapes_list.activate(shape_num - 1)
-                # else:
-                #     self.shapes_list.selection_set(shape_num)
-                #     self.shapes_list.activate(shape_num)
                 self.TApp.main_canvas.delete("all")
                 self.TApp.canvas_refresh()
             except Exception as message:
@@ -303,6 +335,9 @@ class TShapesWindow(Frame):
                 return
 
     def add_vertex_to_polygon(self):
+        """
+        Add a vertex to selected polygon on the shapes list.
+        """
         try:
             shape_num = (self.shapes_list.curselection())[0]
         except IndexError:
@@ -315,7 +350,9 @@ class TShapesWindow(Frame):
         self.TApp.canvas_refresh()
 
     def copy_shape(self):
-        "Copy selected shape to buffer"
+        """
+        Copy selected shape on the shapes list.
+        """
         try:
             shape_num = self.shapes_list.curselection()[0]
         except:
@@ -327,5 +364,12 @@ class TShapesWindow(Frame):
                 messagebox.showerror ("Error while manipulating shapes list!", message)
     
     def paste_shape(self, *, deltax = 15, deltay = 15):
-        "Paste selected shape from buffer"
+        """
+        Paste selected shape from buffer.
+        
+        :param deltax: pasted shape offset in x direction in pixels.
+        :type deltax: integer
+        :param deltay: pasted shape offset in y direction in pixels.
+        :type deltay: integer
+        """
         self.TApp.paste_ctrl_v(Event())

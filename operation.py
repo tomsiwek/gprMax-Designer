@@ -3,11 +3,11 @@ class TOperation(object):
     Class represents a single operation performed in program.
 
     :param o_type: operation type.
-    :param type: string.
+    :type o_type: string
     :param shape: shape on which the operation was performed.
-    :param type: TShape, TRect, TCylin, TCylinSector, TPolygon.
+    :type shape: TShape, TRect, TCylin, TCylinSector, TPolygon
     :param shape_num: shape list index.
-    :param type: integer.
+    :type shape_num: integer
     """
 
     def __init__(self, o_type = None, **kwargs):
@@ -21,11 +21,11 @@ class TOperation(object):
         Set the parameters of an operation.
 
         :param o_type: operation type.
-        :param type: string.
+        :type o_type: string
         :param shape: shape on which the operation was performed.
-        :param type: TShape, TRect, TCylin, TCylinSector, TPolygon.
+        :type o_type: TShape, TRect, TCylin, TCylinSector, TPolygon
         :param shape_num: shape list index.
-        :param type: integer.
+        :type shape_num: integer
         """
         self.o_type = o_type
         self.shape = kwargs.pop('shape', None)

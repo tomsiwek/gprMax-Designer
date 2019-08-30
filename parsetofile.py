@@ -1,4 +1,3 @@
-#import matplotlib.pyplot as plt
 from tkinter import messagebox
 
 from settings import TModel_Size, TSurveySettings
@@ -22,11 +21,11 @@ class TParser(object):
         Parses given model to a gprMax compliant file.
 
         :param materials: list of materials.
-        :param type: TMaterial.
+        :type materials: TMaterial
         :param shapes: list of shapes.
-        :param type: TShape, TRect, TCylin, TCylinSector, TPolygon.
+        :type shapes: TShape, TRect, TCylin, TCylinSector, TPolygon
 
-        :rtype: string.
+        :rtype: string
         """
         TParser.PARSE_STRING = ""
         TParser.THICKNESS_2D = min(TModel_Size.DX, TModel_Size.DY)
@@ -128,7 +127,7 @@ class TParser(object):
         Introduce a rectangle into the input file.
 
         :param rectangle: examined rectangle object.
-        :param type: TRect.
+        :type rectangle: TRect
         """
         TParser.PARSE_STRING += "#box: " + str(rectangle.point1_mod.x) + " " + \
                                 str(rectangle.point1_mod.y) + " " + str(TParser.FRONT_2D) + \
@@ -141,7 +140,7 @@ class TParser(object):
         Introduce a cylinder into the input file.
 
         :param cylinder: examined cylinder object.
-        :param type: TCylin.
+        :type cylinder: TCylin
         """
         TParser.PARSE_STRING += "#cylinder: " + str(cylinder.centre_mod.x) + " " + \
                                 str(cylinder.centre_mod.y) + " " + str(TParser.FRONT_2D) + \
@@ -155,7 +154,7 @@ class TParser(object):
         Introduce a cylinder sector into the input file.
 
         :param cylinsector: examined cylinder sector object.
-        :param type: TCylinSector.
+        :type cylinsector: TCylinSector
         """
         TParser.PARSE_STRING += "#cylindrical_sector: z " + str(cylinSector.centre_mod.x) + \
                                 " " + str(cylinSector.centre_mod.y) + " " + str(TParser.FRONT_2D) + \
@@ -169,7 +168,7 @@ class TParser(object):
         Introduce a polygon into the input file as a series of triangles.
 
         :param polygon: examined polygon object.
-        :param type: TPolygon.
+        :type polygon: TPolygon
         """
         # Triangulate the polygon
         tt = TParser.triangulate(polygon)
@@ -188,9 +187,9 @@ class TParser(object):
         Divide an input polygon into triangles using triangulate module.
 
         :param polygon: examined polygon object.
-        :param type: TPolygon.
+        :type polygon: TPolygon
 
-        :rtype: list.
+        :rtype: list
         """
         debug = False
         if(debug):

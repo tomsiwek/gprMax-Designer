@@ -5,9 +5,9 @@ class TOutputPreviewWindow(simpledialog.Dialog):
     Class represents output file contents preview window.
 
     :param master: master window object.
-    :param type: tkinter.Tk.
+    :type master: tkinter.Tk
     :param out_string: contents of the gprMAx input file.
-    :param type: string.
+    :type out_string: string
     """
     def __init__(self, master, output_string):
         """
@@ -21,7 +21,7 @@ class TOutputPreviewWindow(simpledialog.Dialog):
         Initialise widgets.
 
         :param master: master window object.
-        :param type: tkinter.Tk.
+        :type master: tkinter.Tk
         """
         self.output_preview = scrolledtext.ScrolledText(self)
         self.output_preview.pack()

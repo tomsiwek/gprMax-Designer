@@ -14,21 +14,21 @@ class TGeometry(object):
         Calculate model coordinates from a given windows coordinates.
 
         :param window_pt: point in window coordinates system (pixels).
-        :param type: TPoint.
-        :param min_model: visible model area lower left point in m.
-        :param type: TPoint.
-        :param max_model: vivible model area upper right point in m.
         :param type: TPoint
+        :param min_model: visible model area lower left point in m.
+        :param type: TPoint
+        :param max_model: vivible model area upper right point in m.
+        :param type: TPoin
         :param min_window: model box lower left point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_window: model box upper right point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param dx: grid discretisation step in x direction.
-        :param type: float.
+        :param type: float
         :param dx: grid discretisation step in y direction.
-        :param type: float.
+        :param type: float
         
-        :rtype: TPoint.
+        :rtype: TPoint
         """
         mod_pt = TPoint()
         mod_pt.x = TGeometry.round_to_multiple((max_model.x - min_model.x)*(window_pt.x - min_window.x)/(max_window.x - min_window.x) + min_model.x, dx)
@@ -41,23 +41,21 @@ class TGeometry(object):
         Calculate window coordinates from s given model coordinates.
 
         :param mod_pt: point in model coordinate system (m).
-        :param type: TPoint.
+        :param type: TPoint
         :param min_model: visible model area lower left point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_model: vivible model area upper right point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param min_window: model box lower left point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_window: model box upper right point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         
-        :rtype: TPoint.
+        :rtype: TPoint
         """
         window_pt = TPoint()
         window_pt.x = round(((mod_pt.x - min_model.x)*(max_window.x - min_window.x))/(max_model.x - min_model.x) + min_window.x)
         window_pt.y = round(((mod_pt.y - min_model.y)*(max_window.y - min_window.y))/(max_model.y - min_model.y) + min_window.y)
-        # window_pt.x = TGeometry.round_to_multiple(((mod_pt.x - min_model.x)*(max_window.x - min_window.x))/(max_model.x - min_model.x) + min_window.x, 1)
-        # window_pt.y = TGeometry.round_to_multiple(((mod_pt.y - min_model.y)*(max_window.y - min_window.y))/(max_model.y - min_model.y) + min_window.y, 1)
         return window_pt
 
     @staticmethod
@@ -66,21 +64,21 @@ class TGeometry(object):
         Calculate distance in model coordinate system from a given distance in window coordinate system.
 
         :param mod_dist: distance in model coordinate system (m).
-        :param type: TPoint.
+        :param type: TPoint
         :param min_model: visible model area lower left point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_model: vivible model area upper right point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param min_window: model box lower left point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_window: model box upper right point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param dx: model discretization in x direction.
-        :param type: float.
+        :param type: float
         :param dy: model discretization in y direction.
-        :param type: float.
+        :param type: float
 
-        :rtype: float.
+        :rtype: float
         """
         return TGeometry.round_to_multiple(mod_dist*(max_model.x - min_model.x)/(max_window.x - min_window.x), min(dx, dy))
 
@@ -90,17 +88,17 @@ class TGeometry(object):
         Calculate distance in windows coordinate system from a given distance in model coordinate system.
 
         :param win_dist: distance in window coordinate system (pixels).
-        :param type: TPoint.
+        :param type: TPoint
         :param min_model: visible model area lower left point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_model: vivible model area upper right point in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param min_window: model box lower left point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_window: model box upper right point in pixels.
-        :param type: TPoint.
+        :param type: TPoint
 
-        :rtype: float.
+        :rtype: float
         """
         return win_dist*(max_window.x - min_window.x)/(max_model.x - min_model.x)
 
@@ -110,11 +108,11 @@ class TGeometry(object):
         Round given float to nearest multiple of another real.
         
         :param x: number to be rounded.
-        :param type: float.
+        :param type: float
         :param m: number to multiple of which x is to be rounded to.
-        :param type: float.
+        :param type: float
 
-        :rtype: float.
+        :rtype: float
         """
         m_reverse = m**(-1)
         return floor (x*m_reverse + 0.5)/m_reverse # Python has issues with float multiplying
@@ -125,13 +123,13 @@ class TGeometry(object):
         Detect if a given mouse position lies within model.
 
         :param pos: point coordinates in pixels.
-        :param type: TPoint.
+        :param type: TPoint
         :param box_min: lower left model box point.
-        :param type: TPoint.
+        :param type: TPoint
         :param box_max: upper right model box point.
-        :param type: TPoint.
+        :param type: TPoint
 
-        :rtype: boolean.
+        :rtype: boolean
         """
         if(pos.x >= min(box_min.x, box_max.x) and pos.x <= max(box_min.x, box_max.x) and \
            pos.y >= min(box_min.y, box_max.y) and pos.y <= max(box_min.y, box_max.y)):
@@ -144,13 +142,13 @@ class TGeometry(object):
         Detect if a given point is within visible area of model.
 
         :param point: point coordinates in m.
-        :param type: TPoint.
+        :param type: TPoint
         :param min_model: lower left visible model area point.
-        :param type: TPoint.
+        :param type: TPoint
         :param max_model: upper right visible model area point.
-        :param type: TPoint.
+        :param type: TPoint
 
-        :rtype: boolean.
+        :rtype: boolean
         """
         if((point.x >= min_model.x and point.y >= min_model.y) and \
            (point.x <= max_model.x and point.y <= max_model.y)):
@@ -164,15 +162,15 @@ class TGeometry(object):
         Detect if two line segments intersect.
 
         :param point1: first line segment start.
-        :param type: TPoint.
+        :param type: TPoint
         :param point2: first line segment end.
-        :param type: TPoint.
+        :param type: TPoint
         :param point3: second line segment start.
-        :param type: TPoint.
+        :param type: TPoint
         :param point4: second line segment end.
-        :param type: TPoint.
+        :param type: TPoint
 
-        :rtype: boolean.
+        :rtype: boolean
         """
         def sign(a):
             if(a >= 0):
@@ -194,9 +192,9 @@ class TGeometry(object):
         Calculate the area of polygon enclosed by points in given list.
 
         :param points: list of consecutive polygons points.
-        :param type: list of TPoint.
+        :param type: list of TPoint
 
-        :rtype: float.
+        :rtype: float
         """
         sum = 0.0
         for i, pt in enumerate(points):

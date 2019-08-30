@@ -2,14 +2,28 @@ from tkinter import simpledialog, Label, Checkbutton, IntVar, Frame, W
 
 class TTraceWindow(simpledialog.Dialog):
     """
-    Class represents popup used to choose trace components and FFT
+    Class represents popup used to choose trace components and FFT.
+
+    :param master: master window object.
+    :param type: tkinter.Tk
+    :param show_fft: fft displaying toggle.
+    :type show_fft: boolean
     """
 
     def __init__(self, master, *, show_fft = True):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         self.show_fft = show_fft
         super().__init__(master)
 
     def body(self, master):
+        """
+        Initialise widgets.
+
+        :param master: master window object.
+        :param type: tkinter.Tk
+        """
         Label(self, text = "Choose component(s) to plot:").pack()
         bwidth = 3
         self.button_frame = Frame(self)
@@ -49,9 +63,11 @@ class TTraceWindow(simpledialog.Dialog):
         if(self.show_fft):
             self.fft_button = Checkbutton(self, text = "Show FFT", variable = self.fft_en)
             self.fft_button.pack()
-        # self.mag_frame.pack()
 
     def apply(self):
+        """
+        Return requested inputs.
+        """
         res_str = ""
         if(self.ex_en.get() == 1):
             res_str += " Ex"

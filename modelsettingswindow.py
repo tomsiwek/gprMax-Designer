@@ -5,15 +5,15 @@ class TModelSettingsWindow(simpledialog.Dialog):
     Class represents popup window used for entering model size (domain).
 
     :param master: master window object.
-    :param type: tkinter.Tk.
+    :type master: tkinter.Tk
     :param maxx: model width (maximal x coordinate).
-    :param type: float.
-    :param maxx: model height (maximal y coordinate).
-    :param type: float.
+    :type maxx: float
+    :param maxy: model height (maximal y coordinate).
+    :type maxy: float
     :param dx: discretisation step in the x direction.
-    :param type: float.
-    :param dx: discretisation step in the y direction.
-    :param type: float.
+    :type dx: float
+    :param dy: discretisation step in the y direction.
+    :type dy: float
     """
     def __init__(self, master, maxx = 0.0, maxy = 0.0, dx = 0.01, dy = 0.01):
         """
@@ -30,7 +30,7 @@ class TModelSettingsWindow(simpledialog.Dialog):
         Initialise widgets.
 
         :param master: master window object.
-        :param type: tkinter.Tk.
+        :type master: tkinter.Tk
         """
         Label(master, text = "x [m]:", anchor = W).grid(row = 0, sticky = EW)
         Label(master, text = "y [m]:", anchor = W).grid(row = 1, sticky = EW)

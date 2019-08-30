@@ -3,7 +3,6 @@ from copy import copy, deepcopy
 import cProfile
 #from itertools import islice
 from math import asin, atan2, pi
-#import matplotlib.pyplot as plt
 from sortedcontainers import SortedDict
 import sys
 
@@ -14,8 +13,6 @@ class Vertex(object):
     """
 
     def __init__(self, x, y, v_type = None):
-        # self.x = Decimal(str(x))
-        # self.y = Decimal(str(y))
         self.x = x
         self.y = y
         self.v_type = v_type
@@ -199,222 +196,22 @@ class Polygon(object):
             return True
         else:
             return False
-    
-    def split_polygon(self, diag):
-        raise NotImplementedError("Feature not yet completed")
-        # new_polygon = []
-        # reverse = False
-        # start = diag.start
-        # end = diag.end
-        # if(not diag.start < diag.end):
-        #     start = diag.end
-        #     end = diag.start
-        # if(self.next_vertex(start) < start):
-        #     reverse = True
-        # vj = start
-        # if(not reverse):
-        #     while(not vj == end):
-        #         new_polygon.append(vj)
-        #         vj = self.next_vertex(vj)
-        #     new_polygon.append(vj)
-        # else:
-        #     while(not vj == end):
-        #         new_polygon.append(vj)
-        #         vj = self.previous_vertex(vj)
-        #     new_polygon.append(vj)
-        # return new_polygon
-
-
-# class Node(object):
-#     def __init__(self, key, *, parent = None, edge = None):
-#         self.key = key
-#         self.edge = edge
-#         self.left_child = None
-#         self.right_child = None
-#         self.parent = parent
-
-
-# class LBST(object):
-#     """
-#     Binary search tree that stores all data in leaves. Innder node's key is equal to the maximal leave key
-#     in its left subtree
-#     """
-#     def __init__(self):
-#         self.root = None
-#         self._max_key = None
-
-#     def print(self):
-#         self._print_in_order(self.root)
-#         print('---')
-
-#     def _print_in_order(self, current_node):
-#         if(current_node is not None):
-#             self._print_in_order(current_node.left_child)
-#             print(current_node.key)
-#             self._print_in_order(current_node.right_child)
-
-#     def max(self):
-#         current_node = self.root
-#         while(current_node.right_child is not None):
-#             current_node = current_node.right_child
-#         return current_node.key
-    
-#     def min(self):
-#         current_node = self.root
-#         while(current_node.left_child is not None):
-#             current_node = current_node.left_child
-#         return current_node.key
-    
-#     def insert(self, edge, vertex):
-#         key = vertex.x
-#         if(self.root is None):
-#             self.root = Node(key, edge = edge)
-#             self._max_key = key
-#         else:
-#             self._insert_node(key, edge)
-
-#     def _insert_node(self, key, edge):
-#         current_node = self.root
-#         prev_key = key
-#         while(current_node.right_child is not None):
-#             if(key < current_node.right_child.key):
-#                 prev_key = current_node.key
-#                 if(key > current_node.key):
-#                     current_node.key = key
-#                 current_node = current_node.left_child
-#             else:
-#                 current_node = current_node.right_child
-#         parent = current_node.parent
-#         if(parent is None or current_node == parent.left_child):
-#             ckey = current_node.key
-#             current_node.key = min(ckey, key)
-#             if(ckey < key):
-#                 current_node.left_child = Node(min(ckey, key), parent = current_node, \
-#                                                                edge = current_node.edge)
-#                 current_node.right_child = Node(max(ckey, key), parent = current_node, edge = edge)
-#             else:
-#                 current_node.left_child = Node(min(ckey, key), parent = current_node, edge = edge)
-#                 current_node.right_child = Node(max(ckey, key), parent = current_node, \
-#                                                 edge = current_node.edge)
-#             if(key > self._max_key):
-#                 self._max_key = key
-#         elif(current_node.key == self._max_key):
-#             current_node.left_child = Node(current_node.key, parent = current_node, \
-#                                            edge = current_node.edge)
-#             current_node.right_child = Node(key, parent = current_node, edge = edge)
-#             self._max_key = key
-#         else:
-#             left_subtree = copy(parent)
-#             parent.right_child = Node(key, parent = parent, edge = edge)
-#             parent.key = prev_key
-#             parent.left_child = left_subtree
-#             parent.left_child.parent = current_node.parent
-#             self._update_subtree_parents(left_subtree)
-#             if(key > self._max_key):
-#                 self._max_key = key
-#         if(parent is not None):
-#             parent.edge = None
-    
-#     def _update_subtree_parents(self, current_node):
-#         if(current_node.left_child is not None):
-#             self._update_subtree_parents(current_node.left_child)
-#             current_node.left_child.parent = current_node
-#             current_node.right_child.parent = current_node
-#             self._update_subtree_parents(current_node.right_child)
-        
-#     def find_max_smaller_than(self, x):
-#         return self._find_max_smaller_than_node(self.root, x)
-    
-#     def _find_max_smaller_than_node(self, current_node, x):
-#         if(current_node == None):  
-#             return None
-#         if(current_node.key == x):  
-#             return current_node
-#         elif(current_node.key < x):  
-#             node = self._find_max_smaller_than_node(current_node.right_child, x)
-#             if(node is None): 
-#                 return current_node
-#             else: 
-#                 return node
-#         elif(current_node.key > x):
-#             return self._find_max_smaller_than_node(current_node.left_child, x)
-    
-#     def find_leaf(self, key):
-#         return self._find_leaf_node(self.root, key)
-
-#     def _find_leaf_node(self, current_node, key):
-#         if(current_node is None):
-#             return None
-#         elif(key == current_node.key):
-#             if(current_node.left_child is not None):
-#                 return self._find_leaf_node(current_node.left_child, key)
-#             else:
-#                 return current_node
-#         elif(key < current_node.key):
-#             return self._find_leaf_node(current_node.left_child, key)
-#         else:
-#             return self._find_leaf_node(current_node.right_child, key)
-    
-#     def delete(self, vertex, edge):
-#         key = vertex.x
-#         current_node = self.root
-#         while(current_node.right_child is not None):
-#             if(key <= current_node.key):
-#                 if(key == current_node.key):
-#                     current_node.key = current_node.left_child.key
-#                 current_node = current_node.left_child
-#             else:
-#                 current_node = current_node.right_child
-#         parent = current_node.parent
-#         if(parent is None):
-#             self.root = None
-#             self._max_key = None
-#         else:
-#             if(key == self._max_key):
-#                 left = self._get_direct_left_leaf(current_node)
-#                 self._max_key = left.key
-#             if(current_node == parent.left_child):
-#                 subtree = copy(parent.right_child)
-#             elif(current_node == parent.right_child):
-#                 subtree = copy(parent.left_child)
-#             if(parent.parent is not None):
-#                 subtree.parent = parent.parent
-#                 if(parent == parent.parent.left_child):
-#                     parent.parent.left_child = subtree
-#                 elif(parent == parent.parent.right_child):
-#                     parent.parent.right_child = subtree
-#             else:
-#                 self.root = subtree
-#                 self.root.parent = None
-#             self._update_subtree_parents(subtree)
-#             del current_node
-
-#     def find_left(self, vertex):
-#         key = vertex.x
-#         current_node = self.root
-#         while(current_node.right_child is not None):
-#             if(key > current_node.key and key > current_node.right_child.key):
-#                 current_node = current_node.right_child
-#             else:
-#                 current_node = current_node.left_child
-#         if(current_node.key >= key):
-#             return self._get_direct_left_leaf(current_node)
-#         elif((max(current_node.edge.start.x, current_node.edge.end.x) > vertex.x and
-#             max(current_node.edge.start.y, current_node.edge.end.y) > vertex.y)):
-#             return self._get_direct_left_leaf(current_node)
-#         else:
-#             return current_node
-
-#     def _get_direct_left_leaf(self, right_node):
-#         current_node = right_node.parent
-#         if(current_node is not None):
-#             current_node = current_node.left_child
-#             while(current_node.right_child is not None):
-#                 current_node = current_node.right_child
-#             return current_node
-               
+   
 
 def angle(v1, v2, v3):
+    """
+    Calculate an angle between points v1, v2 and v3.
+    
+    :param v1: angle first point.
+    :type v1: Vertex
+    :param v2: angle second point.
+    :type v2: Vertex
+    :param v3: angle third point.
+    :type v3: Vertex
+    
+    :return: Angle between v1, v2 and v3 in radians.
+    :rtype: float
+    """
     x = (v3.x - v2.x)*(v1.x - v2.x) + (v3.y - v2.y)*(v1.y - v2.y)
     y = (v3.x - v2.x)*(v1.y - v2.y) - (v3.y - v2.y)*(v1.x - v2.x)
     if(x == 0.0 and y == 0.0):
@@ -537,7 +334,7 @@ def make_monotone(polygon):
         return q
 
     def vertex_type(v, polygon):
-        "Determine type of vertex"
+        "Determine type of a vertex"
         v_pre = polygon.previous_vertex(v)
         v_nex = polygon.next_vertex(v)
         alpha = angle(v_pre, v, v_nex)
@@ -565,21 +362,21 @@ def make_monotone(polygon):
             v_type = "regular_up"
         elif(upper(v_pre, v) and lower(v_nex, v)):
             v_type = "regular_down"
-        # print(v, v_type)
         return v_type
     
-    def insert(dictionary, e, v):
+    def insert(dictionary, e):
         """
-        Insert edge to dictionary.
+        Insert edge to a dictionary.
         """
         key = min(e.start.x, e.end.x)
+        dk = 1.0e-10
         while(key in dictionary):
-            key += 1.0e-10
+            key += dk
         dictionary[key] = e
 
-    def delete(dictionary, e, v):
+    def delete(dictionary, e):
         """
-        Delete edge from dictionary.
+        Delete edge from a dictionary.
         """
         key = min(e.start.x, e.end.x)
         dk = 1.0e-10
@@ -619,7 +416,7 @@ def make_monotone(polygon):
         nonlocal t, polygon
         e = polygon.get_edge(v)
         e.helper = v
-        insert(t, e, v)
+        insert(t, e)
     
     def handle_end_vertex(v):
         nonlocal t, d, polygon
@@ -627,7 +424,7 @@ def make_monotone(polygon):
         helper = e_prev.helper
         if(helper is not None and helper.v_type == "merge"):
             d.append(Edge(v, e_prev.helper))
-        delete(t, e_prev, polygon.previous_vertex(v))
+        delete(t, e_prev)
     
     def handle_split_vertex(v):
         nonlocal t, d, polygon, left_count
@@ -640,14 +437,14 @@ def make_monotone(polygon):
         d.append(Edge(v, left.helper))
         left.helper = v
         e.helper = v
-        insert(t, e, v)
+        insert(t, e)
     
     def handle_merge_vertex(v):
         nonlocal t, d, polygon, left_count
         e_prev = polygon.previous_edge(v)
         if(e_prev.helper is not None and e_prev.helper.v_type == "merge"):
             d.append(Edge(v, e_prev.helper))
-        delete(t, e_prev, polygon.previous_vertex(v))
+        delete(t, e_prev)
         left = find_left(t, v)
         if(debug):
             left_count += 1
@@ -662,10 +459,10 @@ def make_monotone(polygon):
         e_prev = polygon.previous_edge(v) 
         if(e_prev.helper is not None and e_prev.helper.v_type == "merge"):
             d.append(Edge(v, e_prev.helper))
-        delete(t, e_prev, polygon.previous_vertex(v))
+        delete(t, e_prev)
         e = polygon.get_edge(v)
         e.helper = v
-        insert(t, e, v)
+        insert(t, e)
     
     def handle_regular_up_vertex(v):
         nonlocal left_count
@@ -855,7 +652,7 @@ def triangulate_monotone_polygon(polygon):
         vert = polygon[:]
         vert.sort(key = lambda pt: (pt.y, -pt.x))
         vert.reverse()
-        return vert[:]
+        return vert
 
     debug = False
     u = create_vertices_sequence(polygon.get_vertices())
@@ -888,171 +685,36 @@ def triangulate_monotone_polygon(polygon):
     return d
 
 
-if(__name__ == "__main__"):
-    # polygon = [Vertex(1, 1), Vertex(3, 0), Vertex(2, 2), \
-    #            Vertex(4, 3), Vertex(5, 1), Vertex(6, 5), \
-    #            Vertex(2, 5)]
+# if(__name__ == "__main__"):
+#     with open('test_poly_1000.txt', 'r') as f:
+#         content = f.readlines()
+#     polygon_dupl = []
+#     for line in content:
+#         x, y = line.split('\t')
+#         polygon_dupl.append(Vertex(float(x), float(y)))
+#     polygon = []
+#     for pt in polygon_dupl:
+#         if(pt not in polygon):
+#             polygon.append(pt)
 
-    # polygon = [Vertex(0, 3), Vertex(1, 1), Vertex(3, 2), \
-    #            Vertex(5, 1), Vertex(6, 3), Vertex(4, 4), \
-    #            Vertex(3, 3), Vertex(1, 4)]
-
-    # polygon = [Vertex(0, 4), Vertex(2, 2), Vertex(3, 3), \
-    #            Vertex(6, 0), Vertex(5, 5), Vertex(7, 4), \
-    #            Vertex(9, 8), Vertex(6, 7), Vertex(6, 10), \
-    #            Vertex(4, 9), Vertex(3, 10), Vertex(1, 8.7), \
-    #            Vertex(3, 8), Vertex(2, 6), Vertex(1, 7)]
-
-    # polygon = [Vertex(3.71, 9.03), Vertex(2.8, 7.08), Vertex(0.2, 6.47), \
-    #            Vertex(2.66, 6.41), Vertex(2.02, 4.15), Vertex(3.86, 6.1), \
-    #            Vertex(5.12, 3.58), Vertex(4.41, 6.05), Vertex(9.29, 8.12), 
-    #            Vertex(4.03, 7.22)]
-
-    # polygon = [Vertex(3.64, 9.24), Vertex(0.47, 1.05), Vertex(2.39, 3.71), \
-    #            Vertex(2.78, 1.17), Vertex(3.9, 4.69), Vertex(4.27, 1.83), \
-    #            Vertex(5.19, 7.42), Vertex(5.75, 2.25), Vertex(6.42, 7.15), \
-    #            Vertex(7.41, 1.63), Vertex(7.56, 8.29), Vertex(5.75, 8.8), \
-    #            Vertex(5.8, 9.88), Vertex(2.08, 9.64), Vertex(2.08, 8.29)]
-
-    # polygon = [Vertex(1,4), Vertex(3,1), Vertex(4,6), \
-    #            Vertex(5,2), Vertex(6,5), Vertex(6,9), \
-    #            Vertex(2,8)]
-
-    # polygon = [Vertex(2.12,8.03),Vertex(2.12,6.47),Vertex(3.24,5.86), \
-    #            Vertex(2.14,4.83),Vertex(3.56,4.86),Vertex(4.36,5.76), \
-    #            Vertex(4.36,4.92),Vertex(5.61,4.92),Vertex(5.61,6.54), \
-    #            Vertex(6.41,6.54),Vertex(6.41,4.98),Vertex(7.54,5.66), \
-    #            Vertex(6.53,7.58),Vertex(5.07,7.58),Vertex(4.19,8.32), \
-    #            Vertex(3.34,7.78),Vertex(4.05,7.78),Vertex(2.76,6.92)]
-
-    # polygon = [Vertex(3.17,8.59),Vertex(2.14,7.64),Vertex(1.46,6.34), \
-    #            Vertex(1.19,4.36),Vertex(1.41,4.14),Vertex(2.63,5.59), \
-    #            Vertex(3.47,4.22),Vertex(3.08,3.17),Vertex(3.39,2.36), \
-    #            Vertex(5.97,2.54),Vertex(7.46,3.76),Vertex(7.46,5.53), \
-    #            Vertex(5.31,5.83),Vertex(3.76,5.58),Vertex(6.03,7.9), \
-    #            Vertex(9.29,7.53),Vertex(9.29,8.39),Vertex(6.68,9.44), \
-    #            Vertex(5.66,8.08),Vertex(4.32,6.81),Vertex(3.44,8.31)]
-
-    # polygon = [Vertex(2.42,7.68),Vertex(2.07,6.83),Vertex(1.71,5.46), \
-    #            Vertex(1.76,4.15),Vertex(2.54,3.42),Vertex(3.92,2.93), \
-    #            Vertex(5.36,2.95),Vertex(6.93,3.32),Vertex(7.0,4.29), \
-    #            Vertex(6.31,5.88),Vertex(5.95,6.9),Vertex(6.78,6.66), \
-    #            Vertex(7.73,5.15),Vertex(8.42,5.34),Vertex(8.54,7.1), \
-    #            Vertex(7.29,8.19),Vertex(5.2,8.58),Vertex(4.19,8.36), \
-    #            Vertex(3.39,8.19)]
-
-    # polygon = [Vertex(0.97,8.71),Vertex(0.97,3.63),Vertex(8.53,3.63), \
-    #            Vertex(8.53,8.51),Vertex(7.66,8.49),Vertex(6.93,8.0), \
-    #            Vertex(6.46,7.27),Vertex(6.34,6.54),Vertex(5.98,5.9), \
-    #            Vertex(5.25,5.88),Vertex(4.9,7.08),Vertex(5.05,8.53), \
-    #            Vertex(5.07,9.22),Vertex(4.8,9.14),Vertex(4.24,8.12), \
-    #            Vertex(4.12,6.98),Vertex(4.08,6.37),Vertex(3.63,5.88), \
-    #            Vertex(2.76,5.93),Vertex(2.37,7.07),Vertex(1.83,8.68), \
-    #            Vertex(1.66,8.9)]
-
-    # polygon = [Vertex(1.9,2.46),Vertex(1.9,5.8),Vertex(2.27,5.75), \
-    #            Vertex(2.42,4.93),Vertex(2.9,3.54),Vertex(3.51,4.47), \
-    #            Vertex(4.08,6.34),Vertex(4.42,5.07),Vertex(4.86,3.46), \
-    #            Vertex(5.47,4.68),Vertex(6.29,6.29),Vertex(6.81,6.25), 
-    #            Vertex(6.81,2.46)]
-
-    # polygon = [Vertex(10.0,0.0),Vertex(10.0,6.97),Vertex(9.39,7.1), \
-    #            Vertex(9.03,6.63),Vertex(8.27,4.9),Vertex(7.64,3.83), \
-    #            Vertex(6.73,3.42),Vertex(6.22,3.83),Vertex(6.25,5.0), \
-    #            Vertex(6.31,6.34),Vertex(6.25,7.61),Vertex(5.68,8.05), \
-    #            Vertex(5.42,7.85),Vertex(5.32,7.47),Vertex(5.1,6.1), \
-    #            Vertex(4.95,4.71),Vertex(4.42,3.41),Vertex(3.66,2.98), \
-    #            Vertex(3.53,3.31),Vertex(3.63,4.36),Vertex(3.61,5.76), \
-    #            Vertex(3.53,6.88),Vertex(3.0,7.75),Vertex(2.81,7.68), \
-    #            Vertex(2.61,6.83),Vertex(2.58,5.56),Vertex(2.51,4.64), \
-    #            Vertex(2.49,4.14),Vertex(1.76,3.05),Vertex(1.54,3.07),
-    #            Vertex(1.37,3.19),Vertex(1.05,4.08),Vertex(1.0,4.75), \
-    #            Vertex(0.95,5.34),Vertex(0.85,5.93),Vertex(0.71,6.61), \
-    #            Vertex(0.49,7.47),Vertex(0.39,7.63),Vertex(0.0,7.75), \
-    #            Vertex(0.0,0.0)]
-
-    # polygon = [Vertex(0.0,7.98), Vertex(0.0,0.0), Vertex(10.0,0.0), \
-    #            Vertex(10.0,7.53), Vertex(9.81,7.63), Vertex(9.36,7.46), \
-    #            Vertex(9.02,6.81), Vertex(8.9,6.0), Vertex(8.81,5.34), \
-    #            Vertex(8.75,4.69), Vertex(8.56,4.03), Vertex(8.39,3.9), \
-    #            Vertex(7.95,4.22), Vertex(7.73,5.36), Vertex(7.83,6.44), \
-    #            Vertex(7.86,7.12), Vertex(8.32,7.83), Vertex(8.64,8.19), \
-    #            Vertex(8.56,8.71), Vertex(6.75,8.95), Vertex(5.92,7.9), \
-    #            Vertex(5.73,6.15), Vertex(6.34,3.88), Vertex(7.41,3.03), \
-    #            Vertex(8.56,2.95), Vertex(8.93,2.2), Vertex(7.9,1.53), \
-    #            Vertex(6.05,1.81), Vertex(4.81,2.85), Vertex(4.66,4.31), \
-    #            Vertex(4.71,6.39), Vertex(4.59,7.54), Vertex(4.07,7.68), \
-    #            Vertex(3.27,5.41), Vertex(2.8,3.66), Vertex(2.12,3.2), \
-    #            Vertex(1.49,3.76), Vertex(1.07,6.02), Vertex(0.66,7.56)]
-
-    # polygon = [Vertex(0.0,0.0),Vertex(0.0,8.0),Vertex(0.58,6.94),Vertex(1.11,5.92),\
-    #            Vertex(1.64,4.61),Vertex(2.12,3.59),Vertex(3.14,2.77),Vertex(4.1,2.57),\
-    #            Vertex(5.21,2.57),Vertex(6.47,2.72),Vertex(7.63,3.11),Vertex(8.93,3.3),\
-    #            Vertex(10.04,3.3),Vertex(11.49,2.91),Vertex(13.18,2.18),Vertex(14.09,1.99),\
-    #            Vertex(15.73,1.94),Vertex(16.89,1.99),Vertex(18.15,2.43),Vertex(18.97,2.72),\
-    #            Vertex(20.13,3.16),Vertex(21.04,3.5),Vertex(22.78,4.08),Vertex(24.52,4.22),\
-    #            Vertex(26.64,3.88),Vertex(28.86,3.16),Vertex(30.36,2.82),Vertex(31.61,2.67),\
-    #            Vertex(33.69,2.67),Vertex(36.1,2.77),Vertex(38.56,2.67),Vertex(40.44,2.48),\
-    #            Vertex(43.0,2.52),Vertex(44.21,2.67),Vertex(45.95,3.16),Vertex(47.01,3.79),\
-    #            Vertex(47.92,4.71),Vertex(48.5,5.44),Vertex(49.18,6.46),Vertex(50.0,8.0),\
-    #            Vertex(50.0,0.0)]
-
-    # polygon = [Vertex(0.0,8.0),Vertex(1.35,7.04),Vertex(1.83,6.36),Vertex(2.41,5.53),\
-    #            Vertex(2.99,4.81),Vertex(3.43,4.71),Vertex(4.63,4.61),Vertex(5.5,4.71),\
-    #            Vertex(6.47,4.81),Vertex(7.24,4.95),Vertex(8.64,4.95),Vertex(10.71,4.71),\
-    #            Vertex(12.69,4.71),Vertex(14.43,5.1),Vertex(15.4,5.34),Vertex(17.42,5.68),\
-    #            Vertex(19.64,5.58),Vertex(21.57,5.53),Vertex(24.18,5.53),Vertex(27.17,5.39),\
-    #            Vertex(29.87,4.76),Vertex(33.16,4.66),Vertex(33.74,4.66),Vertex(38.42,4.95),\
-    #            Vertex(39.67,4.9),Vertex(43.15,5.1),Vertex(45.13,5.53),Vertex(46.48,5.92),\
-    #            Vertex(48.41,6.75),Vertex(50.0,8.00),Vertex(49.18,6.46),Vertex(48.5,5.44),\
-    #            Vertex(47.92,4.71),Vertex(47.01,3.79),Vertex(45.95,3.16),Vertex(44.21,2.67),\
-    #            Vertex(43.0,2.52),Vertex(40.44,2.48),Vertex(38.56,2.67),Vertex(36.1,2.77),\
-    #            Vertex(33.69,2.67),Vertex(31.61,2.67),Vertex(30.36,2.82),Vertex(28.86,3.16),\
-    #            Vertex(26.64,3.88),Vertex(24.52,4.22),Vertex(22.78,4.08),Vertex(21.04,3.5),\
-    #            Vertex(20.13,3.16),Vertex(18.97,2.72),Vertex(18.15,2.43),Vertex(16.89,1.99),\
-    #            Vertex(15.73,1.94),Vertex(14.09,1.99),Vertex(13.18,2.18),Vertex(11.49,2.91),\
-    #            Vertex(10.04,3.3),Vertex(8.93,3.3),Vertex(7.63,3.11),Vertex(6.47,2.72),\
-    #            Vertex(5.21,2.57),Vertex(4.1,2.57),Vertex(3.14,2.77),Vertex(2.12,3.59),\
-    #            Vertex(1.64,4.61),Vertex(1.11,5.92),Vertex(0.58,6.94)]
-    
-    # polygon = [Vertex(0.0,8.0),Vertex(50.0,8.0),Vertex(48.41,6.75),Vertex(46.48,5.92),\
-    #            Vertex(45.13,5.53),Vertex(43.15,5.1),Vertex(39.67,4.9),Vertex(38.42,4.95),\
-    #            Vertex(33.74,4.66),Vertex(33.16,4.66),Vertex(29.87,4.76),Vertex(27.17,5.39),\
-    #            Vertex(24.18,5.53),Vertex(21.57,5.53),Vertex(19.64,5.58),Vertex(17.42,5.68),\
-    #            Vertex(15.4,5.34),Vertex(14.43,5.1),Vertex(12.69,4.71),Vertex(10.71,4.71),\
-    #            Vertex(8.64,4.95),Vertex(7.24,4.95),Vertex(6.47,4.81),Vertex(5.5,4.71),\
-    #            Vertex(4.63,4.61),Vertex(3.43,4.71),Vertex(2.99,4.81),Vertex(2.41,5.53),\
-    #            Vertex(1.83,6.36),Vertex(1.35,7.04)]
-
-    with open('test_poly_1000.txt', 'r') as f:
-        content = f.readlines()
-    polygon_dupl = []
-    for line in content:
-        x, y = line.split('\t')
-        polygon_dupl.append(Vertex(float(x), float(y)))
-    polygon = []
-    for pt in polygon_dupl:
-        if(pt not in polygon):
-            polygon.append(pt)
-
-    from timeit import default_timer as timer
-    polygon_obj = Polygon(polygon)
-    start = timer()
-    edges = make_monotone(polygon_obj)
-    monotone_polygons = split_polygons(polygon_obj, edges)
-    edges2 = []
-    for poly in monotone_polygons:
-        if(poly != []):
-            edges2 += triangulate_monotone_polygon(poly)
-    # tt = split_polygons(polygon_obj, edges)
-    end = timer()
-    print("n vertices:", len(polygon))
-    print("elapsed time:", end - start)
-    for i, pt in enumerate(polygon):
-        plt.plot([pt.x, polygon[(i+1)%len(polygon)].x], [pt.y, polygon[(i+1)%len(polygon)].y], c = 'b')
-    for e in edges:
-        plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'r')
-    for i, e in enumerate(edges2):
-        plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'g', linewidth = 0.75)
-    plt.grid()
-    plt.show()
+#     from timeit import default_timer as timer
+#     polygon_obj = Polygon(polygon)
+#     start = timer()
+#     edges = make_monotone(polygon_obj)
+#     monotone_polygons = split_polygons(polygon_obj, edges)
+#     edges2 = []
+#     for poly in monotone_polygons:
+#         if(poly != []):
+#             edges2 += triangulate_monotone_polygon(poly)
+#     # tt = split_polygons(polygon_obj, edges)
+#     end = timer()
+#     print("n vertices:", len(polygon))
+#     print("elapsed time:", end - start)
+#     for i, pt in enumerate(polygon):
+#         plt.plot([pt.x, polygon[(i+1)%len(polygon)].x], [pt.y, polygon[(i+1)%len(polygon)].y], c = 'b')
+#     for e in edges:
+#         plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'r')
+#     for i, e in enumerate(edges2):
+#         plt.plot([e.start.x, e.end.x], [e.start.y, e.end.y], c = 'g', linewidth = 0.75)
+#     plt.grid()
+#     plt.show()

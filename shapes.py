@@ -18,18 +18,21 @@ class TShape(ABC):
     and polygons).
 
     :param width: shape outline width in pixels.
-    :param type: integer.
+    :type width: integer
     :param colour: shape outline colour.
-    :param type: string.
+    :type colour: string
     :param fill: shape fill colour.
-    :param type: string.
+    :type fill: string
     :param material: shape material.
-    :param type: string.
+    :type material: string
     :param shape_type: shape type (ie. rectangle, cylinder etc.).
-    :param type: string.
+    :type shape_type: string
     """
     def __init__(self, width = None, colour = None, fill = "", material = "pec", \
                  shape_type = "None"):
+        """
+        Initialise object variables.
+        """
         self.COLOURS = ("red", "blue", "yellow", "green", "orange", "purple", \
                         "indigo", "fuchsia", "white", "navy", "brown")
         self.width = width
@@ -39,7 +42,7 @@ class TShape(ABC):
         num_of_colours = len(self.COLOURS)
         random_index = randrange(0, num_of_colours)
         self.fill = self.COLOURS[random_index]
-        # Adjust shape's position on screen according to new model coordinates
+        # Adjust shape position on screen according to new model coordinates
         self.update_window_positions()
     
     @abstractmethod
@@ -69,11 +72,11 @@ class TShape(ABC):
         Determine wether the shape lies within the visible model area.
 
         :param min_model: lower left visible model corner.
-        :param type: TPoint.
+        :type min_model: TPoint
         :param max_model: upper right visible model corner.
-        :param type: TPoint.
+        :type max_model: TPoint
 
-        :rtype: boolean.
+        :rtype: boolean
         """
         pass
     
@@ -82,7 +85,7 @@ class TShape(ABC):
         """
         Calculate shape area.
 
-        :rtype: float.
+        :rtype: float
         """
         pass
     
@@ -92,9 +95,9 @@ class TShape(ABC):
         Draw the shape to a png image file.
 
         :param image: png image.
-        :param type: PIL.Image.
+        :type image: PIL.Image
         :param colour: shape colour.
-        :param type: tuple.
+        :type colour: tuple
         """
         pass
 
@@ -103,30 +106,30 @@ class TRect(TShape):
     Class represents a rectangle.
     
     :param point1: lower left rectangle point in pixels.
-    :param type: TPoint.
+    :type point1: TPoint
     :param point2: upper right rectangle point in pixels.
-    :param type: TPoint.
+    :type point2: TPoint
     :param point1_x: lower left rectangle point x coordinate in pixels.
-    :param type: integer.
+    :type point1_x: integer
     :param point1_y: lower left rectangle point y coordinate in pixels.
-    :param type: integer.
+    :type point1_y: integer
     :param point2_x: upper right rectangle point x coordinate in pixels.
-    :param type: integer.
+    :type point2_x: integer
     :param point2_y: upper right rectangle point y coordinate in pixels.
-    :param type: integer.
+    :type point2_y: integer
     :param colour: shape outline colour.
-    :param type: string.
+    :type colour: string
     :param fill: shape fill colour.
-    :param type: string.
+    :type fill: string.
     :param width: shape outline width in pixels.
-    :param type: integer.
+    :type width: integer
     :param material: shape material.
-    :param type: string.
+    :type material: string
     :param point1_mod: lower left rectangle point in metres.
-    :param type: TPoint.
+    :type point1_mod: TPoint
     :param point2_mod: upper right rectangle point in metres.
-    :param type: TPoint.
-    """    
+    :type point2_mod: TPoint
+    """
     def __init__(self, point1 = None, point2 = None, point1_x = None, \
                  point1_y = None, point2_x = None, point2_y = None, \
                  colour = "black", fill = "", width = 1, material = "pec", \
@@ -153,12 +156,18 @@ class TRect(TShape):
                 self.point2.y = min(point1_y, point2_y)
             self.point3 = TPoint(self.point1.x, self.point2.y)
             self.point4 = TPoint(self.point2.x, self.point1.y)
-            # Coordinates in model's system
+            # Coordinates in model system
             self.update_model_positions()
         super().__init__(colour = colour, width = width, shape_type = "Rectangle", \
                          material = material)
 
     def draw(self, canvas):
+        """
+        Draw the rectangle on a canvas.
+
+        :param canvas: canvas on which to draw the rectangle.
+        :type canvas: tkinter.Canvas
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         if(TColours.FILL):
@@ -186,6 +195,9 @@ class TRect(TShape):
                                fill = self.colour, width = 1)
 
     def update_window_positions(self):
+        """
+        Recalculate window positions of the rectangle from its model positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -200,6 +212,9 @@ class TRect(TShape):
                                          min_window, max_window)
 
     def update_model_positions(self):
+        """
+        Recalculate model positions of the rectangle from its window positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -216,6 +231,16 @@ class TRect(TShape):
                                              min_window, max_window, dx, dy)
     
     def visible(self, min_model, max_model):
+        """
+        Determine wether the rectangle lies within the visible model area.
+
+        :param min_model: lower left visible model corner.
+        :type min_model: TPoint
+        :param max_model: upper right visible model corner.
+        :type max_model: TPoint
+
+        :rtype: boolean
+        """
         point1 = deepcopy(self.point1_mod)
         point2 = deepcopy(self.point2_mod)
         point3 = TPoint(self.point1_mod.x, self.point2_mod.y)
@@ -232,12 +257,24 @@ class TRect(TShape):
             return False
     
     def area(self):
-        "Calculate rectangle area"
+        """
+        Calculate rectangle area.
+
+        :rtype: float
+        """
         len_x = abs(self.point2_mod.x - self.point1_mod.x)
         len_y = abs(self.point2_mod.y - self.point1_mod.y)
         return len_x*len_y
 
     def draw_to_image(self, image, colour):
+        """
+        Draw the rectangle to a png image file.
+
+        :param image: png image.
+        :type image: PIL.Image
+        :param colour: shape colour.
+        :type colour: tuple
+        """
         draw = ImageDraw.Draw(image)
         point1_im_x = (self.point1_mod.x/TModel_Size.DOM_X)*image.width
         point1_im_y = (1-(self.point1_mod.y/TModel_Size.DOM_Y))*image.height
@@ -248,8 +285,36 @@ class TRect(TShape):
 
 
 class TCylin(TShape):
-    def __init__(self, centre = None, radius = None, centre_x = None, centre_y = None, colour = "black", fill = "", \
-        width = 1, material = "pec", centre_mod = None, radius_mod = None):
+    """
+    Class represents a cylinder.
+    
+    :param centre: cylinder centre in pixels.
+    :type centre: TPoint
+    :param radius: cylinder radius in pixels.
+    :type radius: float
+    :param centre_x: cylinder centre x coordinate in pixels.
+    :type centre_x: integer
+    :param centre_y: cylinder centre y coordinate in pixels.
+    :type centre_y: integer
+    :param colour: shape outline colour.
+    :type colour: string
+    :param fill: shape fill colour.
+    :type fill: string
+    :param width: shape outline width in pixels.
+    :type width: integer
+    :param material: shape material.
+    :type material: string
+    :param centre_mod: cylinder centre in metres.
+    :type centre_mod: TPoint
+    :param radius_mod: cylinder radius in metres.
+    :type radius_mod: float
+    """
+    def __init__(self, centre = None, radius = None, centre_x = None, centre_y = None, \
+                 colour = "black", fill = "", width = 1, material = "pec", \
+                 centre_mod = None, radius_mod = None):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         # Cylinder middle point
         if(centre_mod and radius_mod):
             self.centre_mod = copy(centre_mod)
@@ -269,10 +334,14 @@ class TCylin(TShape):
                          material = material)
 
     def draw(self, canvas):
+        """
+        Draw the cylinder on a canvas.
+
+        :param canvas: canvas on which to draw the cylinder.
+        :type canvas: tkinter.Canvas
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
-        # visible = self.visible(min_model, max_model)
-        # if(visible):
         if(TColours.FILL):
             fill = self.fill
         else:
@@ -280,76 +349,81 @@ class TCylin(TShape):
         canvas.create_oval(self.centre.x - self.radius, self.centre.y - self.radius, \
                            self.centre.x + self.radius, self.centre.y + self.radius, \
                            outline = self.colour, fill = fill, width = self.width)
-        # elif(visible == "partly"):
-        #     self._draw_partly_visible(canvas)
         if(TG.point_visible(self.centre_mod, min_model, max_model)):
             canvas.create_oval(self.centre.x-3, self.centre.y-3, self.centre.x+3, \
                                self.centre.y+3, outline = self.colour, \
                                fill = self.colour, width = 1)
 
-    def _draw_partly_visible(self, canvas):
-        a, b, r = self.centre.x, self.centre.y, self.radius
-        if((self.centre_mod.x - self.radius_mod) <= TModel_Size.MIN_X):
-            border_x = TWindow_Size.BOX_MIN_X
-        else:
-            border_x = TWindow_Size.BOX_MAX_X
-        if((self.centre_mod.y - self.radius_mod) <= TModel_Size.MIN_Y):
-            border_y = TWindow_Size.BOX_MIN_Y
-        else:
-            border_y = TWindow_Size.BOX_MAX_Y
-        delta_x = (round(r)**2 - (border_y - b)**2)
-        delta_y = (round(r)**2 - (border_x - a)**2)
-        if(delta_x >= 0):
-            x1 = a - delta_x**(0.5)
-            x2 = a + delta_x**(0.5)
-        if(delta_y >= 0):
-            y1 = b - delta_y**(0.5)
-            y2 = b + delta_y**(0.5)
-        intersection_type = "both"
-        if(delta_x > 0 and delta_y <= 0):
-            intersection_type = "x"
-        elif(delta_x <= 0 and delta_y > 0):
-            intersection_type = "y"
-        if(intersection_type == "x"):
-            chord_sq = (x1 - x2)**2
-            start = degrees(asin(abs(border_y - b)/round(r)))
-            extent = degrees(acos(1 - chord_sq/(2*round(r)**2)))
-            if(border_y == TWindow_Size.BOX_MIN_Y):
-                if(b <= TWindow_Size.BOX_MIN_Y):
-                    start  = -start
-                    extent = 360 - extent
-            else:
-                start = start + extent
-                extent = 360 - extent
-                if(b <= TWindow_Size.BOX_MAX_Y):
-                    start  = -start
-                    extent = 360 - extent
-        elif(intersection_type == "y"):
-            chord_sq = (y1 - y2)**2
-            start = degrees(asin(abs(min(y1, y2) - b)/round(r)))
-            extent = 360 - 2*start
-            if(border_x == TWindow_Size.BOX_MIN_X):
-                if(a <= TWindow_Size.BOX_MIN_X):
-                    start  = -start
-                    extent = 360 - extent
-            else:
-                start = start + extent
-                extent = 360 - extent
-                if(a <= TWindow_Size.BOX_MAX_X):
-                    start  = -start
-                    extent = 360 - extent
-        elif(intersection_type == "both"):
-            pass
-        canvas.create_arc(a - r, b - r, a + r, b + r, 
-                          start = start, extent = extent, \
-                          outline = self.colour, fill = self.fill, \
-                          width = self.width, style = CHORD)
+    # def _draw_partly_visible(self, canvas):
+    #     a, b, r = self.centre.x, self.centre.y, self.radius
+    #     if((self.centre_mod.x - self.radius_mod) <= TModel_Size.MIN_X):
+    #         border_x = TWindow_Size.BOX_MIN_X
+    #     else:
+    #         border_x = TWindow_Size.BOX_MAX_X
+    #     if((self.centre_mod.y - self.radius_mod) <= TModel_Size.MIN_Y):
+    #         border_y = TWindow_Size.BOX_MIN_Y
+    #     else:
+    #         border_y = TWindow_Size.BOX_MAX_Y
+    #     delta_x = (round(r)**2 - (border_y - b)**2)
+    #     delta_y = (round(r)**2 - (border_x - a)**2)
+    #     if(delta_x >= 0):
+    #         x1 = a - delta_x**(0.5)
+    #         x2 = a + delta_x**(0.5)
+    #     if(delta_y >= 0):
+    #         y1 = b - delta_y**(0.5)
+    #         y2 = b + delta_y**(0.5)
+    #     intersection_type = "both"
+    #     if(delta_x > 0 and delta_y <= 0):
+    #         intersection_type = "x"
+    #     elif(delta_x <= 0 and delta_y > 0):
+    #         intersection_type = "y"
+    #     if(intersection_type == "x"):
+    #         chord_sq = (x1 - x2)**2
+    #         start = degrees(asin(abs(border_y - b)/round(r)))
+    #         extent = degrees(acos(1 - chord_sq/(2*round(r)**2)))
+    #         if(border_y == TWindow_Size.BOX_MIN_Y):
+    #             if(b <= TWindow_Size.BOX_MIN_Y):
+    #                 start  = -start
+    #                 extent = 360 - extent
+    #         else:
+    #             start = start + extent
+    #             extent = 360 - extent
+    #             if(b <= TWindow_Size.BOX_MAX_Y):
+    #                 start  = -start
+    #                 extent = 360 - extent
+    #     elif(intersection_type == "y"):
+    #         chord_sq = (y1 - y2)**2
+    #         start = degrees(asin(abs(min(y1, y2) - b)/round(r)))
+    #         extent = 360 - 2*start
+    #         if(border_x == TWindow_Size.BOX_MIN_X):
+    #             if(a <= TWindow_Size.BOX_MIN_X):
+    #                 start  = -start
+    #                 extent = 360 - extent
+    #         else:
+    #             start = start + extent
+    #             extent = 360 - extent
+    #             if(a <= TWindow_Size.BOX_MAX_X):
+    #                 start  = -start
+    #                 extent = 360 - extent
+    #     elif(intersection_type == "both"):
+    #         pass
+    #     canvas.create_arc(a - r, b - r, a + r, b + r, 
+    #                       start = start, extent = extent, \
+    #                       outline = self.colour, fill = self.fill, \
+    #                       width = self.width, style = CHORD)
     
     def area(self):
-        "Calculate cylinder area"
+        """
+        Calculate cylinder area.
+
+        :rtype: float
+        """
         return self.radius_mod**2*pi
     
     def update_window_positions(self):
+        """
+        Recalculate window positions of the cylinder from its model positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -360,6 +434,9 @@ class TCylin(TShape):
                                               min_window, max_window)
 
     def update_model_positions(self):
+        """
+        Recalculate model positions of the cylinder from its window positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -372,6 +449,16 @@ class TCylin(TShape):
                                                   min_window, max_window, dx, dy)
 
     def visible(self, min_model, max_model):
+        """
+        Determine wether the cylinder lies within the visible model area.
+
+        :param min_model: lower left visible model corner.
+        :type min_model: TPoint
+        :param max_model: upper right visible model corner.
+        :type max_model: TPoint
+
+        :rtype: boolean
+        """
         point1 = TPoint(self.centre_mod.x - self.radius_mod, \
                         self.centre_mod.y - self.radius_mod)
         point2 = TPoint(self.centre_mod.x + self.radius_mod, \
@@ -392,6 +479,14 @@ class TCylin(TShape):
             return False
     
     def draw_to_image(self, image, colour):
+        """
+        Draw the cylinder to a png image file.
+
+        :param image: png image.
+        :type image: PIL.Image
+        :param colour: shape colour.
+        :type colour: tuple
+        """
         draw = ImageDraw.Draw(image)
         centre_im_x = (self.centre_mod.x/TModel_Size.DOM_X)*image.width
         centre_im_y = (1-(self.centre_mod.y/TModel_Size.DOM_Y))*image.height
@@ -403,12 +498,44 @@ class TCylin(TShape):
 
 class TCylinSector(TShape):
     """
-    Class represents 2-dimensional cylinder sector (slice).
-    Inherits after TCylin class.
-    Described with parameters as in TCylin and additionaly by location of 2 boundary points defining angle of the sector.
+    Class represents a cylinder sector.
+    
+    :param centre: cylinder centre in pixels.
+    :type centre: TPoint
+    :param radius: cylinder radius in pixels.
+    :type radius: float
+    :param centre_x: cylinder centre x coordinate in pixels.
+    :type centre_x: integer
+    :param centre_y: cylinder centre y coordinate in pixels.
+    :type centre_y: integer
+    :param colour: shape outline colour.
+    :type colour: string
+    :param fill: shape fill colour.
+    :type fill: string
+    :param width: shape outline width in pixels.
+    :type width: integer
+    :param boundary_pt1: sector first boundary point.
+    :type boundary_pt1: TPoint
+    :param boundary_pt2: sector first boundary point.
+    :type boundary_pt2: TPoint
+    :param start: angle between positive x direction and first sector radius.
+    :type start: float
+    :param extent: angle between first and second sector radius.
+    :type extent: float
+    :param material: shape material.
+    :type material: string
+    :param centre_mod: cylinder centre in metres.
+    :type centre_mod: TPoint
+    :param radius_mod: cylinder radius in metres.
+    :type radius_mod: float
     """
-    def __init__(self, centre = None, radius = None, centre_x = None, centre_y = None, colour = "black", fill = "", width = 1, \
-        boundary_pt1 = None, boundary_pt2 = None, start = None, extent = None, material = "pec", centre_mod = None, radius_mod = None):
+    def __init__(self, centre = None, radius = None, centre_x = None, \
+        centre_y = None, colour = "black", fill = "", width = 1, \
+        boundary_pt1 = None, boundary_pt2 = None, start = None, extent = None, \
+        material = "pec", centre_mod = None, radius_mod = None):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         self.boundary_pt1 = TPoint()
         self.boundary_pt2 = TPoint()
         if(centre_mod and radius_mod and start != None and extent):
@@ -465,17 +592,21 @@ class TCylinSector(TShape):
             if(self.extent > 360):
                 self.extent -= 360
             self.start = TG.round_to_multiple(self.start, min(TModel_Size.DX, TModel_Size.DY))
-            # self.start = round (self.start, TTicksSettings.ROUND_DIGITS)
             self.extent = TG.round_to_multiple(self.extent, min(TModel_Size.DX, TModel_Size.DY))
-            # self.extent = round (self.extent, TTicksSettings.ROUND_DIGITS)
             self.boundary_pt2.x = int (self.centre.x + cos (radians (self.start + self.extent) )*self.radius )
             self.boundary_pt2.y = int (self.centre.y - sin (radians (self.start + self.extent) )*self.radius )
-            # Coordinates in model's system
+            # Coordinates in model system
             self.update_model_positions()
         super().__init__(colour = colour, width = width, shape_type = "CylinSector", \
                          material = material)
 
     def draw (self, canvas):
+        """
+        Draw the cylinder sector on a canvas.
+
+        :param canvas: canvas on which to draw the cylinder sector.
+        :type canvas: tkinter.Canvas
+        """
         if(TColours.FILL):
             fill = self.fill
         else:
@@ -495,6 +626,9 @@ class TCylinSector(TShape):
                            outline = self.colour, fill = self.colour, width = 1)
 
     def update_window_positions (self):
+        """
+        Recalculate window positions of the cylinder sector from its model positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -509,6 +643,9 @@ class TCylinSector(TShape):
         self.boundary_pt2.y = TG.round_to_multiple(self.centre.y - sin(radians(self.start + self.extent))*self.radius, 1)
 
     def update_model_positions(self):
+        """
+        Recalculate model positions of the cylinder sector from its window positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -525,6 +662,16 @@ class TCylinSector(TShape):
                                                   min_window, max_window, dx, dy)
     
     def visible(self, min_model, max_model):
+        """
+        Determine wether the cylinder sector lies within the visible model area.
+
+        :param min_model: lower left visible model corner.
+        :type min_model: TPoint
+        :param max_model: upper right visible model corner.
+        :type max_model: TPoint
+
+        :rtype: boolean
+        """
         min_x = min(self.centre_mod.x - self.radius_mod, self.boundary_pt1_mod.x, \
                     self.boundary_pt2_mod.x)
         min_y = min(self.centre_mod.y - self.radius_mod, self.boundary_pt1_mod.y, \
@@ -545,10 +692,22 @@ class TCylinSector(TShape):
             return "invisible"
 
     def area(self):
-        "Calculate cylindrical sector area"
+        """
+        Calculate cylinder sector area.
+
+        :rtype: float
+        """
         return (self.extent/360.0)*self.radius_mod**2*pi
     
     def draw_to_image(self, image, colour):
+        """
+        Draw the cylinder sector to a png image file.
+
+        :param image: png image.
+        :type image: PIL.Image
+        :param colour: shape colour.
+        :type colour: tuple
+        """
         draw = ImageDraw.Draw(image)
         centre_im_x = (self.centre_mod.x/TModel_Size.DOM_X)*image.width
         centre_im_y = (1-(self.centre_mod.y/TModel_Size.DOM_Y))*image.height
@@ -560,68 +719,28 @@ class TCylinSector(TShape):
                       start = start_im, end = end_im, fill = colour, outline = None)
 
 
-# class TTriangle (TShape):
-#     """
-#     Class represents 2-dimensional triangle.
-#     """
-#     def __init__ (self, point1 = None, point2 = None, point3 = None, point1_x = None, point1_y = None, point2_x = None, point2_y = None, \
-#         point3_x = None, point3_y = None, colour = "black", fill = "", width = 1, material = "pec"):
-#         super ().__init__ (width, colour, fill)
-#         self.type = "Triangle"
-#         self.point1 = TPoint ()
-#         self.point2 = TPoint ()
-#         self.point3 = TPoint ()
-#         if (point1 == None):
-#             self.point1.x = point1_x
-#             self.point1.y = point1_y
-#         else:
-#             self.point1 = copy (point1)
-#         if (point2 == None):
-#             self.point2.x = point2_x
-#             self.point2.y = point2_y
-#         else:
-#             self.point2 = copy (point2)
-#         if (point3 == None):
-#             self.point3.x = point3_x
-#             self.point3.y = point3_y
-#         else:
-#             self.point3 = copy (point3)
-#         # Material
-#         self.material = material
-#         # Coordinates in model's system
-#         self.point1_mod = TGeometry.window_to_model (self.point1, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y), \
-#             TModel_Size.DX, TModel_Size.DY)
-#         self.point2_mod = TGeometry.window_to_model (self.point2, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y), \
-#             TModel_Size.DX, TModel_Size.DY)
-#         self.point3_mod = TGeometry.window_to_model (self.point3, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y), \
-#             TModel_Size.DX, TModel_Size.DY)
-#         # Adjust shape's position on screen according to new model coordinates
-#         self.update_window_positions ()    
-        
-#     def draw (self, canvas):
-#         canvas.create_polygon (self.point1.x, self.point1.y, self.point2.x, self.point2.y, self.point3.x, self.point3.y, \
-#            outline = self.colour, fill = self.fill, width = self.width)
-#         canvas.create_oval (self.point1.x-3, self.point1.y-3, self.point1.x+3, self.point1.y+3, outline = self.colour, fill = self.colour, width = 1)
-#         canvas.create_oval (self.point2.x-3, self.point2.y-3, self.point2.x+3, self.point2.y+3, outline = self.colour, fill = self.colour, width = 1)
-#         canvas.create_oval (self.point3.x-3, self.point3.y-3, self.point3.x+3, self.point3.y+3, outline = self.colour, fill = self.colour, width = 1)
-
-#     def update_window_positions (self):
-#         self.point1 = TGeometry.model_to_window (self.point1_mod, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y) )
-#         self.point2 = TGeometry.model_to_window (self.point2_mod, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y) )
-#         self.point3 = TGeometry.model_to_window (self.point3_mod, TPoint (TModel_Size.MAX_X, TModel_Size.MAX_Y), \
-#             TPoint (TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y), TPoint(TWindow_Size.BOX_MAX_X, TWindow_Size.BOX_MAX_Y) )
-
-
 class TPolygon(TShape):
     """
-    Class represents discretionary polygon.
+    Class represents a polygon.
+    
+    :param points: list of polygon vertices in window coordinates system.
+    :type points: list of TPoint
+    :param colour: shape outline colour.
+    :type colour: string
+    :param fill: shape fill colour.
+    :type fill: string
+    :param width: shape outline width in pixels.
+    :type width: integer
+    :param material: shape material.
+    :type material: string
+    :param points_mod: list of polygon vertices in model coordinates system.
+    :type points_mod: list of TPoint
     """
-    def __init__(self, points = [], colour = "black", fill = "", width = 1, material = "pec", points_mod = []):
+    def __init__(self, points = [], colour = "black", fill = "", width = 1, \
+                 material = "pec", points_mod = []):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         if(points_mod):
             self.points_mod = self._remove_duplicates(points_mod)
             self.update_window_positions()
@@ -630,13 +749,19 @@ class TPolygon(TShape):
                 raise Exception ('Polygon requires at least 3 vertices to be given.')
             else:
                 self.points = self._remove_duplicates(points)
-            self.unwrap_points ()
+            self.unwrap_points()
             # Coordinates in model's system
             self.update_model_positions()
         super().__init__(colour = colour, width = width, shape_type = "Polygon", \
                          material = material)
 
     def draw(self, canvas):
+        """
+        Draw the polygon on a canvas.
+
+        :param canvas: canvas on which to draw the polygon.
+        :type canvas: tkinter.Canvas
+        """
         if(TColours.FILL):
             fill = self.fill
         else:
@@ -648,6 +773,9 @@ class TPolygon(TShape):
                                fill = self.colour, width = 1)
     
     def update_window_positions(self):
+        """
+        Recalculate window positions of the polygon from its model positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -662,6 +790,12 @@ class TPolygon(TShape):
             self.points_unwrapped.append(pt.y)
     
     def remove_vertex(self, vertex_num):
+        """
+        Remove a vertex from the polygon.
+
+        :param vertex_num: index of a vertex to be removed.
+        :type vertex_num: integer
+        """
         if(len (self.points) <= 3):
             messagebox.showerror ("Cannot remove vertex!", "Polygon must have at least 3 vertices")
         else:
@@ -673,6 +807,12 @@ class TPolygon(TShape):
             self.update_model_positions()
     
     def _remove_duplicates(self, points_list):
+        """
+        Remove any duplicated points from vertices list.
+
+        :param points_list: vertices list to be examined.
+        :type points_list: list of TPoint
+        """
         filtered = []
         for pt in points_list:
             if(pt not in filtered):
@@ -680,6 +820,16 @@ class TPolygon(TShape):
         return filtered
 
     def edit_vertex(self, *, vertex_num, x, y):
+        """
+        Edit seleted vertex coordimates.
+
+        :param vertex_num: list index of a vertex to be modified.
+        :type vertex_num: integer
+        :param x: new vertex x coordinate.
+        :type x: float
+        :param y: new vertex y coordinate.
+        :type y: float
+        """
         try:
             self.points_mod[vertex_num].x = x
             self.points_mod[vertex_num].y = y
@@ -689,7 +839,18 @@ class TPolygon(TShape):
         self.unwrap_points()
 
     def add_vertex(self, **kwargs):
-        "Adds vertex to polygon"
+        """
+        Add a vertex to the polygon.
+
+        :param x: vertex x coordinate in pixels.
+        :type x: integer
+        :param y: vertex y coordinate in pixels.
+        :type y: integer
+        :param x_mod: vertex x coordinate in metres.
+        :type x_mod: float
+        :param y_mod: vertex y coordinate in metres.
+        :type y_mod: float
+        """
         x = kwargs.pop('x', None)
         y = kwargs.pop('y', None)
         x_mod = kwargs.pop('x_mod', None)
@@ -703,8 +864,26 @@ class TPolygon(TShape):
                                         min_window, max_window)
             x, y = pt_win.x, pt_win.y
         def dist_to_segment(v1, v2, v3):
-            "https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment#1501725"
+            """
+            Calculate a distence from a point to a line segment.
+            https://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment#1501725
+
+            :param v1: first line segment point.
+            :type v1: TPoint
+            :param v2: second line segment point.
+            :type v2: TPoint
+            :param v3: single point.
+            :type v3: TPoint
+            """
             def dist2(v1, v2):
+                """
+                Calculate distance between two points.
+
+                :param v1: first point.
+                :type v1: TPoint
+                :param v2: second point.
+                :type v2: TPoint
+                """
                 return (v1.x - v2.x)**2 + (v1.y - v2.y)**2
             l2 = dist2(v1, v2)
             t = ((v3.x - v1.x) * (v2.x - v1.x) + (v3.y - v1.y) * (v2.y - v1.y)) / l2
@@ -721,13 +900,19 @@ class TPolygon(TShape):
         self.update_model_positions()
         self.update_window_positions()
 
-    def unwrap_points (self):
+    def unwrap_points(self):
+        """
+        Unwrap list of points into a list of alternating x and y coordinates.
+        """
         self.points_unwrapped = []
         for pt in self.points:
-            self.points_unwrapped.append (pt.x)
-            self.points_unwrapped.append (pt.y)
+            self.points_unwrapped.append(pt.x)
+            self.points_unwrapped.append(pt.y)
     
-    def update_model_positions (self):
+    def update_model_positions(self):
+        """
+        Recalculate model positions of the polygon from its window positions.
+        """
         min_model = TPoint(TModel_Size.MIN_X, TModel_Size.MIN_Y)
         max_model = TPoint(TModel_Size.MAX_X, TModel_Size.MAX_Y)
         min_window = TPoint(TWindow_Size.BOX_MIN_X, TWindow_Size.BOX_MIN_Y)
@@ -741,6 +926,16 @@ class TPolygon(TShape):
                                                       dx, dy))
     
     def visible(self, min_model, max_model):
+        """
+        Determine wether the polygon lies within the visible model area.
+
+        :param min_model: lower left visible model corner.
+        :type min_model: TPoint
+        :param max_model: upper right visible model corner.
+        :type max_model: TPoint
+
+        :rtype: boolean
+        """
         xs = [pt.x for pt in self.points_mod]
         ys = [pt.y for pt in self.points_mod]
         min_x = min(xs)
@@ -759,7 +954,11 @@ class TPolygon(TShape):
             return "invisible"
 
     def area(self):
-        "Calculate polygon area"
+        """
+        Calculate cylinder sector area.
+
+        :rtype: float
+        """
         darea = 0.0
         for v1, v2 in zip(self.points_mod, self.points_mod[1:] + \
                           self.points_mod[:1]):
@@ -767,6 +966,14 @@ class TPolygon(TShape):
         return darea/2.0
     
     def draw_to_image(self, image, colour):
+        """
+        Draw the polygon to a png image file.
+
+        :param image: png image.
+        :type image: PIL.Image
+        :param colour: shape colour.
+        :type colour: tuple
+        """
         draw = ImageDraw.Draw(image)
         coords = []
         for pt_mod in self.points_mod:
@@ -777,7 +984,46 @@ class TPolygon(TShape):
 
 class TCoordSys(TRect):
     """
-    Class represents coordinates system.
+    Class represents the coordinates system.
+
+    :param colour: coordinate system box outline colour.
+    :type colour: string
+    :param width: coordinate system box outline width.
+    :type width: integer
+    :param minx: minimal x coordinate of coordinate system box in pixels.
+    :type minx: integer
+    :param miny: minimal y coordinate of coordinate system box in pixels.
+    :type miny: integer
+    :param maxx: maxmial x coordinate of coordinate system box in pixels.
+    :type maxx: integer
+    :param maxy: maximal y coordinate of coordinate system box in pixels.
+    :type maxy: integer
+    :param margx: coordinate system box margin in x direction.
+    :type margx: integer
+    :param margy: coordinate system box margin in y direction.
+    :type margy: integer
+    :param model_min_x: minimal visible x coordinate in metres.
+    :type model_min_x: float
+    :param model_min_y: minimal visible y coordinate in metres.
+    :type model_min_y: float
+    :param model_max_x: maximal visible x coordinate in metres.
+    :type model_max_x: float
+    :param model_max_y: maximal visible y coordinate in metres.
+    :type model_max_y: float
+    :param ticintmetx: tick interval in x direction in metres.
+    :type ticintmetx: float
+    :param ticintmety: tick interval in y direction in metres.
+    :type ticintmety: float
+    :param ticlenx: x-ticks length in pixels.
+    :type ticlenx: integer
+    :param ticleny: x-ticks length in pixels.
+    :type ticleny: integer
+    :param grid: grid diplay toggle.
+    :type grid: boolean
+    :param grid_colour: grid lines colour.
+    :type grid_colour: string
+    :param round_digits: tick labels precision.
+    :type round_digits: integer
     """
     def __init__(self, colour = "black", width = 1, minx = 0, miny = 0, \
                  maxx = TWindow_Size.MAX_X, maxy = TWindow_Size.MAX_Y,\
@@ -786,6 +1032,9 @@ class TCoordSys(TRect):
                  model_max_y = TModel_Size.MAX_Y, ticintmetx = TTicksSettings.INT_X, \
                  ticintmety = TTicksSettings.INT_Y, ticlenx = 5, ticleny = 5, \
                  grid = False, grid_colour = "grey", round_digits = TTicksSettings.ROUND_DIGITS):
+        """
+        Initialise object variables and call the parent class constructor.
+        """
         super().__init__(self, point1_x = minx + margx, point1_y = miny + margy, \
                          point2_x = maxx-margx, point2_y = maxy-margy, \
                          colour = colour, width = width)
@@ -811,11 +1060,25 @@ class TCoordSys(TRect):
         self.round_digits = round_digits
 
     def draw(self, canvas):
-        # if(self.grid):
-        #     self.draw_grid(canvas)
-        canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, self.point2.y, outline = self.colour, width = self.width)
+        """
+        Draw the coordinate system box on a canvas.
+
+        :param canvas: canvas on which to draw the coordinate system box.
+        :type canvas: tkinter.Canvas
+        """
+        canvas.create_rectangle(self.point1.x, self.point1.y, self.point2.x, \
+                                self.point2.y, outline = self.colour, \
+                                width = self.width)
     
     def draw_ticks(self, canvas, grid = False):
+        """
+        Draw the axis ticks on a canvas.
+
+        :param canvas: canvas on which to draw the ticks.
+        :type canvas: tkinter.Canvas
+        :param grid: grid diplay toggle.
+        :type grid: boolean
+        """
         fsize = 7
         fname = "Arial"
         text_offset = 20
@@ -867,7 +1130,12 @@ class TCoordSys(TRect):
             current_pos_y -= self.ticinty
     
     def obscure_protruding_edges(self, canvas):
-        "Obscures edges protruding from model area with background-coloured rectangles"
+        """
+        Obscure edges protruding from model area with background-coloured rectangles.
+
+        :param canvas: canvas on which to perform the obscuring.
+        :type canvas: tkinter.Canvas
+        """
         bgcolour = canvas["background"]
         canvas.create_rectangle(0, 0, self.maxx, TWindow_Size.BOX_MAX_Y - 1, \
                                 outline = bgcolour, fill = bgcolour)
@@ -882,7 +1150,13 @@ class TCoordSys(TRect):
                                 self.maxx, TWindow_Size.BOX_MIN_Y + 1, \
                                 outline = bgcolour, fill = bgcolour)
     
-    def toogle_grid(self, state):
+    def toggle_grid(self, state):
+        """
+        Toggle displaying of the coordinate system grid.
+
+        :param state: new grid state.
+        :type state: boolean
+        """
         if(state == "On" or state == "on"):
             self.grid = True
         elif(state == "Off" or state == "off"):
@@ -891,6 +1165,12 @@ class TCoordSys(TRect):
             raise Exception("Improper argument {}.".format (state))
 
     def draw_grid(self, canvas):
+        """
+        Draw coordinate system grid on a canvas.
+
+        :param canvas: canvas on which to draw the grid.
+        :type canvas: tkinter.Canvas
+        """
         width = abs(self.point2.x - self.point1.x)
         height = abs(self.point1.y - self.point2.y)
         start_x = min(self.point1.x, self.point2.x)
@@ -905,6 +1185,12 @@ class TCoordSys(TRect):
                 start_y - (i + 1)*self.ticinty, fill = self.grid_colour, width = self.width)
     
     def write_axis_labels(self, canvas):
+        """
+        Write axis labels on a canvas.
+
+        :param canvas: canvas on which to draw the grid.
+        :type canvas: tkinter.Canvas
+        """
         debug = True
         if(debug):
             marg = 5
@@ -944,6 +1230,14 @@ class TCoordSys(TRect):
                 messagebox.showerror("Error while writing axis labels!", message)
     
     def label_round(self, label, digits):
+        """
+        Round axis labels.
+
+        :param label: label too be rounded.
+        :type label: float
+        :param digits: rounding precision.
+        :type digits: integer
+        """
         if(isinstance(label, float)):
             label = round(label, digits)
             if(label.is_integer()):
@@ -954,12 +1248,18 @@ class TCoordSys(TRect):
             raise Exception ("Input is not float!")
     
     def model_size_update(self):
+        """
+        Update model size.
+        """
         self.model_max_x = TModel_Size.MAX_X
         self.model_max_y = TModel_Size.MAX_Y
         self.ticintx = float((self.maxx - self.minx - 2*self.margx)/(self.model_max_x - self.model_min_x))
         self.ticinty = float((self.maxy - self.miny - 2*self.margx)/(self.model_max_y - self.model_min_y))
 
     def window_size_update(self):
+        """
+        Update window size.
+        """
         self.minx = TWindow_Size.MIN_X
         self.miny = TWindow_Size.MIN_Y
         self.maxx = TWindow_Size.MAX_X
@@ -1015,6 +1315,9 @@ class TCoordSys(TRect):
             messagebox.showerror ("Error while handling settings!", message)
         
     def display_settings_update(self):
+        """
+        Update display settings.
+        """
         self.model_min_x = TModel_Size.MIN_X
         self.model_min_y = TModel_Size.MIN_Y
         self.model_max_x = TModel_Size.MAX_X
@@ -1022,5 +1325,7 @@ class TCoordSys(TRect):
         self.ticintmetx = TTicksSettings.INT_X
         self.ticintmety = TTicksSettings.INT_Y
         self.round_digits = TTicksSettings.ROUND_DIGITS
-        self.ticintx = (abs(TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X)*self.ticintmetx)/(self.model_max_x - self.model_min_x)
-        self.ticinty = (abs(TWindow_Size.BOX_MAX_Y - TWindow_Size.BOX_MIN_Y)*self.ticintmety)/(self.model_max_y - self.model_min_y)
+        self.ticintx = (abs(TWindow_Size.BOX_MAX_X - TWindow_Size.BOX_MIN_X)*\
+                       self.ticintmetx)/(self.model_max_x - self.model_min_x)
+        self.ticinty = (abs(TWindow_Size.BOX_MAX_Y - TWindow_Size.BOX_MIN_Y)*\
+                       self.ticintmety)/(self.model_max_y - self.model_min_y)

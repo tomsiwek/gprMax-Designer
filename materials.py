@@ -3,15 +3,15 @@ class TMaterial(object):
     Class represents a material with its properties.
 
     :param epsilon_r: relative permittivity.
-    :param type: float.
+    :type epsilon_r: float
     :param sigma: conductivity.
-    :param type: float.
+    :type sigma: float
     :param mu_r: relative permeability.
-    :param type: float.
+    :type mu_r: float
     :param sigma_mag: magnetic loss.
-    :param type: float.
+    :type sigma_mag: float
     :param name: material identifier.
-    :param type: string.
+    :type name: string
     """
     def __init__(self, epsilon_r = 0.0, sigma = 0.0, mu_r = 0.0, sigma_mag = 0.0, name = ""):
         """

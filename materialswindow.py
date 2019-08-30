@@ -177,7 +177,7 @@ class TMaterialsWindow(Frame):
         Update shapes list.
 
         :param materials: new materials database.
-        :param type: list.
+        :type materials: list
         """
         self.materials_list.delete(0, self.materials_list.size())
         i = 0
@@ -202,7 +202,7 @@ class TMaterialsWindow(Frame):
         """
         Retrieve a index of a selected material on the list.
 
-        :rtype: integer.
+        :rtype: integer
         """
         try:
             selection = self.materials_list.curselection()
@@ -217,7 +217,7 @@ class TMaterialsWindow(Frame):
         Display selected material parameters in the text fields.
 
         :param event: listbox LMB click event.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         item_num = self.get_selected_item_num()
         if(item_num < 0):

@@ -9,11 +9,11 @@ class TPolygonWindow(simpledialog.Dialog):
     Class represents a polygon vertices edit window.
 
     :param master: master window object.
-    :param type: tkinter.Tk.
+    :type master: tkinter.Tk
     :param app: main app object.
-    :param type: TApp.
+    :type app: TApp
     :param polygon: edited polygon object.
-    :param type: TPolygon.
+    :type polygon: TPolygon
     """
     def __init__(self, master, app, polygon):
         """
@@ -28,7 +28,7 @@ class TPolygonWindow(simpledialog.Dialog):
         Initialise widgets.
 
         :param master: master window object.
-        :param type: tkinter.Tk.
+        :type master: tkinter.Tk
         """
         # Frame for widgets
         self.main_frame = Frame(self)
@@ -68,7 +68,7 @@ class TPolygonWindow(simpledialog.Dialog):
         """
         Retrieve the selected vertex index. 
 
-        :rtype: integer.
+        :rtype: integer
         """
         try:
             cursel = self.vertices_list.curselection()[0]
@@ -81,7 +81,7 @@ class TPolygonWindow(simpledialog.Dialog):
         Display and edit selected vertex parameters.
 
         :param event: listbox LMB click event.
-        :param type: tkinter.Event.
+        :type event: tkinter.Event
         """
         try:
             vertex_num = (self.vertices_list.curselection())[0]
