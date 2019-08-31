@@ -33,7 +33,7 @@ from parsetofile import TParser
 from point import TPoint
 from polygonwindow import TPolygonWindow
 from settings import TWindow_Size, TModel_Size, TTicksSettings, TSurveySettings, \
-                    TColours
+                     TColours
 from shapes import TRect, TCylin, TCylinSector, TPolygon, TCoordSys
 from shapeswindow import TShapesWindow
 from surveysettingswindow import TSurveySettingsWindow
@@ -3003,8 +3003,12 @@ class TApp(object):
         n_iter = simpledialog.askinteger("Give number of iterations", "n: ", \
                                          initialvalue = init_iter)
         if(n_iter is not None):
-            command = "start cmd /K run_gprmax.bat compute " + "\"" + filename + "\"" + \
-                      " -n " + str(n_iter) + " --geometry-fixed"
+            if(sys.platform == "win32"):
+                command = "start cmd /K run_gprmax.bat compute " + "\"" + filename + "\"" + \
+                        " -n " + str(n_iter) + " --geometry-fixed"
+            elif(sys.platform == "linux" or sys.platform == "linux2" or\
+                 sys.platform == "darwin"):
+                raise NotImplementedError("First create the shell script!")
             sts = subprocess.call(command, shell = True)
             del sts
     
@@ -3488,8 +3492,9 @@ class TApp(object):
         """
         Export a gprMax output file in HDF5 format to ASCII.
         """
-        filename = filedialog.asksaveasfilename(initialdir = '.', title = "Select file", \
-                    filetypes = [("gprMax output files", "*.out"), ("All files", "*.*")])
+        filename = filedialog.askopenfilename(initialdir = '.', title = "Select file", \
+                                              filetypes = [("gprMax output files", "*.out"), \
+                                              ("All files", "*.*")])
         h5file = h5py.File(filename)
         iterations = h5file.attrs["Iterations"]
         title = h5file.attrs["Title"]
