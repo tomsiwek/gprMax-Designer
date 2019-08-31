@@ -3,7 +3,7 @@
 
 name: gprMax-Designer
 dependencies:
-- python>=3.6
+- python>=3.7
 - h5py
 - sortedcontainers
 - pillow
